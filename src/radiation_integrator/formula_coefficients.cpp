@@ -171,9 +171,7 @@ void RadiationIntegrator::CalculateFormulaCoefficients()
         double j_nu_fluid_cgs =
             formula_cn0 * n_n0_fluid * std::pow(nu_fluid_cgs / formula_nup, -formula_alpha);
         j_i[adaptive_level](l,m,n) = j_nu_fluid_cgs / (nu_fluid_cgs * nu_fluid_cgs);
-	//here would be where I edit things and have to decide if I should add free-free emission as its own array or 
-	//moreso just add it as an additive term
-
+        
         // Calculate absorption coefficient in CGS units (C 11-12)
         double alpha_nu_fluid_cgs = formula_a * formula_cn0 * n_n0_fluid
             * std::pow(nu_fluid_cgs / formula_nup, -formula_beta - formula_alpha);

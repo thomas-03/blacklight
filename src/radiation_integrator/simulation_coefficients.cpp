@@ -479,6 +479,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             double var_a = Math::sqrt2 * Math::pi / 27.0 * sin_theta_b;
             double var_b = std::pow(2.0, 11.0 / 12.0);
             double var_c = xx_1_2 + var_b * xx_1_6;
+            //TEGAN: here is the coefficient for the thermal synchrotron emissivities!!
             j_i_val = coefficient * var_a * var_c * var_c;
             if (image_light or image_emission or image_emission_ave)
               j_i[adaptive_level](l,m,n) = j_i_val;
@@ -555,10 +556,14 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             rho_v[adaptive_level](l,m,n) = coefficient_v * factor_v;
           }
 
+          //here we can try to add the rule to basically add free-free emission to j_i
+          //also think we might have to add the absorption coefficients potentially but idk
+
           // Calculate power-law synchrotron emissivities (M 28,38)
           if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave))
           {
             double var_a = std::pow(nu_cgs / (nu_c_cgs * sin_theta_b), -(plasma_p - 1.0) / 2.0);
+            //TEGAN: here is the coefficient for the power-law synchrotron emissivities!!
             double coefficient = plasma_power_frac * n_e_cgs * Physics::e * Physics::e * nu_c_cgs
                 / (Physics::c * nu_2_cgs) * power_jj * sin_theta_b * var_a;
             j_i[adaptive_level](l,m,n) += coefficient;
@@ -616,6 +621,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             double var_c = std::pow(xx, -(plasma_kappa - 2.0) / 2.0) * sin_theta_b;
             double coefficient_low = kappa_jj_low * var_a * var_b;
             double coefficient_high = kappa_jj_high * var_a * var_c;
+            //TEGAN: here is the coefficient for the kappa-distribution synchrotron emissivities!!
             j_i[adaptive_level](l,m,n) += std::pow(std::pow(coefficient_low, -kappa_jj_x_i)
                 + std::pow(coefficient_high, -kappa_jj_x_i), -1.0 / kappa_jj_x_i);
             if (image_light and image_polarization)
