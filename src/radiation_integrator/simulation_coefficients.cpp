@@ -288,6 +288,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
         double n_e_cgs = n_cgs / (1.0 + 1.0 / plasma_ne_ni);
+        double n_i_cgs = n_cgs - n_e_cgs;
 
         // Calculate simulation metric
         CovariantSimulationMetric(x1, x2, x3, gcov_sim);
@@ -556,8 +557,64 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             rho_v[adaptive_level](l,m,n) = coefficient_v * factor_v;
           }
 
-          //here we can try to add the rule to basically add free-free emission to j_i
+          //TEGAN: here we can try to add the rule to basically add free-free emission to j_i
           //also think we might have to add the absorption coefficients potentially but idk
+          //we are in the comoving frame from how this is all written
+          //i think for the equation i wrote down in my notebook it mostly just makes sense that those are in the comoving frame but idk for sure
+          
+          //Calculate thermal free-free emissivities
+          if (plasma_thermal_frac != 0.0 and image_free_free)
+          {
+            // Calculate thermal free-free emissivities
+            //double coefficient = plasma_thermal_frac * n_e_cgs * Physics::e * Physics::e
+            //    * nu_cgs / (Physics::m_e * Physics::c * nu_c_cgs);
+            double coeff_a = ((8.0/3.0)*Math::pi*std::pow(Physics::e,6.)/(Physics::h*pow(Physics::c,3.)*std::pow(Physics::m_e,2.)));
+            double coeff_b = std::sqrt(2.0*Math::pi/(3.0*Physics::m_e*kb_tt_e_cgs));
+            double gaunt_factor = 1.0; //THIS IS JUST A HOLDER
+            double alpha_coefficient = (coeff_a*coeff_b*plasma_power_frac * n_e_cgs*n_i_cgs *gaunt_factor)*(-std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs))/std::pow(nu_c_cgs,3.0);
+            double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/(Physics::c*Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs));
+            double coefficient = alpha_coefficient*B_coeff;
+
+            if (image_light or image_emission or image_emission_ave)
+              j_i[adaptive_level](l,m,n) += coefficient;
+            if (image_light and image_polarization)
+            {
+              j_q[adaptive_level](l,m,n) += 0.0;
+              j_v[adaptive_level](l,m,n) += 0.0;
+            }
+          }
+
+          //Calculate thermal free-free absorptivities
+          // Calculate power-law synchrotron absorptivities (M 29,39)
+          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
+          {
+            double coeff_a = ((8.0/3.0)*Math::pi*std::pow(Physics::e,6.)/(Physics::h*pow(Physics::c,3.)*std::pow(Physics::m_e,2.)));
+            double coeff_b = std::sqrt(2.0*Math::pi/(3.0*Physics::m_e*kb_tt_e_cgs));
+            double gaunt_factor = 1.0; //THIS IS JUST A HOLDER
+            double coefficient = (coeff_a*coeff_b*plasma_power_frac * n_e_cgs*n_i_cgs*gaunt_factor)*(-std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs))/std::pow(nu_c_cgs,3.0);
+
+            if (image_light or image_emission or image_emission_ave)
+            alpha_i[adaptive_level](l,m,n) += coefficient;
+            if (image_light and image_polarization)
+            {
+              alpha_q[adaptive_level](l,m,n) += 0.0;
+              alpha_v[adaptive_level](l,m,n) += 0.0;
+            }
+
+            // Account for numerical issues later arising from absorptivities being too small
+            if ((image_light or image_tau or image_tau_int)
+                and 1.0 / (alpha_i[adaptive_level](l,m,n) * alpha_i[adaptive_level](l,m,n))
+                == std::numeric_limits<double>::infinity())
+            {
+              alpha_i[adaptive_level](l,m,n) = 0.0;
+              if (image_light and image_polarization)
+              {
+                alpha_q[adaptive_level](l,m,n) = 0.0;
+                alpha_v[adaptive_level](l,m,n) = 0.0;
+              }
+            }
+          }
+
 
           // Calculate power-law synchrotron emissivities (M 28,38)
           if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave))
