@@ -560,13 +560,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //Calculate thermal free-free emissivities
           if (plasma_thermal_frac != 0.0 and image_free_free)
           {
-            // Calculate thermal free-free emissivities
-
            double coeff_a = Math::pi*Math::pi*std::pow(Physics::e,6.)/(pow(Physics::c,3.)*pow(Physics::m_e,2.));
            double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
-           double coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor;
+           double coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
             if (image_light or image_emission or image_emission_ave)
               j_i[adaptive_level](l,m,n) += coefficient;
 
@@ -585,7 +583,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
-           double j_coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor;
+           double j_coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
            double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/(Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs));
            
            double coefficient = j_coefficient/B_coeff;
