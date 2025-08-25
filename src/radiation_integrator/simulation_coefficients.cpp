@@ -557,42 +557,38 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             rho_v[adaptive_level](l,m,n) = coefficient_v * factor_v;
           }
 
-          //TEGAN: here we can try to add the rule to basically add free-free emission to j_i
-          //also think we might have to add the absorption coefficients potentially but idk
-          //we are in the comoving frame from how this is all written
-          //i think for the equation i wrote down in my notebook it mostly just makes sense that those are in the comoving frame but idk for sure
-          
           //Calculate thermal free-free emissivities
           if (plasma_thermal_frac != 0.0 and image_free_free)
           {
             // Calculate thermal free-free emissivities
-            //double coefficient = plasma_thermal_frac * n_e_cgs * Physics::e * Physics::e
-            //    * nu_cgs / (Physics::m_e * Physics::c * nu_c_cgs);
-            double coeff_a = ((8.0/3.0)*Math::pi*std::pow(Physics::e,6.)/(Physics::h*pow(Physics::c,3.)*std::pow(Physics::m_e,2.)));
-            double coeff_b = std::sqrt(2.0*Math::pi/(3.0*Physics::m_e*kb_tt_e_cgs));
-            double gaunt_factor = 1.0; //THIS IS JUST A HOLDER
-            double alpha_coefficient = (coeff_a*coeff_b*plasma_power_frac * n_e_cgs*n_i_cgs *gaunt_factor)*(-std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs))/std::pow(nu_c_cgs,3.0);
-            double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/(Physics::c*Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs));
-            double coefficient = alpha_coefficient*B_coeff;
 
+           double coeff_a = Math::pi*Math::pi*std::pow(Physics::e,6.)/(pow(Physics::c,3.)*pow(Physics::m_e,2.));
+           double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
+           double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
+
+           double coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor;
             if (image_light or image_emission or image_emission_ave)
               j_i[adaptive_level](l,m,n) += coefficient;
+
             if (image_light and image_polarization)
             {
+              //assume that there's no polarizational bremsstrahlung
               j_q[adaptive_level](l,m,n) += 0.0;
               j_v[adaptive_level](l,m,n) += 0.0;
             }
           }
 
           //Calculate thermal free-free absorptivities
-          // Calculate power-law synchrotron absorptivities (M 29,39)
           if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
           {
-            double coeff_a = ((8.0/3.0)*Math::pi*std::pow(Physics::e,6.)/(Physics::h*pow(Physics::c,3.)*std::pow(Physics::m_e,2.)));
-            double coeff_b = std::sqrt(2.0*Math::pi/(3.0*Physics::m_e*kb_tt_e_cgs));
-            double gaunt_factor = 1.0; //THIS IS JUST A HOLDER
-            double coefficient = (coeff_a*coeff_b*plasma_power_frac * n_e_cgs*n_i_cgs*gaunt_factor)*(-std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs))/std::pow(nu_c_cgs,3.0);
+           double coeff_a = Math::pi*Math::pi*std::pow(Physics::e,6.)/(pow(Physics::c,3.)*pow(Physics::m_e,2.));
+           double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
+           double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
+           double j_coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor;
+           double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/(Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs));
+           
+           double coefficient = j_coefficient/B_coeff;
             if (image_light or image_emission or image_emission_ave)
             alpha_i[adaptive_level](l,m,n) += coefficient;
             if (image_light and image_polarization)
@@ -602,6 +598,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             }
 
             // Account for numerical issues later arising from absorptivities being too small
+            //(taken from the synchrotron treatment above mostly)
             if ((image_light or image_tau or image_tau_int)
                 and 1.0 / (alpha_i[adaptive_level](l,m,n) * alpha_i[adaptive_level](l,m,n))
                 == std::numeric_limits<double>::infinity())
@@ -614,7 +611,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               }
             }
           }
-
+          //TEGAN: this is where we would have the free-free rotativities but I don't think those really should apply too much I don't think so I ommitted them for now
 
           // Calculate power-law synchrotron emissivities (M 28,38)
           if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave))
