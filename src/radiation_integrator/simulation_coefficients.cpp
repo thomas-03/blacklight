@@ -584,8 +584,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
            double j_coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
-           double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/(Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs));
-           
+           double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/((Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs)));
+
            double coefficient = j_coefficient/B_coeff;
             if (image_light or image_emission or image_emission_ave)
             alpha_i[adaptive_level](l,m,n) += coefficient;
