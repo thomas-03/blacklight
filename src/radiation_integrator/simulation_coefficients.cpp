@@ -480,7 +480,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             double var_a = Math::sqrt2 * Math::pi / 27.0 * sin_theta_b;
             double var_b = std::pow(2.0, 11.0 / 12.0);
             double var_c = xx_1_2 + var_b * xx_1_6;
-            //TEGAN: here is the coefficient for the thermal synchrotron emissivities!!
+
             j_i_val = coefficient * var_a * var_c * var_c;
             if (image_light or image_emission or image_emission_ave)
               j_i[adaptive_level](l,m,n) = j_i_val;
@@ -564,7 +564,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
-           double coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
+           double coefficient = 0.25*coeff_a*coeff_b*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
             if (image_light or image_emission or image_emission_ave)
               j_i[adaptive_level](l,m,n) += coefficient;
 
@@ -577,15 +577,16 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           //Calculate thermal free-free absorptivities
-          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
+          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
           {
            double coeff_a = Math::pi*Math::pi*std::pow(Physics::e,6.)/(pow(Physics::c,3.)*pow(Physics::m_e,2.));
            double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
-           double j_coefficient = 0.25*coeff_a*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
+           double j_coefficient = 0.25*coeff_a*coeff_b*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
+           //note that the B_coeff for the free-free case likely is pretty big 
            double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/((Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs)));
-
+           
            double coefficient = j_coefficient/B_coeff;
             if (image_light or image_emission or image_emission_ave)
             alpha_i[adaptive_level](l,m,n) += coefficient;
