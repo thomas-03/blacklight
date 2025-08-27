@@ -557,14 +557,14 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             rho_v[adaptive_level](l,m,n) = coefficient_v * factor_v;
           }
 
-          //Calculate thermal free-free emissivities
+          //Calculate thermal free-free emissivities (Rybicki & Lightman, eqn 5.14a)
           if (plasma_thermal_frac != 0.0 and image_free_free)
           {
-           double coeff_a = Math::pi*Math::pi*std::pow(Physics::e,6.)/(pow(Physics::c,3.)*pow(Physics::m_e,2.));
-           double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
+           double partA = 32.0*Math::pi*std::pow(Physics::e,6.)/3.0*Physics::m_e*std::pow(Physics::c,3.);
+           double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
-           double coefficient = 0.25*coeff_a*coeff_b*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
+           double coefficient = partA*partB*n_e_cgs*n_i_cgs*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)*gaunt_factor;
             if (image_light or image_emission or image_emission_ave)
               j_i[adaptive_level](l,m,n) += coefficient;
 
@@ -576,18 +576,16 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             }
           }
 
-          //Calculate thermal free-free absorptivities
+          //Calculate thermal free-free absorptivities (Rybicki & Lightman, eqn 5.18a)
+          //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission which feels wrong (like should the absorption only apply to the free_free??) but idk
           if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
           {
-           double coeff_a = Math::pi*Math::pi*std::pow(Physics::e,6.)/(pow(Physics::c,3.)*pow(Physics::m_e,2.));
-           double coeff_b = std::sqrt(2.0*Physics::m_e/(Math::pi*kb_tt_e_cgs));
+           double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
+           double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
-
-           double j_coefficient = 0.25*coeff_a*coeff_b*n_e_cgs*n_i_cgs*gaunt_factor*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs);
-           //note that the B_coeff for the free-free case likely is pretty big 
-           double B_coeff = (2.0*Physics::h*nu_cgs*nu_cgs*nu_cgs)/((Physics::c*Physics::c)*(std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs)));
            
-           double coefficient = j_coefficient/B_coeff;
+           double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/nu_cgs*nu_cgs*nu_cgs;
+            
             if (image_light or image_emission or image_emission_ave)
             alpha_i[adaptive_level](l,m,n) += coefficient;
             if (image_light and image_polarization)
