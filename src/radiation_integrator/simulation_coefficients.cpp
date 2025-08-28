@@ -577,7 +577,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           //Calculate thermal free-free absorptivities (Rybicki & Lightman, eqn 5.18a)
-          //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission which feels wrong (like should the absorption only apply to the free_free??) but idk
+          //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission
           if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
           {
            double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);

@@ -1142,6 +1142,10 @@ void SimulationReader::VerifyVariablesAthena()
 {
   // Check that array of all primitives is present
   int prim_offset = 0;
+  for (auto name : *variable_names){
+    std::cout << "Variable name: " << name << std::endl;
+  }
+  std::cout<<"Number of variables: "<<num_variable_names<<std::endl;
   for (ind_hydro = 0; ind_hydro < num_dataset_names; ind_hydro++)
     if (dataset_names[ind_hydro] == "prim")
       break;
@@ -1185,6 +1189,10 @@ void SimulationReader::VerifyVariablesAthena()
       break;
   if (ind_uu3 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel3\" slice of \"prim\" in data file.");
+  //TEGAN TO DO: put the actual variable name that the kappas would be under here. 
+  for (ind_rad = prim_offset; ind_rad < prim_offset + num_variables(ind_hydro); ind_rad++)
+    if (variable_names[ind_rad] == "vel4")
+      break;
 
   // Check that array of all magnetic field components is present
   int bb_offset = 0;
