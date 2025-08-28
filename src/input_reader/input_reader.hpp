@@ -116,6 +116,7 @@ struct InputReader
   std::optional<bool> image_crossings;
   std::optional<bool> image_free_free;
   std::optional<bool> image_scattering;
+  std::optional<bool> image_synchrotron;
 
   // Data - rendering parameters
   std::optional<int> render_num_images;

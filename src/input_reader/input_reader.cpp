@@ -265,6 +265,8 @@ int InputReader::Read()
       image_free_free = ReadBool(val);
     else if (key == "image_scattering")
       image_scattering = ReadBool(val);
+    else if (key == "image_synchrotron")
+      image_synchrotron = ReadBool(val);
 
     // Store rendering parameters
     else if (key.compare(0, 7, "render_") == 0)

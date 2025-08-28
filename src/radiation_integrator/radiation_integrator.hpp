@@ -79,6 +79,7 @@ struct RadiationIntegrator
   bool image_crossings;
   bool image_free_free;
   bool image_scattering;
+  bool image_synchrotron;
 
   // Input data - rendering parameters
   int render_num_images;

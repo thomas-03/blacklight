@@ -469,7 +469,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
           // Calculate thermal synchrotron emissivities (M 28,30)
           double j_i_val;
-          if (plasma_thermal_frac != 0.0)
+          if (plasma_thermal_frac != 0.0 and image_synchrotron)
           {
             double xx = nu_cgs / nu_s_cgs;
             double xx_1_2 = std::sqrt(xx);
@@ -498,7 +498,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate thermal synchrotron absorptivities from Kirchoff's law (M 31)
-          if (plasma_thermal_frac != 0.0)
+          if (plasma_thermal_frac != 0.0 and image_synchrotron)
           {
             // Calculate absorptivities
             double b_nu_nu_3_cgs = 2.0 * Physics::h / (Physics::c * Physics::c)
@@ -526,7 +526,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate thermal synchrotron rotativities (M 33-37)
-          if (plasma_thermal_frac != 0.0 and image_light and image_polarization)
+          if (plasma_thermal_frac != 0.0 and image_light and image_polarization and image_synchrotron)
           {
             double coefficient_q = -plasma_thermal_frac * n_e_cgs * Physics::e * Physics::e
                 * nu_c_cgs * nu_c_cgs * sin2_theta_b / (Physics::m_e * Physics::c * nu_2_cgs);
@@ -560,7 +560,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //Calculate thermal free-free emissivities (Rybicki & Lightman, eqn 5.14a)
           if (plasma_thermal_frac != 0.0 and image_free_free)
           {
-           double partA = 32.0*Math::pi*std::pow(Physics::e,6.)/3.0*Physics::m_e*std::pow(Physics::c,3.);
+           double partA = 32.0*Math::pi*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
@@ -584,7 +584,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
            
-           double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/nu_cgs*nu_cgs*nu_cgs;
+           double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
             
             if (image_light or image_emission or image_emission_ave)
             alpha_i[adaptive_level](l,m,n) += coefficient;
@@ -611,7 +611,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //TEGAN: this is where we would have the free-free rotativities but I don't think those really should apply too much I don't think so I ommitted them for now
 
           // Calculate power-law synchrotron emissivities (M 28,38)
-          if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave))
+          if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron)
           {
             double var_a = std::pow(nu_cgs / (nu_c_cgs * sin_theta_b), -(plasma_p - 1.0) / 2.0);
             //TEGAN: here is the coefficient for the power-law synchrotron emissivities!!
@@ -628,7 +628,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate power-law synchrotron absorptivities (M 29,39)
-          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int))
+          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_synchrotron)
           {
             double var_a = std::pow(nu_cgs / (nu_c_cgs * sin_theta_b), -(plasma_p + 2.0) / 2.0);
             double coefficient = plasma_power_frac * n_e_cgs * Physics::e * Physics::e
@@ -645,7 +645,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate power-law synchrotron rotativities (M 40-42)
-          if (plasma_power_frac != 0.0 and image_light and image_polarization)
+          if (plasma_power_frac != 0.0 and image_light and image_polarization and image_synchrotron)
           {
             double var_a = n_e_cgs * Physics::e * Physics::e * nu_cgs
                 / (Physics::m_e * Physics::c * nu_c_cgs * sin_theta_b);
@@ -661,7 +661,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate kappa-distribution synchrotron emissivities (M 28,43-46)
-          if (plasma_kappa_frac != 0.0 and (image_light or image_emission or image_emission_ave))
+          if (plasma_kappa_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron)
           {
             double nu_kappa_cgs =
                 nu_c_cgs * plasma_w * plasma_w * plasma_kappa * plasma_kappa * sin_theta_b;
