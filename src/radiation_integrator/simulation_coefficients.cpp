@@ -359,7 +359,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
         {
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
-          //but that would make temperature bigger not smaller.
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
           double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
           std::ofstream kTFile;
