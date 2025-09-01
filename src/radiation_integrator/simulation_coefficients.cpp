@@ -4,6 +4,8 @@
 #include <algorithm>  // min
 #include <cmath>      // cbrt, cos, cyl_bessel_k, exp, expm1, pow, sin, sinh, sqrt, tanh, tgamma
 #include <limits>     // numeric_limits
+#include <iostream>
+#include <fstream>
 
 // Library headers
 #include <omp.h>  // pragmas
@@ -237,6 +239,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
   double d_unit = simulation_rho_cgs;
   double e_unit = d_unit * Physics::c * Physics::c;
   double b_unit = std::sqrt(4.0 * Math::pi * e_unit);
+  if(plasma_model==PlasmaModel::one_temp)
+  std::cout<<"Warning: you have selected the one_temp electron model. The electron temperature will be calculated as if it were a two temperature simulation but with T_e = T_i."<<std::endl;
 
   // Work in parallel
   #pragma omp parallel
@@ -287,6 +291,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double rho_cgs = rho * d_unit;
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
+        //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
         double n_e_cgs = n_cgs / (1.0 + 1.0 / plasma_ne_ni);
         double n_i_cgs = n_cgs - n_e_cgs;
 
@@ -338,6 +343,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           double tti_tte = (plasma_rat_high + plasma_rat_low * beta_inv * beta_inv)
               / (1.0 + beta_inv * beta_inv);
           double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+          
           if (plasma_use_p)
             kb_tt_e_cgs = (1.0 + plasma_ne_ni) / (tti_tte + plasma_ne_ni) * kb_tt_tot_cgs;
           else
@@ -345,6 +351,24 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             kb_tt_e_cgs = (1.0 + plasma_ne_ni) * kb_tt_tot_cgs / (plasma_gamma - 1.0);
             kb_tt_e_cgs /= tti_tte / (plasma_gamma_i - 1.0) + plasma_ne_ni / (plasma_gamma_e - 1.0);
           }
+         //we don't need the factor v0**2 because it also shows up in P0 so it's already accounted for there
+          kb_tt_e_cgs = kb_tt_tot_cgs;
+          
+          theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
+        }
+        if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
+        {
+          //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
+          //but that would make temperature bigger not smaller.
+          //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
+          double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+          std::ofstream kTFile;
+          kTFile.open("./kTOutput.txt", std::ios_base::app);
+          kTFile<<kb_tt_tot_cgs<<std::endl;
+          kTFile.close();
+
+          kb_tt_e_cgs = kb_tt_tot_cgs;
+          
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
         }
 
@@ -566,13 +590,13 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)*gaunt_factor;
             if (image_light or image_emission or image_emission_ave)
-              j_i[adaptive_level](l,m,n) += coefficient;
+              j_i[adaptive_level](l,m,n) = coefficient;
 
             if (image_light and image_polarization)
             {
               //assume that there's no polarizational bremsstrahlung
-              j_q[adaptive_level](l,m,n) += 0.0;
-              j_v[adaptive_level](l,m,n) += 0.0;
+              j_q[adaptive_level](l,m,n) = 0.0;
+              j_v[adaptive_level](l,m,n) = 0.0;
             }
           }
 
@@ -587,11 +611,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
             
             if (image_light or image_emission or image_emission_ave)
-            alpha_i[adaptive_level](l,m,n) += coefficient;
+            alpha_i[adaptive_level](l,m,n) = coefficient;
             if (image_light and image_polarization)
             {
-              alpha_q[adaptive_level](l,m,n) += 0.0;
-              alpha_v[adaptive_level](l,m,n) += 0.0;
+              alpha_q[adaptive_level](l,m,n) = 0.0;
+              alpha_v[adaptive_level](l,m,n) = 0.0;
             }
 
             // Account for numerical issues later arising from absorptivities being too small
@@ -608,7 +632,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               }
             }
           }
-          //TEGAN: this is where we would have the free-free rotativities but I don't think those really should apply too much I don't think so I ommitted them for now
+
 
           // Calculate power-law synchrotron emissivities (M 28,38)
           if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron)

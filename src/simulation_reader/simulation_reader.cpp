@@ -89,7 +89,7 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
   {
     plasma_mu = p_input_reader->plasma_mu.value();
     plasma_model = p_input_reader->plasma_model.value();
-    if (plasma_model == PlasmaModel::ti_te_beta)
+    if (plasma_model == PlasmaModel::ti_te_beta || plasma_model == PlasmaModel::one_temp)
     {
       plasma_use_p = p_input_reader->plasma_use_p.value();
       if (plasma_use_p)
@@ -1142,10 +1142,7 @@ void SimulationReader::VerifyVariablesAthena()
 {
   // Check that array of all primitives is present
   int prim_offset = 0;
-  for (auto name : *variable_names){
-    std::cout << "Variable name: " << name << std::endl;
-  }
-  std::cout<<"Number of variables: "<<num_variable_names<<std::endl;
+  
   for (ind_hydro = 0; ind_hydro < num_dataset_names; ind_hydro++)
     if (dataset_names[ind_hydro] == "prim")
       break;

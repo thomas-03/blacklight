@@ -255,16 +255,12 @@ void SimulationReader::ReadHDF5RootObjectHeader()
         variable_names_found = true;
         SetHDF5StringArray(datatype_raw, dataspace_raw, message_data + offset,
             first_time_root_object_header, &variable_names, &num_variable_names);
-            std::cout<<*variable_names<<std::endl;
-            //std::printf("Variable names: %s\n", *variable_names);
 
       }
       else if (name == "NumVariables")
       {
         num_variables_found = true;
         SetHDF5IntArray(datatype_raw, dataspace_raw, message_data + offset, num_variables);
-        std::cout<<num_variables.n_tot<<std::endl;
-        //std::printf("Number of variables: %s\n", *num_variables);
       }
 
       // Free raw buffers

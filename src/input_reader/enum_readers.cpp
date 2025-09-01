@@ -250,6 +250,8 @@ PlasmaModel InputReader::ReadPlasmaModel(const std::string &string)
     return PlasmaModel::ti_te_beta;
   else if (string == "code_kappa")
     return PlasmaModel::code_kappa;
+  else if(string == "one_temp")
+    return PlasmaModel::one_temp;
   else
     throw BlacklightException("Unknown string used for PlasmaModel value.");
 }

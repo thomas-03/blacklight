@@ -1,10 +1,10 @@
 # General parameters
 model_type  = simulation  # type of model (simulation, formula)
-num_threads = 4           # number of threads to use in parallel
+num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/example_tde.npz  # file to be (over)written with output data
+output_file   = output/highfreq_free_tde.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -21,12 +21,13 @@ simulation_coord        = sks              # simulation coordinates (sks, cks)
 simulation_a            = 0.0              # dimensionless black hole spin
 simulation_m_msun       = 3.0e6          # black hole mass in solar masses
 simulation_rho_cgs      = 1.0e-8          # unit code density in g/cm^3
-simulation_interp       = tru0.ate             # flag indicating interpolation should be used
-simulation_block_interp = false            # flag indicating interpolation should cross blocks
+simulation_interp       = true             # flag indicating interpolation should be used
+simulation_block_interp = false            # flag indicating interpolation should cross blocks  
+
 
 # Camera parameters
 camera_type       = plane  # type of camera (plane, pinhole)
-camera_r          = 50.0   # KS radial coordinate r in gravitational units
+camera_r          = 100.0   # KS radial coordinate r in gravitational units
 camera_th         = 45.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
@@ -36,7 +37,7 @@ camera_k_r        = 1.0    # covariant KS r-momentum of photons
 camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radians)
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
-camera_width      = 24.0   # full width of image in gravitational units
+camera_width      = 48.0   # full width of image in gravitational units
 camera_resolution = 64     # number of pixels per side
 
 # Ray-tracing parameters
@@ -52,23 +53,26 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 
 # Image parameters
 image_light           = true      # flag indicating real image of radiation should be produced
-image_num_frequencies   = 5        # number of observation frequencies
-image_frequency_start   = 1.5e11    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3.3e11    # last frequency in Hz if image_frequency_num > 1
-image_frequency_spacing = lin_wave  # frequency spacing (lin_freq, lin_wave, log)
+image_num_frequencies   = 30        # number of observation frequencies
+image_frequency         = 3.3e15  # frequency in Hz if image_frequency_num = 1
+image_frequency_start   = 3.3e11    # first frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 3.3e25    # last frequency in Hz if image_frequency_num > 1
+image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
 image_rotation_split  = false     # flag for Strang splitting rotation from emission/absorption
 image_time            = false     # flag for producing image of geodesic times
 image_length          = false     # flag for producing image of geodesic lengths
 image_lambda          = false     # flag for producing image of affine path lengths
-image_emission        = false     # flag for producing image of emission coefficients
-image_tau             = false     # flag for producing image of optical depths
+image_emission        = true     # flag for producing image of emission coefficients
+image_tau             = true     # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
 image_tau_int         = false     # flag for producing tau-integrated images
 image_crossings       = false     # flag for counting plane crossings of geodesics
-image_free_free       = true      # flag for specifying whether or not we should include free-free emission terms
+image_free_free       = true  # flag for specifying whether to include free-free emission terms
+image_scattering      = false     # flag for specifying whether to include compton scattering
+image_synchrotron     = false
 
 # Rendering parameters
 render_num_images = 0  # number of false-color renderings
@@ -80,9 +84,9 @@ slow_light_on = false  # flag indicating slow light should be used
 adaptive_max_level = 0  # maximum number of adaptive levels beyond root
 
 # Plasma parameters
-plasma_mu         = 0.5         # molecular weight of fluid in proton masses
+plasma_mu         = 0.6         # molecular weight of fluid in proton masses
 plasma_ne_ni      = 1.0         # electrons per ion
-plasma_model      = ti_te_beta  # thermal electron temperature model (ti_te_beta, code_kappa)
+plasma_model      = one_temp  # thermal electron temperature model (ti_te_beta, code_kappa)
 plasma_use_p      = true        # flag indicating total p (rather than u) should match simulation
 plasma_rat_low    = 1.0         # ion-electron temperature ratio at zero plasma beta
 plasma_rat_high   = 10.0        # ion-electron temperature ratio at infinite plasma beta

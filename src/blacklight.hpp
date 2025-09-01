@@ -43,6 +43,6 @@ enum struct RayIntegrator {dp, rk4, rk2};
 enum struct FrequencySpacing {lin_freq, lin_wave, log};
 enum struct FrequencyNormalization {camera, infinity};
 enum struct RenderType {fill, thresh, rise, fall};
-enum struct PlasmaModel {ti_te_beta, code_kappa};
+enum struct PlasmaModel {ti_te_beta, code_kappa, one_temp};
 
 #endif
