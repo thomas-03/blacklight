@@ -40,6 +40,7 @@ struct RadiationIntegrator
   Coordinates simulation_coord;
   double simulation_m_msun;
   double simulation_rho_cgs;
+  double simulation_v_cgs;
   bool simulation_interp;
   bool simulation_block_interp;
 

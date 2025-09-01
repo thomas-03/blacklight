@@ -237,7 +237,15 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
   // Calculate units
   double d_unit = simulation_rho_cgs;
-  double e_unit = d_unit * Physics::c * Physics::c;
+  double v_unit = simulation_v_cgs;
+  //TEGAN:
+  //for some reason simulation_v_cgs isn't loading correctly, so I just explicitly put it in for e_unit
+  //need to fix it though
+  std::cout<<"v0: "<<v_unit<<std::endl;
+  std::cout<<"d unit: "<<d_unit<<std::endl;
+  double e_unit = d_unit * Physics::c * Physics::c * 0.0005*0.0005;
+  std::cout<<"e unit: "<<e_unit<<std::endl;
+
   double b_unit = std::sqrt(4.0 * Math::pi * e_unit);
   if(plasma_model==PlasmaModel::one_temp)
   std::cout<<"Warning: you have selected the one_temp electron model. The electron temperature will be calculated as if it were a two temperature simulation but with T_e = T_i."<<std::endl;
@@ -361,10 +369,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
           double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
-          std::ofstream kTFile;
+          /*std::ofstream kTFile;
           kTFile.open("./kTOutput.txt", std::ios_base::app);
           kTFile<<kb_tt_tot_cgs<<std::endl;
-          kTFile.close();
+          kTFile.close();*/
 
           kb_tt_e_cgs = kb_tt_tot_cgs;
           

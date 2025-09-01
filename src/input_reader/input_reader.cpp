@@ -145,6 +145,10 @@ int InputReader::Read()
       simulation_m_msun = std::stod(val);
     else if (key == "simulation_rho_cgs")
       simulation_rho_cgs = std::stod(val);
+    else if (key == "simulation_v_cgs"){
+      simulation_v_cgs = std::stod(val);
+      std::cout<<"v0 read"<<std::endl;
+    }
     else if (key == "simulation_kappa_name")
       simulation_kappa_name = val;
     else if (key == "simulation_interp")
