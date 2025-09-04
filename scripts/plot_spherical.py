@@ -40,7 +40,7 @@ T0=v0**2*mu*mp/kB #temperature unit
 rho0=2*G*Mbh/c**2
 
 # Main function
-def main(**kwargs):
+def plot_spherical(**kwargs):
 
     # Load function for transforming coordinates
     if kwargs['stream'] is not None:
@@ -185,9 +185,9 @@ def main(**kwargs):
     # Perform slicing/averaging of scalar data
     if kwargs['midplane']:
         if nx2 % 2 == 0:
-            vals = np.mean(quantity[:, nx2//2-1:nx2//2+1, :], axis=1)
+            vals = np.mean(quantity[:, int(nx2*kwargs['slice']-1):int(nx2*kwargs['slice']+1), :], axis=1)
         else:
-            vals = quantity[:, nx2//2, :]
+            vals = quantity[:, int(nx2*kwargs['slice']), :]
         if kwargs['average']:
             vals = np.repeat(np.mean(vals, axis=0, keepdims=True), nx3, axis=0)
     else:
@@ -208,12 +208,12 @@ def main(**kwargs):
         if kwargs['midplane']:
             if nx2 % 2 == 0:
                 vals_r = np.mean(data[kwargs['stream'] + '1']
-                                 [:, nx2//2-1:nx2//2+1, :], axis=1).T
+                                 [:, int(nx2*kwargs['slice']-1):int(nx2*kwargs['slice']+1), :], axis=1).T
                 vals_phi = np.mean(data[kwargs['stream'] + '3']
-                                   [:, nx2//2-1:nx2//2+1, :], axis=1).T
+                                   [:, int(nx2*kwargs['slice']-1):int(nx2*kwargs['slice']+1), :], axis=1).T
             else:
-                vals_r = data[kwargs['stream'] + '1'][:, nx2//2, :].T
-                vals_phi = data[kwargs['stream'] + '3'][:, nx2//2, :].T
+                vals_r = data[kwargs['stream'] + '1'][:, int(nx2*kwargs['slice']), :].T
+                vals_phi = data[kwargs['stream'] + '3'][:, int(nx2*kwargs['slice']), :].T
             if kwargs['stream_average']:
                 vals_r = np.tile(np.reshape(np.mean(vals_r, axis=1), (nx1, 1)), nx3)
                 vals_phi = np.tile(np.reshape(np.mean(vals_phi, axis=1), (nx1, 1)), nx3)
@@ -336,12 +336,351 @@ def main(**kwargs):
             plt.xlabel(r'$x$')
             plt.ylabel(r'$z$')
     plt.colorbar(im)
-    plt.title(kwargs['quantity'])
+    if kwargs['midplane'] and not kwargs['average']:
+        plt.title(kwargs['quantity'] + " midplane at $\\theta = $ {:.5f}".format(
+            theta[int(nx2*kwargs['slice'])]))
+    elif not kwargs['midplane'] and not kwargs['average']:
+        plt.title(kwargs['quantity'] + ' vertical slice at $\\phi = 0$')
+    elif kwargs['midplane'] and kwargs['average']:
+        plt.title(kwargs['quantity'] + ' midplane, $\\phi$-averaged')
+    else:
+        plt.title(kwargs['quantity'] + ' vertical slice, $\\phi$-averaged')
+    
     if kwargs['output_file'] == 'show':
         plt.show()
     else:
         plt.savefig(kwargs['output_file'], bbox_inches='tight')
 
+def plot_movie(**kwargs):
+
+    # Load function for transforming coordinates
+    if kwargs['stream'] is not None:
+        from scipy.ndimage import map_coordinates
+
+    # Load Python plotting modules
+    if kwargs['output_file'] != 'show':
+        import matplotlib
+        matplotlib.use('agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as colors
+
+    # Determine refinement level to use
+    if kwargs['level'] is not None:
+        level = kwargs['level']
+    else:
+        level = None
+
+    if(kwargs['quantity']=='Tgas'):
+        quantities = ['press','rho']
+    else:
+        quantities = [kwargs['quantity']]
+        
+    # Determine if vector quantities should be read
+    if kwargs['stream'] is not None:
+        quantities.append(kwargs['stream'] + '1')
+        if kwargs['midplane']:
+            quantities.append(kwargs['stream'] + '3')
+        else:
+            quantities.append(kwargs['stream'] + '2')
+
+    # Define grid compression in theta-direction
+    h = kwargs['theta_compression'] if kwargs['theta_compression'] is not None else 1.0
+
+    def theta_func(xmin, xmax, _, nf):
+        x2_vals = np.linspace(xmin, xmax, nf)
+        theta_vals = x2_vals + (1.0 - h) / 2.0 * np.sin(2.0 * x2_vals)
+        return theta_vals
+      
+    # Read data
+    if kwargs['theta_compression'] is not None:
+        if quantities[0] == 'Levels':
+            data = athena_read.athdf(kwargs['data_file'], quantities=quantities[1:],
+                                     level=level, return_levels=True,
+                                     face_func_2=theta_func)
+        else:
+            data = athena_read.athdf(kwargs['data_file'], quantities=quantities,
+                                     level=level, face_func_2=theta_func)
+    else:
+        if quantities[0] == 'Levels':
+            data = athena_read.athdf(kwargs['data_file'], quantities=quantities[1:],
+                                     level=level, return_levels=True)
+        else:
+            data = athena_read.athdf(kwargs['data_file'], quantities=quantities,
+                                     level=level)
+
+    # Extract basic coordinate information
+    coordinates = data['Coordinates'].decode('ascii', 'replace')
+    r = data['x1v']
+    theta = data['x2v']
+    phi = data['x3v']
+    r_face = data['x1f']
+    theta_face = data['x2f']
+    phi_face = data['x3f']
+    nx1 = len(r)
+    nx2 = len(theta)
+    nx3 = len(phi)
+
+    # Set radial extent
+    if kwargs['r_max'] is not None:
+        r_max = kwargs['r_max']
+    else:
+        r_max = r_face[-1]
+
+    # Account for logarithmic radial coordinate
+    if kwargs['logr']:
+        r = np.log10(r)
+        r_face = np.log10(r_face)
+        r_max = np.log10(r_max)
+
+    
+    # Create streamline grid
+    if kwargs['stream'] is not None:
+        x_stream = np.linspace(-r_max, r_max, kwargs['stream_samples'])
+        if kwargs['midplane']:
+            y_stream = np.linspace(-r_max, r_max, kwargs['stream_samples'])
+            x_grid_stream, y_grid_stream = np.meshgrid(x_stream, y_stream)
+            r_grid_stream_coord = (x_grid_stream.T**2 + y_grid_stream.T**2) ** 0.5
+            phi_grid_stream_coord = np.pi + np.arctan2(-y_grid_stream.T, -x_grid_stream.T)
+            phi_grid_stream_pix = ((phi_grid_stream_coord + phi[0])
+                                   / (2.0*np.pi + 2.0 * phi[0])) * (nx3 + 1)
+        else:
+            z_stream = np.linspace(-r_max, r_max, kwargs['stream_samples'])
+            x_grid_stream, z_grid_stream = np.meshgrid(x_stream, z_stream)
+            r_grid_stream_coord = (x_grid_stream.T**2 + z_grid_stream.T**2) ** 0.5
+            theta_grid_stream_coord = np.pi - \
+                np.arctan2(x_grid_stream.T, -z_grid_stream.T)
+            if kwargs['theta_compression'] is None:
+                theta_grid_stream_pix = ((theta_grid_stream_coord + theta[0])
+                                         / (2.0*np.pi + 2.0 * theta[0])) * (2 * nx2 + 1)
+            else:
+                theta_grid_stream_pix = np.empty_like(theta_grid_stream_coord)
+                theta_extended = np.concatenate((-theta[0:1], theta,
+                                                 2.0*np.pi - theta[::-1],
+                                                 2.0*np.pi + theta[0:1]))
+                for (i, j), theta_val in np.ndenumerate(theta_grid_stream_coord):
+                    index = sum(theta_extended[1:-1] < theta_val) - 1
+                    if index < 0:
+                        theta_grid_stream_pix[i, j] = -1
+                    elif index < 2 * nx2 - 1:
+                        theta_grid_stream_pix[i, j] = (
+                            index + ((theta_val - theta_extended[index])
+                                     / (theta_extended[index+1] - theta_extended[index])))
+                    else:
+                        theta_grid_stream_pix[i, j] = 2 * nx2 + 2
+        r_grid_stream_pix = np.empty_like(r_grid_stream_coord)
+        for (i, j), r_val in np.ndenumerate(r_grid_stream_coord):
+            index = sum(r < r_val) - 1
+            if index < 0:
+                r_grid_stream_pix[i, j] = -1
+            elif index < nx1 - 1:
+                r_grid_stream_pix[i, j] = index + \
+                    (r_val - r[index]) / (r[index + 1] - r[index])
+            else:
+                r_grid_stream_pix[i, j] = nx1
+
+    if(kwargs['quantity']=='Tgas'):
+        quantity = T0*(data['press']/data['rho'])
+    else:
+        quantity = data[kwargs['quantity']]
+    
+    #make a series of plots for the movie
+    j=0
+    previous_output = kwargs['output_file']
+    for i in np.linspace(0, 1, num=kwargs['n_frames'],endpoint=False):
+        kwargs['slice'] = i
+        kwargs['output_file'] = ('.'+previous_output.split('.')[1] + '_frame_' + str(j).zfill(3) + '.png')
+        print('Creating ' + kwargs['output_file']+ " with $\\theta = $ {:.5f}".format(
+            theta[int(nx2*kwargs['slice'])]))
+            
+        
+        # Create scalar grid
+        if kwargs['midplane']:
+            r_grid, phi_grid = np.meshgrid(r_face, phi_face)
+            x_grid = r_grid * np.cos(phi_grid)*np.sin(theta[int(nx2*kwargs['slice'])])
+            y_grid = r_grid * np.sin(phi_grid)*np.sin(theta[int(nx2*kwargs['slice'])])
+        else:
+            theta_face_extended = np.concatenate((theta_face, 2.0*np.pi - theta_face[-2::-1]))
+            r_grid, theta_grid = np.meshgrid(r_face, theta_face_extended)
+            x_grid = r_grid * np.sin(theta_grid)
+            y_grid = r_grid * np.cos(theta_grid)
+        # Perform slicing/averaging of scalar data
+        if kwargs['midplane']:
+            if nx2 % 2 == 0:
+                vals = np.mean(quantity[:, int(nx2*kwargs['slice']-1):int(nx2*kwargs['slice']+1), :], axis=1)
+            else:
+                vals = quantity[:, int(nx2*kwargs['slice']), :]
+            if kwargs['average']:
+                vals = np.repeat(np.mean(vals, axis=0, keepdims=True), nx3, axis=0)
+        else:
+            if kwargs['average']:
+                vals_right = np.mean(quantity, axis=0)
+                vals_left = vals_right
+            else:
+                vals_right = 0.5 * (quantity[-1, :, :] + quantity[0, :, :])
+                vals_left = 0.5 * (quantity[(nx3//2)-1, :, :]
+                                + quantity[nx3//2, :, :])
+
+        # Join scalar data through boundaries
+        if not kwargs['midplane']:
+            vals = np.vstack((vals_right, vals_left[::-1, :]))
+
+        # Perform slicing/averaging of vector data
+        if kwargs['stream'] is not None:
+            if kwargs['midplane']:
+                if nx2 % 2 == 0:
+                    vals_r = np.mean(data[kwargs['stream'] + '1']
+                                    [:, int(nx2*kwargs['slice']-1):int(nx2*kwargs['slice']+1), :], axis=1).T
+                    vals_phi = np.mean(data[kwargs['stream'] + '3']
+                                    [:, int(nx2*kwargs['slice']-1):int(nx2*kwargs['slice']+1), :], axis=1).T
+                else:
+                    vals_r = data[kwargs['stream'] + '1'][:, int(nx2*kwargs['slice']), :].T
+                    vals_phi = data[kwargs['stream'] + '3'][:, int(nx2*kwargs['slice']), :].T
+                if kwargs['stream_average']:
+                    vals_r = np.tile(np.reshape(np.mean(vals_r, axis=1), (nx1, 1)), nx3)
+                    vals_phi = np.tile(np.reshape(np.mean(vals_phi, axis=1), (nx1, 1)), nx3)
+            else:
+                if kwargs['stream_average']:
+                    vals_r_right = np.mean(data[kwargs['stream'] + '1'], axis=0).T
+                    vals_r_left = vals_r_right
+                    vals_theta_right = np.mean(data[kwargs['stream'] + '2'], axis=0).T
+                    vals_theta_left = -vals_theta_right
+                else:
+                    vals_r_right = data[kwargs['stream'] + '1'][0, :, :].T
+                    vals_r_left = data[kwargs['stream'] + '1'][nx3//2, :, :].T
+                    vals_theta_right = data[kwargs['stream'] + '2'][0, :, :].T
+                    vals_theta_left = -data[kwargs['stream'] + '2'][nx3//2, :, :].T
+
+        # Join vector data through boundaries
+        if kwargs['stream'] is not None:
+            if kwargs['midplane']:
+                vals_r = np.hstack((vals_r[:, -1:], vals_r, vals_r[:, :1]))
+                vals_r = map_coordinates(vals_r, (r_grid_stream_pix, phi_grid_stream_pix),
+                                        order=1, cval=np.nan)
+                vals_phi = np.hstack((vals_phi[:, -1:], vals_phi, vals_phi[:, :1]))
+                vals_phi = map_coordinates(vals_phi, (r_grid_stream_pix, phi_grid_stream_pix),
+                                        order=1, cval=np.nan)
+            else:
+                vals_r = np.hstack((vals_r_left[:, :1], vals_r_right, vals_r_left[:, ::-1],
+                                    vals_r_right[:, :1]))
+                vals_r = map_coordinates(vals_r, (r_grid_stream_pix, theta_grid_stream_pix),
+                                        order=1, cval=np.nan)
+                vals_theta = np.hstack((vals_theta_left[:, :1], vals_theta_right,
+                                        vals_theta_left[:, ::-1], vals_theta_right[:, :1]))
+                vals_theta = map_coordinates(vals_theta,
+                                            (r_grid_stream_pix, theta_grid_stream_pix),
+                                            order=1, cval=np.nan)
+
+        # Transform vector data to Cartesian components
+        if kwargs['stream'] is not None:
+            if kwargs['logr']:
+                r_vals = 10.0**r_grid_stream_coord
+                logr_vals = r_grid_stream_coord
+            else:
+                r_vals = r_grid_stream_coord
+            if kwargs['midplane']:
+                sin_phi = np.sin(phi_grid_stream_coord)
+                cos_phi = np.cos(phi_grid_stream_coord)
+                if kwargs['logr']:
+                    dx_dr = 1.0 / (np.log(10.0) * r_vals) * cos_phi
+                    dy_dr = 1.0 / (np.log(10.0) * r_vals) * sin_phi
+                    dx_dphi = -logr_vals * sin_phi
+                    dy_dphi = logr_vals * cos_phi
+                else:
+                    dx_dr = cos_phi
+                    dy_dr = sin_phi
+                    dx_dphi = -r_vals * sin_phi
+                    dy_dphi = r_vals * cos_phi
+                if not (coordinates == 'schwarzschild' or coordinates == 'kerr-schild'):
+                    dx_dphi /= r_vals
+                    dy_dphi /= r_vals
+                vals_x = dx_dr * vals_r + dx_dphi * vals_phi
+                vals_y = dy_dr * vals_r + dy_dphi * vals_phi
+            else:
+                sin_theta = np.sin(theta_grid_stream_coord)
+                cos_theta = np.cos(theta_grid_stream_coord)
+                if kwargs['logr']:
+                    dx_dr = 1.0 / (np.log(10.0) * r_vals) * sin_theta
+                    dz_dr = 1.0 / (np.log(10.0) * r_vals) * cos_theta
+                    dx_dtheta = logr_vals * cos_theta
+                    dz_dtheta = -logr_vals * sin_theta
+                else:
+                    dx_dr = sin_theta
+                    dz_dr = cos_theta
+                    dx_dtheta = r_vals * cos_theta
+                    dz_dtheta = -r_vals * sin_theta
+                if not (coordinates == 'schwarzschild' or coordinates == 'kerr-schild'):
+                    dx_dtheta /= r_vals
+                    dz_dtheta /= r_vals
+                vals_x = dx_dr * vals_r + dx_dtheta * vals_theta
+                vals_z = dz_dr * vals_r + dz_dtheta * vals_theta
+
+        # Determine colormapping properties
+        cmap = plt.get_cmap(kwargs['colormap'])
+        vmin = kwargs['vmin']
+        vmax = kwargs['vmax']
+        if kwargs['logc']:
+            norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+        else:
+            norm = colors.Normalize(vmin=vmin, vmax=vmax)
+
+        # Make plot
+        plt.figure()
+        im = plt.pcolormesh(x_grid, y_grid, vals, cmap=cmap, norm=norm)
+        if kwargs['stream'] is not None:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    'ignore',
+                    'invalid value encountered in greater_equal',
+                    RuntimeWarning,
+                    'numpy')
+                if kwargs['midplane']:
+                    plt.streamplot(x_stream, y_stream, vals_x.T, vals_y.T,
+                                density=kwargs['stream_density'], color='k')
+                else:
+                    plt.streamplot(x_stream, z_stream, vals_x.T, vals_z.T,
+                                density=kwargs['stream_density'], color='k')
+        plt.gca().set_aspect('equal')
+        plt.xlim((-r_max, r_max))
+        plt.ylim((-r_max, r_max))
+        if kwargs['logr']:
+            if kwargs['midplane']:
+                plt.xlabel(r'$\log_{10}(r)\ x / r$')
+                plt.ylabel(r'$\log_{10}(r)\ y / r$')
+            else:
+                plt.xlabel(r'$\log_{10}(r)\ x / r$')
+                plt.ylabel(r'$\log_{10}(r)\ z / r$')
+        else:
+            if kwargs['midplane']:
+                plt.xlabel(r'$x$')
+                plt.ylabel(r'$y$')
+            else:
+                plt.xlabel(r'$x$')
+                plt.ylabel(r'$z$')
+        plt.colorbar(im)
+        if kwargs['midplane'] and not kwargs['average']:
+            plt.title(kwargs['quantity'] + " midplane at $\\theta = $ {:.5f}".format(
+                theta[int(nx2*kwargs['slice'])]))
+        elif not kwargs['midplane'] and not kwargs['average']:
+            plt.title(kwargs['quantity'] + ' vertical slice at $\\phi = 0$')
+        elif kwargs['midplane'] and kwargs['average']:
+            plt.title(kwargs['quantity'] + ' midplane, $\\theta$-averaged')
+        else:
+            plt.title(kwargs['quantity'] + ' vertical slice, $\\phi$-averaged')
+        
+        if kwargs['output_file'] == 'show':
+            plt.show()
+        else:
+            plt.savefig(kwargs['output_file'], bbox_inches='tight')
+        j+=1
+
+def main(**kwargs):
+    if kwargs['movie']:
+        if not kwargs['midplane']:
+            raise NotImplementedError('movie option only implemented for midplane plots')
+        # Create a series of plots for the movie
+        plot_movie(**kwargs)
+    else:
+        plot_spherical(**kwargs)
 
 # Execute main function
 if __name__ == '__main__':
@@ -363,10 +702,21 @@ if __name__ == '__main__':
                         help='flag indicating phi-averaging should be done')
     parser.add_argument('-l',
                         '--level',
-                        type=int,
+                        type=float,
                         default=None,
                         help=('refinement level to be used in plotting (default: max '
                               'level in file)'))
+    parser.add_argument('--slice',
+                        type=float,
+                        default=0.5,
+                        help=('index of slice to be plotted (default: middle slice). note its only implemented for midplane plots and for the upper hemisphere'))
+    parser.add_argument('--movie',
+                        action='store_true',
+                        help='flag indicating that multiple plots should be made for a movie')
+    parser.add_argument('--n_frames',
+                        type=int,
+                        default=10,
+                        help='number of frames to make for movie (default: 10)')
     parser.add_argument('-r', '--r_max',
                         type=float,
                         default=None,
