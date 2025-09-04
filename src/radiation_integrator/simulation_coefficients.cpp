@@ -300,8 +300,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
         //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
-        double n_e_cgs = n_cgs / (1.0 + 1.0 / plasma_ne_ni);
-        double n_i_cgs = n_cgs - n_e_cgs;
+        double n_e_cgs = n_cgs*plasma_ne_ni;
+        double n_i_cgs = n_cgs;
 
         // Calculate simulation metric
         CovariantSimulationMetric(x1, x2, x3, gcov_sim);
@@ -369,10 +369,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
           double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
-          /*std::ofstream kTFile;
-          kTFile.open("./kTOutput.txt", std::ios_base::app);
-          kTFile<<kb_tt_tot_cgs<<std::endl;
-          kTFile.close();*/
 
           kb_tt_e_cgs = kb_tt_tot_cgs;
           
@@ -492,7 +488,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           // Calculate orthonormal-frame frequencies
           double nu_cgs = 0.0;
           for (int mu = 0; mu < 4; mu++)
-            nu_cgs -= kcov[mu] * ucon[mu];
+            nu_cgs -= kcov[mu] * ucon[mu];//this gives the fluid frame frequency
           nu_cgs *= image_frequencies(l) * momentum_factors[adaptive_level](m);
           double nu_2_cgs = nu_cgs * nu_cgs;
           double nu_c_cgs = Physics::e * bb_cgs / (2.0 * Math::pi * Physics::m_e * Physics::c);
@@ -591,19 +587,30 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //Calculate thermal free-free emissivities (Rybicki & Lightman, eqn 5.14a)
           if (plasma_thermal_frac != 0.0 and image_free_free)
           {
-           double partA = 32.0*Math::pi*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
+           double partA = 16.0*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
 
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)*gaunt_factor;
+
+           double tempx1 = sample_pos[adaptive_level](m,n,1);
+           double tempx2 = sample_pos[adaptive_level](m,n,2);
+           double tempx3 = sample_pos[adaptive_level](m,n,3);
+           ConvertFromCKS(&tempx1, &tempx2, &tempx3);
+           std::ofstream kTFile;
+           kTFile.open("./fullkTOutput.csv", std::ios_base::app);
+           kTFile<<tempx1<<","<<tempx2<<","<<tempx3<<","<<kb_tt_e_cgs<<","<<nu_cgs<<","<<std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)<<","<<coefficient<<std::endl;
+           kTFile.close();
+
+           
             if (image_light or image_emission or image_emission_ave)
-              j_i[adaptive_level](l,m,n) = coefficient;
+              j_i[adaptive_level](l,m,n) += coefficient;
 
             if (image_light and image_polarization)
             {
               //assume that there's no polarizational bremsstrahlung
-              j_q[adaptive_level](l,m,n) = 0.0;
-              j_v[adaptive_level](l,m,n) = 0.0;
+              j_q[adaptive_level](l,m,n) += 0.0;
+              j_v[adaptive_level](l,m,n) += 0.0;
             }
           }
 
@@ -618,11 +625,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
             
             if (image_light or image_emission or image_emission_ave)
-            alpha_i[adaptive_level](l,m,n) = coefficient;
+            alpha_i[adaptive_level](l,m,n) += coefficient;
             if (image_light and image_polarization)
             {
-              alpha_q[adaptive_level](l,m,n) = 0.0;
-              alpha_v[adaptive_level](l,m,n) = 0.0;
+              alpha_q[adaptive_level](l,m,n) += 0.0;
+              alpha_v[adaptive_level](l,m,n) += 0.0;
             }
 
             // Account for numerical issues later arising from absorptivities being too small
@@ -631,11 +638,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
                 and 1.0 / (alpha_i[adaptive_level](l,m,n) * alpha_i[adaptive_level](l,m,n))
                 == std::numeric_limits<double>::infinity())
             {
-              alpha_i[adaptive_level](l,m,n) = 0.0;
+              alpha_i[adaptive_level](l,m,n) += 0.0;
               if (image_light and image_polarization)
               {
-                alpha_q[adaptive_level](l,m,n) = 0.0;
-                alpha_v[adaptive_level](l,m,n) = 0.0;
+                alpha_q[adaptive_level](l,m,n) += 0.0;
+                alpha_v[adaptive_level](l,m,n) += 0.0;
               }
             }
           }
