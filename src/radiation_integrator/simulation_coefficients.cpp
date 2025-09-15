@@ -238,13 +238,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
   // Calculate units
   double d_unit = simulation_rho_cgs;
   double v_unit = simulation_v_cgs;
-  //TEGAN:
-  //for some reason simulation_v_cgs isn't loading correctly, so I just explicitly put it in for e_unit
-  //need to fix it though
-  std::cout<<"v0: "<<v_unit<<std::endl;
-  std::cout<<"d unit: "<<d_unit<<std::endl;
-  double e_unit = d_unit * Physics::c * Physics::c * 0.0005*0.0005;
-  std::cout<<"e unit: "<<e_unit<<std::endl;
+  double e_unit = d_unit * Physics::c * Physics::c * v_unit*v_unit;
 
   double b_unit = std::sqrt(4.0 * Math::pi * e_unit);
   if(plasma_model==PlasmaModel::one_temp)
@@ -593,14 +587,14 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)*gaunt_factor;
 
-           double tempx1 = sample_pos[adaptive_level](m,n,1);
+           /*double tempx1 = sample_pos[adaptive_level](m,n,1);
            double tempx2 = sample_pos[adaptive_level](m,n,2);
            double tempx3 = sample_pos[adaptive_level](m,n,3);
            ConvertFromCKS(&tempx1, &tempx2, &tempx3);
            std::ofstream kTFile;
-           kTFile.open("./fullkTOutput.csv", std::ios_base::app);
-           kTFile<<tempx1<<","<<tempx2<<","<<tempx3<<","<<kb_tt_e_cgs<<","<<nu_cgs<<","<<std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)<<","<<coefficient<<std::endl;
-           kTFile.close();
+           kTFile.open("./medianVSmean.csv", std::ios_base::app);
+           kTFile<<kb_tt_e_cgs<<","<<nu_cgs<<","<<coefficient<<std::endl;
+           kTFile.close();*/
 
            
             if (image_light or image_emission or image_emission_ave)
