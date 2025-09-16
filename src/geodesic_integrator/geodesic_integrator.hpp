@@ -46,6 +46,7 @@ struct GeodesicIntegrator
   double camera_k_ph;
   double camera_rotation;
   double camera_width;
+  double simulation_r_rg;
   int camera_resolution;
   bool camera_pole;
 

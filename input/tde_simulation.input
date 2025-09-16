@@ -17,18 +17,19 @@ checkpoint_sample_load   = false  # flag indicating simulation sampling should b
 simulation_format       = athena           # format of GRMHD data
 simulation_file         = data/tdestream.out1.00600.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
-simulation_coord        = sks              # simulation coordinates (sks, cks)
+simulation_coord        = sks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
 simulation_m_msun       = 3.0e6          # black hole mass in solar masses
 simulation_rho_cgs      = 1.0e-8          # unit code density in g/cm^3
 simulation_v_cgs        = 5.0e-4             # unit code v0
+simulation_r_rg         = 2.0              # flag indicating the simulation r units relative to r_g. what this effectively does is move the camera out to r=camera_r*simulation_r_rg
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 
 
 # Camera parameters
 camera_type       = plane  # type of camera (plane, pinhole)
-camera_r          = 100.0   # KS radial coordinate r in gravitational units
+camera_r          = 100.0  # KS radial coordinate r in gravitational units
 camera_th         = 45.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity

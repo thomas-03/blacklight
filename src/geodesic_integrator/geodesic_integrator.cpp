@@ -47,6 +47,11 @@ GeodesicIntegrator::GeodesicIntegrator(const InputReader *p_input_reader)
   camera_rotation = p_input_reader->camera_rotation.value();
   camera_width = p_input_reader->camera_width.value();
   camera_resolution = p_input_reader->camera_resolution.value();
+  simulation_r_rg = p_input_reader->simulation_r_rg.value();
+
+  //scale the camera position properly for simulation data
+  camera_r *= simulation_r_rg;
+  
   if (camera_resolution <= 0)
     throw BlacklightException("Must have positive camera_resolution.");
   camera_pole = p_input_reader->camera_pole.value();

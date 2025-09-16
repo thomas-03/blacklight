@@ -21,7 +21,8 @@ def get_flux(**kwargs):
   c = 2.99792458e10
   gg_msun = 1.32712440018e26
   pc = 9.69394202136e18 / np.pi
-  jy = 1.0e-23
+  #jy = 1.0e-23
+  eV = 1.60218e-12
   data_format = np.float64
 
   # Prepare metadata
@@ -116,30 +117,7 @@ def get_flux(**kwargs):
             i_nu = f[key_i][:]
             image_adaptive[level] = np.copy(i_nu[:,:,:,:])
 
-  # Read image data from .npy file
-  elif kwargs['filename_data'][-4:] == '.npy':
-    if kwargs['frequency_num'] is not None and kwargs['frequency_num'] != 1:
-      raise RuntimeError('File type only supports single frequency.')
-    image = np.load(kwargs['filename_data'])
-    polarization = image.shape[0] == 4
-    max_level = 0
-
-  # Read image data from raw file
-  else:
-    if kwargs['frequency_num'] is not None and kwargs['frequency_num'] != 1:
-      raise RuntimeError('File type only supports single frequency.')
-    image = np.fromfile(kwargs['filename_data'], dtype=data_format)
-    pix_num = len(image)
-    pix_res = int(pix_num ** 0.5)
-    if pix_res ** 2 == pix_num:
-      pass
-    elif (pix_res + 1) ** 2 == pix_num:
-      pix_res += 1
-    else:
-      raise RuntimeError('Image data not square.')
-    image = np.reshape(image, (1, pix_res, pix_res))
-    polarization = False
-    max_level = 0
+  
 
   # Calculate image size
   if distance is None:
@@ -158,7 +136,16 @@ def get_flux(**kwargs):
   if max_level == 0:
     nan_found = np.any(np.isnan(image))
     for freq in range(len(frequencies)):
-      flux = np.append(flux, np.nanmean(image[freq,:,:]) * width ** 2 / jy)
+      #this is in ergs cm^-2 s^-1 Hz^-1
+      #print(image[freq,:,:])
+      tempImage = np.copy(image[freq,:,:])
+      #I'm artifically setting a floor to the intensity 
+      #tempImage[tempImage<1e-22]=1e-22
+      print("frequency: "+frequencies[freq].__format__('.3e'))
+      print(np.max(tempImage[~np.isnan(tempImage)]))
+      print((width**2/eV).__format__('.2e'))
+      print(np.average(tempImage[~np.isnan(tempImage)]).__format__('.2e'))
+      flux = np.append(flux, (np.nanmean(tempImage) * width ** 2)/eV)
       #print(flux.shape)
 
   # Calculate flux with adaptive refinement
@@ -211,7 +198,8 @@ def get_flux(**kwargs):
           if np.any(np.isnan(image_adaptive[level][:,block,:,:])):
             nan_found = True
           flux += np.nanmean(image_adaptive[level][:,block,:,:], axis=(1,2)) * block_width ** 2
-    flux /= jy
+    flux /= eV
+    
 
   # Report results
   print('')
@@ -221,15 +209,15 @@ def get_flux(**kwargs):
   if multiple_frequencies:
     for freq in range(len(frequencies)):
       print('frequency: {0}'.format(frequencies[freq]))
-      print('F_nu = {0} Jy'.format(repr(flux[freq])))
+      print('F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[freq])))
   else:
     if polarization:
-      print('I: F_nu = {0} Jy'.format(repr(flux[0])))
-      print('Q: F_nu = {0} Jy'.format(repr(flux[1])))
-      print('U: F_nu = {0} Jy'.format(repr(flux[2])))
-      print('V: F_nu = {0} Jy'.format(repr(flux[3])))
+      print('I: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[0])))
+      print('Q: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[1])))
+      print('U: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[2])))
+      print('V: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[3])))
     else:
-      print('F_nu = {0} Jy'.format(repr(flux[0])))
+      print('F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[0])))
   print('')
   return flux, frequencies
 
@@ -237,15 +225,15 @@ def get_flux(**kwargs):
 def main(**kwargs):
   flux, frequencies = get_flux(**kwargs)
   plt.plot(frequencies,frequencies*flux)
-  plt.plot(frequencies, (10**22.5)*frequencies**3, label=r"$(10^{22.5})*\nu^3$")
-  plt.plot(frequencies, frequencies*1e45*np.exp(-frequencies*h/(2e-7)), label=r"$10^{45}*e^{-\nu/(2*10^{-7})}$")
-  plt.plot(frequencies, frequencies*1e45*np.exp(-frequencies*h/(2e-11)), label=r"$10^{45}*e^{-\nu/(2*10^{-11})}$")
+  #plt.plot(frequencies, (10**10)*frequencies**3, label=r"$(10^{22.5})*\nu^3$")
+  #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-7)), label=r"$10^{45}*e^{-\nu/(2*10^{-7})}$")
+  #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-11)), label=r"$10^{45}*e^{-\nu/(2*10^{-11})}$")
   plt.xscale('log')
-  plt.ylim(1e39, 1e70)
+  plt.ylim(1e5, 1e21)
   plt.yscale('log')
   plt.xlabel('Frequency (Hz)')
-  plt.ylabel('$\\nu$ Flux (Hz*Jy)')
-  plt.title('Flux vs Frequency')
+  plt.ylabel('$\\nu F_\\nu (erg cm^-2 s^-1)$ ')
+  plt.title('Flux vs Frequency with mean intensity used for flux calc')
   plt.legend()
   plt.grid()
   plt.show()

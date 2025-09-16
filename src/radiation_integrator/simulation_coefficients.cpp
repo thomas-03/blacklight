@@ -598,7 +598,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
            
             if (image_light or image_emission or image_emission_ave)
-              j_i[adaptive_level](l,m,n) += coefficient;
+              j_i[adaptive_level](l,m,n) += coefficient/(nu_cgs*nu_cgs);
 
             if (image_light and image_polarization)
             {
@@ -619,7 +619,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
             
             if (image_light or image_emission or image_emission_ave)
-            alpha_i[adaptive_level](l,m,n) += coefficient;
+            alpha_i[adaptive_level](l,m,n) += coefficient*nu_cgs;
             if (image_light and image_polarization)
             {
               alpha_q[adaptive_level](l,m,n) += 0.0;
