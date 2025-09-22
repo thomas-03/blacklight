@@ -127,7 +127,7 @@ def get_flux(**kwargs):
   if width_rg is None:
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
-  width = 2.0 * np.arctan(0.5 * width_rg * rg / (distance))
+  width = 2.0 * np.arctan(0.5 * width_rg / (distance))
 
   # Prepare flag for NaN values
   nan_found = False
@@ -232,8 +232,8 @@ def main(**kwargs):
   plt.ylim(1e5, 1e21)
   plt.yscale('log')
   plt.xlabel('Frequency (Hz)')
-  plt.ylabel('$\\nu F_\\nu (erg cm^-2 s^-1)$ ')
-  plt.title('Flux vs Frequency with mean intensity used for flux calc')
+  plt.ylabel('$\\nu F_\\nu (erg cm^{-2} s^{-1})$ ')
+  plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
   plt.show()
@@ -243,7 +243,7 @@ def main(**kwargs):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('filename_data', help='name of file containing raw image data')
-  parser.add_argument('-d', '--distance', type=float, help='distance to black hole in parsecs')
+  parser.add_argument('-d', '--distance', type=float, help='distance to black hole in gravitational radii')
   parser.add_argument('-m', '--mass', type=float, help='black hole mass in solar masses')
   parser.add_argument('-w', '--width', type=float,
       help='full width of image in gravitational radii')
