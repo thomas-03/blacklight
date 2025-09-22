@@ -297,6 +297,21 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
 
+        // properly scale velocities
+        uu1_sim *=v_unit;
+        uu2_sim *=v_unit;
+        uu3_sim *=v_unit;
+
+        //properly scale magnetic field
+        bb1_sim *=std::sqrt(4.0*Math::pi*d_unit)*v_unit;
+        bb2_sim *=std::sqrt(4.0*Math::pi*d_unit)*v_unit;
+        bb3_sim *=std::sqrt(4.0*Math::pi*d_unit)*v_unit;
+
+        if(uu1_sim>=1 or uu2_sim>=1 or uu3_sim>=1){
+          std::cout<<"Warning: you have a fluid velocity >= c in your simulation data. This is unphysical and will likely cause NaNs in the output. uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
+        }
+
+
         // Calculate simulation metric
         CovariantSimulationMetric(x1, x2, x3, gcov_sim);
         ContravariantSimulationMetric(x1, x2, x3, gcon_sim);
@@ -363,8 +378,22 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
           double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+          if(kb_tt_tot_cgs >= 1e7*Physics::k_b){
+            //std::cout<<"Warning: your one_temp electron temperature is exceeding 10^7 K. It reached "<<kb_tt_tot_cgs/Physics::k_b<<" K. \n"<<std::endl;
 
+            /*double tempx1 = sample_pos[adaptive_level](m,n,1);
+            double tempx2 = sample_pos[adaptive_level](m,n,2);
+            double tempx3 = sample_pos[adaptive_level](m,n,3);
+            ConvertFromCKS(&tempx1, &tempx2, &tempx3);*/
+            /*std::ofstream kTFile;
+            kTFile.open("./debugOutput/findHighTemp.csv", std::ios_base::app);
+            kTFile<<kb_tt_tot_cgs/Physics::k_b<<std::endl;
+            kTFile.close();*/
+            kb_tt_tot_cgs=1e7*Physics::k_b;
+          }
+          
           kb_tt_e_cgs = kb_tt_tot_cgs;
+          
           
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
         }
