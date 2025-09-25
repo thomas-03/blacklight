@@ -60,6 +60,7 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
     simulation_m_msun = p_input_reader->simulation_m_msun.value();
     simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
     simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
+    simulation_r_rg = p_input_reader->simulation_r_rg.value();
   }
 
   // Copy slow-light parameters

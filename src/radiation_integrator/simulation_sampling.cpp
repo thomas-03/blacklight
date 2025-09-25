@@ -47,6 +47,14 @@ void RadiationIntegrator::ObtainGridData()
   x2v = p_simulation_reader->x2v;
   x3v = p_simulation_reader->x3v;
 
+  for(int j=0;j<x1f.n1;j++){
+    for(int i=0;i<x1f.n2;i++){
+      std::cout<<"x1f: "<<x1f(i,j)<<"\n";
+      std::cout<<"x1v: "<<x1v(i,j)<<"\n";
+    }
+  }
+  
+
   // Copy time
   time = p_simulation_reader->time;
 
