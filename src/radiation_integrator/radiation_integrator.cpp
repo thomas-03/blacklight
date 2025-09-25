@@ -59,6 +59,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     simulation_m_msun = p_input_reader->simulation_m_msun.value();
     simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
     simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
+    simulation_r_rg = p_input_reader->simulation_r_rg.value();
     simulation_interp = p_input_reader->simulation_interp.value();
     if ((simulation_format == SimulationFormat::athena
         or simulation_format == SimulationFormat::athenak) and simulation_interp)

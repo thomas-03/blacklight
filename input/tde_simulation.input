@@ -22,7 +22,7 @@ simulation_a            = 0.0              # dimensionless black hole spin
 simulation_m_msun       = 3.0e6          # black hole mass in solar masses
 simulation_rho_cgs      = 1.0e-8          # unit code density in g/cm^3
 simulation_v_cgs        = 5.0e-4             # unit code v0
-simulation_r_rg         = 1.0              # flag indicating the simulation r units relative to r_g. what this effectively does is move the camera out to r=camera_r*simulation_r_rg
+simulation_r_rg         = 2.0              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 

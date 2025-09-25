@@ -47,6 +47,7 @@ void RadiationIntegrator::ObtainGridData()
   x2v = p_simulation_reader->x2v;
   x3v = p_simulation_reader->x3v;
 
+
   // Copy time
   time = p_simulation_reader->time;
 

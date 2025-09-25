@@ -289,6 +289,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double bb2_sim = sample_bb2[adaptive_level](m,n);
         double bb3_sim = sample_bb3[adaptive_level](m,n);
 
+        //scale model velocities appropriately
+        uu1_sim *= v_unit;
+        uu2_sim *= v_unit;
+        uu3_sim *= v_unit;
+
         // Calculate densities and pressures
         double rho_cgs = rho * d_unit;
         double pgas_cgs = pgas * e_unit;

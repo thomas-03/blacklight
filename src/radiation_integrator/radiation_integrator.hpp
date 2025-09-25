@@ -41,6 +41,7 @@ struct RadiationIntegrator
   double simulation_m_msun;
   double simulation_rho_cgs;
   double simulation_v_cgs;
+  double simulation_r_rg;
   bool simulation_interp;
   bool simulation_block_interp;
 
