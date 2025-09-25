@@ -620,6 +620,13 @@ double SimulationReader::Read(int snapshot)
         ReadHDF5FloatArray("x1v", x1v);
         ReadHDF5FloatArray("x2v", x2v);
         ReadHDF5FloatArray("x3v", x3v);
+        for(int j=0;j<x1f.n1;j++){
+          for(int i=0;i<x1f.n2;i++){
+            x1f(i,j) = simulation_r_rg*x1f(i,j);
+            x1v(i,j) = simulation_r_rg*x1v(i,j);
+          }
+        }
+  
       }
       else if (simulation_format == SimulationFormat::iharm3d)
       {
