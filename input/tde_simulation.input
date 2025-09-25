@@ -4,7 +4,7 @@ num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/r400_rayfalse_plane_correctv_tde.npz  # file to be (over)written with output data
+output_file   = output/r800_rayfalse_plane_correctvnr_tde1335.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -15,7 +15,7 @@ checkpoint_sample_load   = false  # flag indicating simulation sampling should b
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = data/tdestream.out1.00600.athdf  # file containing data dump
+simulation_file         = data/tdestream.out1.01335.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = sks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
@@ -29,7 +29,7 @@ simulation_block_interp = false            # flag indicating interpolation shoul
 
 # Camera parameters
 camera_type       = plane  # type of camera (plane, pinhole)
-camera_r          = 400.0  # KS radial coordinate r in gravitational units
+camera_r          = 800.0  # KS radial coordinate r in gravitational units
 camera_th         = 45.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity

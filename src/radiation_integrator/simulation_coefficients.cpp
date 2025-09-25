@@ -385,10 +385,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             double tempx2 = sample_pos[adaptive_level](m,n,2);
             double tempx3 = sample_pos[adaptive_level](m,n,3);
             ConvertFromCKS(&tempx1, &tempx2, &tempx3);*/
-            std::ofstream kTFile;
+            /*std::ofstream kTFile;
             kTFile.open("./debugOutput/findNewHighTemp.csv", std::ios_base::app);
             kTFile<<kb_tt_tot_cgs/Physics::k_b<<std::endl;
-            kTFile.close();
+            kTFile.close();*/
             //kb_tt_tot_cgs=1e7*Physics::k_b;
           }
           
