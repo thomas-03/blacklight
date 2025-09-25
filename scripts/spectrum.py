@@ -209,15 +209,15 @@ def get_flux(**kwargs):
   if multiple_frequencies:
     for freq in range(len(frequencies)):
       print('frequency: {0}'.format(frequencies[freq]))
-      print('F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[freq])))
+      print('F_nu = {0} eV cm^-2 s^-1 Hz^-1'.format(repr(flux[freq])))
   else:
     if polarization:
-      print('I: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[0])))
-      print('Q: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[1])))
-      print('U: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[2])))
-      print('V: F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[3])))
+      print('I: F_nu = {0} eV cm^-2 s^-1 Hz^-1'.format(repr(flux[0])))
+      print('Q: F_nu = {0} eV cm^-2 s^-1 Hz^-1'.format(repr(flux[1])))
+      print('U: F_nu = {0} eV cm^-2 s^-1 Hz^-1'.format(repr(flux[2])))
+      print('V: F_nu = {0} eV cm^-2 s^-1 Hz^-1'.format(repr(flux[3])))
     else:
-      print('F_nu = {0} erg cm^-2 s^-1 Hz^-1'.format(repr(flux[0])))
+      print('F_nu = {0} eV cm^-2 s^-1 Hz^-1'.format(repr(flux[0])))
   print('')
   return flux, frequencies
 
@@ -229,10 +229,10 @@ def main(**kwargs):
   #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-7)), label=r"$10^{45}*e^{-\nu/(2*10^{-7})}$")
   #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-11)), label=r"$10^{45}*e^{-\nu/(2*10^{-11})}$")
   plt.xscale('log')
-  plt.ylim(1e5, 1e21)
+  plt.ylim(1e5, 1e25)
   plt.yscale('log')
   plt.xlabel('Frequency (Hz)')
-  plt.ylabel('$\\nu F_\\nu (erg cm^{-2} s^{-1})$ ')
+  plt.ylabel('$\\nu F_\\nu (eV cm^{-2} s^{-1})$ ')
   plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
