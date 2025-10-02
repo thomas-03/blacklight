@@ -224,7 +224,7 @@ def main(**kwargs):
   gg_msun = 1.32712440018e26
   rg = gg_msun * kwargs['mass'] / c ** 2
   if kwargs['multiInc']:
-    for i in range(len(kwargs['inclinations'])):
+    for i in range(len(kwargs['inclination'])):
       file = kwargs['files'][i]
       kwargs['filename_data'] = file
       flux, frequencies = get_flux(**kwargs)
@@ -240,9 +240,9 @@ def main(**kwargs):
         else:
           print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
         print('')
-        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclinations'][i])+' deg')
+        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclination'][i])+' deg')
       else:
-        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclinations'][i])+' deg')
+        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclination'][i])+' deg')
     if kwargs['luminosity']:
       shaneResults = np.loadtxt('./spec.txt')
       plt.plot(shaneResults[:,0],shaneResults[:,1],label='MC Results')
@@ -306,8 +306,7 @@ if __name__ == '__main__':
       help='maximum adaptive level to use in calculation')
   parser.add_argument('--luminosity',type=bool,default=False,help='if true, plot luminosity instead of flux')
   parser.add_argument('--multiInc',type=bool,default=False,help='if true, plot multiple inclinations on one plot')
-  parser.add_argument('--inclinations',nargs='+',help='list of inclinations to plot if multiInc is true',type=float)
   parser.add_argument('--files',nargs='+',help='list of files to process',type=str)
-  parser.add_argument('--inclination',type=float,default=0.0,help='inclination of image (degrees)')
+  parser.add_argument('--inclination',nargs='+',type=float,default=0.0,help='inclination of image (degrees)')
   args = parser.parse_args()
   main(**vars(args))
