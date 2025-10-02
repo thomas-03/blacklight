@@ -140,12 +140,8 @@ def get_flux(**kwargs):
       #print(image[freq,:,:])
       tempImage = np.copy(image[freq,:,:])
       #I'm artifically setting a floor to the intensity 
-      #tempImage[tempImage<1e-22]=1e-22
-      print("frequency: "+frequencies[freq].__format__('.3e'))
-      print(np.max(tempImage[~np.isnan(tempImage)]))
-      print((width**2/eV).__format__('.2e'))
-      print(np.average(tempImage[~np.isnan(tempImage)]).__format__('.2e'))
-      flux = np.append(flux, (np.nanmean(tempImage) * width ** 2)/eV)
+      #tempImage[tempImage<1e-22]=1e-2
+      flux = np.append(flux, (np.nanmean(tempImage) * width ** 2))
       #print(flux.shape)
 
   # Calculate flux with adaptive refinement
@@ -223,17 +219,74 @@ def get_flux(**kwargs):
 
 
 def main(**kwargs):
-  flux, frequencies = get_flux(**kwargs)
-  plt.plot(frequencies,frequencies*flux)
-  #plt.plot(frequencies, (10**10)*frequencies**3, label=r"$(10^{22.5})*\nu^3$")
-  #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-7)), label=r"$10^{45}*e^{-\nu/(2*10^{-7})}$")
-  #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-11)), label=r"$10^{45}*e^{-\nu/(2*10^{-11})}$")
-  plt.xscale('log')
-  plt.ylim(1e5, 1e25)
-  plt.yscale('log')
-  plt.xlabel('Frequency (Hz)')
-  plt.ylabel('$\\nu F_\\nu (eV cm^{-2} s^{-1})$ ')
-  plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
+
+  c = 2.99792458e10
+  gg_msun = 1.32712440018e26
+  rg = gg_msun * kwargs['mass'] / c ** 2
+  if kwargs['multiInc']:
+    for i in range(len(kwargs['inclinations'])):
+      file = kwargs['files'][i]
+      kwargs['filename_data'] = file
+      flux, frequencies = get_flux(**kwargs)
+      if kwargs['luminosity']:
+        #convert flux to luminosity
+        distance_cm = (kwargs['distance']*rg)
+        flux = flux*4*np.pi*distance_cm**2
+        print('Luminosity:')
+        if len(flux)>1:
+          for freq in range(len(frequencies)):
+            print('frequency: {0}'.format(frequencies[freq]))
+            print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[freq])))
+        else:
+          print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
+        print('')
+        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclinations'][i])+' deg')
+      else:
+        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclinations'][i])+' deg')
+    if kwargs['luminosity']:
+      shaneResults = np.loadtxt('./spec.txt')
+      plt.plot(shaneResults[:,0],shaneResults[:,1],label='MC Results')
+      plt.xscale('log')
+      plt.ylim(1e30, 1e50)
+      plt.yscale('log')
+      plt.xlabel('Frequency (Hz)')
+      plt.ylabel('$\\nu L_\\nu (erg cm^{-2} s^{-1})$ ')
+      plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
+  else:
+    flux, frequencies = get_flux(**kwargs)
+    if kwargs['luminosity']:
+      #convert flux to luminosity
+      distance_cm = (kwargs['distance']*rg)
+      thetaWidth = (np.cos(np.radians(kwargs['inclination'])-np.arctan(2*kwargs['width']/kwargs['distance']))-np.cos(np.radians(kwargs['inclination'])+np.arctan(2*kwargs['width']/kwargs['distance'])))
+      flux = (flux*4*np.pi*distance_cm**2)/(thetaWidth*np.arctan(2*kwargs['width']/kwargs['distance']))
+      print('Luminosity:')
+      if len(flux)>1:
+        for freq in range(len(frequencies)):
+          print('frequency: {0}'.format(frequencies[freq]))
+          print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[freq])))
+      else:
+        print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
+      print('')
+      plt.plot(frequencies,frequencies*flux)
+      shaneResults = np.loadtxt('./spec.txt')
+      plt.plot(shaneResults[:,0],shaneResults[:,1],label='MC Results')
+      plt.xscale('log')
+      plt.ylim(1e30, 1e50)
+      plt.yscale('log')
+      plt.xlabel('Frequency (Hz)')
+      plt.ylabel('$\\nu L_\\nu (erg cm^{-2} s^{-1})$ ')
+      plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
+    else:
+      plt.plot(frequencies,frequencies*flux)
+      #plt.plot(frequencies, (10**10)*frequencies**3, label=r"$(10^{22.5})*\nu^3$")
+      #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-7)), label=r"$10^{45}*e^{-\nu/(2*10^{-7})}$")
+      #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-11)), label=r"$10^{45}*e^{-\nu/(2*10^{-11})}$")
+      plt.xscale('log')
+      plt.ylim(1e5, 1e25)
+      plt.yscale('log')
+      plt.xlabel('Frequency (Hz)')
+      plt.ylabel('$\\nu F_\\nu (eV cm^{-2} s^{-1})$ ')
+      plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
   plt.show()
@@ -251,5 +304,10 @@ if __name__ == '__main__':
       help='index (1-indexed) of frequency to use if multiple present')
   parser.add_argument('-l', '--max_level', type=int,
       help='maximum adaptive level to use in calculation')
+  parser.add_argument('--luminosity',type=bool,default=False,help='if true, plot luminosity instead of flux')
+  parser.add_argument('--multiInc',type=bool,default=False,help='if true, plot multiple inclinations on one plot')
+  parser.add_argument('--inclinations',nargs='+',help='list of inclinations to plot if multiInc is true',type=float)
+  parser.add_argument('--files',nargs='+',help='list of files to process',type=str)
+  parser.add_argument('--inclination',type=float,default=0.0,help='inclination of image (degrees)')
   args = parser.parse_args()
   main(**vars(args))
