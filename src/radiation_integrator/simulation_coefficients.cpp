@@ -377,20 +377,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         {
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
-          double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
-          if(kb_tt_tot_cgs >= 1e7*Physics::k_b){
-            //std::cout<<"Warning: your one_temp electron temperature is exceeding 10^7 K. It reached "<<kb_tt_tot_cgs/Physics::k_b<<" K. \n"<<std::endl;
-
-            /*double tempx1 = sample_pos[adaptive_level](m,n,1);
-            double tempx2 = sample_pos[adaptive_level](m,n,2);
-            double tempx3 = sample_pos[adaptive_level](m,n,3);
-            ConvertFromCKS(&tempx1, &tempx2, &tempx3);*/
-            /*std::ofstream kTFile;
-            kTFile.open("./debugOutput/findNewHighTemp.csv", std::ios_base::app);
-            kTFile<<kb_tt_tot_cgs/Physics::k_b<<std::endl;
-            kTFile.close();*/
-            //kb_tt_tot_cgs=1e7*Physics::k_b;
-          }
+          double kb_tt_tot_cgs = 6.553e+06*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+          
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
           
