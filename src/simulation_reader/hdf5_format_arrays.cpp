@@ -666,6 +666,18 @@ void SimulationReader::SetHDF5DoubleArray(const unsigned char *datatype_raw,
         or static_cast<unsigned long int>(double_array.n1) != dims[1]
         or static_cast<unsigned int>(double_array.n_tot) != num_elements)
       throw BlacklightException("Array dimension mismatch.");
+  }else if (num_dims == 5)
+  {
+    if (not double_array.allocated)
+      double_array.Allocate(static_cast<int>(dims[0]), static_cast<int>(dims[1]),
+          static_cast<int>(dims[2]), static_cast<int>(dims[3]), static_cast<int>(dims[4]));
+    else if (static_cast<unsigned long int>(double_array.n5) != dims[0]
+        or static_cast<unsigned long int>(double_array.n4) != dims[1]
+        or static_cast<unsigned long int>(double_array.n3) != dims[2]
+        or static_cast<unsigned long int>(double_array.n2) != dims[3]
+        or static_cast<unsigned long int>(double_array.n1) != dims[4]
+        or static_cast<unsigned int>(double_array.n_tot) != num_elements)
+      throw BlacklightException("Array dimension mismatch.");
   }
   else
     throw BlacklightException("Unexpected HDF5 floating-point array size.");
@@ -686,7 +698,7 @@ void SimulationReader::SetHDF5DoubleArray(const unsigned char *datatype_raw,
   }
   delete[] buffer;
   }
-  else if(num_dims==2)
+  else if(num_dims>=2)
   {
     // Work in parallel
   

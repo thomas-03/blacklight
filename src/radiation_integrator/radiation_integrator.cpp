@@ -711,6 +711,7 @@ bool RadiationIntegrator::Integrate(int snapshot, double *p_time_sample, double 
     else if (slow_light_on)
       CalculateSimulationSampling(snapshot);
     SampleSimulation();
+    //std::printf("example sample rho: %e\n", sample_rho[0](0,0));
     time_sample_end = omp_get_wtime();
   }
 

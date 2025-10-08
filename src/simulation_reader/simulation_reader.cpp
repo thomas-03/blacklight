@@ -822,10 +822,29 @@ double SimulationReader::Read(int snapshot)
       }
       Array<float> hydro(prim[n]);
       hydro.Slice(5, 0, num_variables(ind_hydro) - 1);
-      ReadHDF5FloatArray("prim", hydro);
+      Array<double> hydro_double(hydro.n5, hydro.n4, hydro.n3, hydro.n2, hydro.n1);
+      ReadHDF5DoubleArray("prim", hydro_double);
+      #pragma omp parallel for schedule(static) collapse(4)
+      for (int n_variable = 0; n_variable < hydro.n5; n_variable++)
+        for (int k = 0; k < hydro.n4; k++)
+          for (int j = 0; j < hydro.n3; j++)
+            for (int i = 0; i < hydro.n2; i++)
+              hydro(n_variable,k,j,i) = static_cast<float>(hydro_double(n_variable,k,j,i));
+      //std::printf("hydro double vs single: %e , %e\n", hydro_double(0,0,0,0,0), hydro(0,0,0,0,0));
+      //
+      //ReadHDF5FloatArray("prim", hydro);
       Array<float> bb(prim[n]);
       bb.Slice(5, num_variables(ind_hydro), num_variables(ind_hydro) + num_variables(ind_bb) - 1);
-      ReadHDF5FloatArray("B", bb);
+      Array<double> bb_double(bb.n5, bb.n4, bb.n3, bb.n2, bb.n1);
+      ReadHDF5DoubleArray("B", bb_double);
+      #pragma omp parallel for schedule(static) collapse(4)
+      for (int n_variable = 0; n_variable < bb.n5; n_variable++)
+        for (int k = 0; k < bb.n4; k++)
+          for (int j = 0; j < bb.n3; j++)
+            for (int i = 0; i < bb.n2; i++)
+              bb(n_variable,k,j,i) = static_cast<float>(bb_double(n_variable,k,j,i));
+      //
+      //ReadHDF5FloatArray("B", bb);
     }
     else if (simulation_format == SimulationFormat::iharm3d)
     {
