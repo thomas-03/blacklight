@@ -253,7 +253,8 @@ double SimulationReader::Read(int snapshot)
       if (simulation_format == SimulationFormat::athena)
       {
         float time_temp;
-        ReadHDF5FloatAttribute("Time", &time_temp);
+        time_temp=1367;
+        //ReadHDF5FloatAttribute("Time", &time_temp);
         latest_time = time_temp;
       }
       else if (simulation_format == SimulationFormat::athenak)
@@ -348,7 +349,8 @@ double SimulationReader::Read(int snapshot)
     if (simulation_format == SimulationFormat::athena)
     {
       float time_temp;
-      ReadHDF5FloatAttribute("Time", &time_temp);
+      time_temp=1367;
+      //ReadHDF5FloatAttribute("Time", &time_temp);
       time[n] = time_temp;
     }
     else if (simulation_format == SimulationFormat::athenak)

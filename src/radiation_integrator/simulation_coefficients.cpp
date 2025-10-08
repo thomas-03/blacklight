@@ -311,7 +311,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           std::cout<<"Warning: you have a fluid velocity >= c in your simulation data. This is unphysical and will likely cause NaNs in the output. uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
         }
 
-
         // Calculate simulation metric
         CovariantSimulationMetric(x1, x2, x3, gcov_sim);
         ContravariantSimulationMetric(x1, x2, x3, gcon_sim);
@@ -377,7 +376,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         {
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
-          double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+          double kb_tt_tot_cgs = 6.553e6*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
           if(kb_tt_tot_cgs >= 1e7*Physics::k_b){
             //std::cout<<"Warning: your one_temp electron temperature is exceeding 10^7 K. It reached "<<kb_tt_tot_cgs/Physics::k_b<<" K. \n"<<std::endl;
 
@@ -396,6 +395,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           
           
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
+
         }
 
         // Calculate electron temperature for given electron entropy (E2 13)
