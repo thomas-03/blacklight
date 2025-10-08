@@ -145,6 +145,7 @@ void SimulationReader::ReadHDF5DoubleArray(const char *name, Array<double> &doub
 
   // Set array
   SetHDF5DoubleArray(datatype_raw, dataspace_raw, data_raw, double_array);
+  std::printf("  Read %d double cells\n", double_array.n1);
   delete[] datatype_raw;
   delete[] dataspace_raw;
   delete[] data_raw;
@@ -570,6 +571,7 @@ void SimulationReader::SetHDF5FloatArray(const unsigned char *datatype_raw,
           std::memcpy(buffer + size - 1 - m, data_raw + n * size + m, 1);
       else
         std::memcpy(buffer, data_raw + n * size, size);
+        //TEGAN: why is the float array function that this is in so strict about the size if we go from double to float anyways??
       double_array(n) = static_cast<double>(*reinterpret_cast<float *>(buffer));
     }
 
@@ -647,19 +649,28 @@ void SimulationReader::SetHDF5DoubleArray(const unsigned char *datatype_raw,
   unsigned int num_elements = 1;
   for (int n = 0; n < num_dims; n++)
     num_elements *= static_cast<unsigned int>(dims[n]);
+  //std::printf("Reading num_dims = %d with %u elements\n", num_dims, num_elements);
 
   // Allocate array
+  //TEGAN: why did we previously enforce that this had to be simply 0D array?? 
   if (num_dims == 0)
   {
     if (not double_array.allocated)
       double_array.Allocate(1);
     else if (static_cast<unsigned int>(double_array.n_tot) != num_elements)
       throw BlacklightException("Array dimension mismatch.");
+  }else if(num_dims ==2){
+    if (not double_array.allocated)
+      double_array.Allocate(static_cast<int>(dims[0]), static_cast<int>(dims[1]));
+    else if (static_cast<unsigned long int>(double_array.n2) != dims[0]
+        or static_cast<unsigned long int>(double_array.n1) != dims[1]
+        or static_cast<unsigned int>(double_array.n_tot) != num_elements)
+      throw BlacklightException("Array dimension mismatch.");
   }
   else
     throw BlacklightException("Unexpected HDF5 floating-point array size.");
   delete[] dims;
-
+  if(num_dims==0){
   // Allocate buffer
   char *buffer = new char[size];
 
@@ -673,8 +684,35 @@ void SimulationReader::SetHDF5DoubleArray(const unsigned char *datatype_raw,
       std::memcpy(buffer, data_raw + n * size, size);
     double_array(n) = *reinterpret_cast<double *>(buffer);
   }
+  delete[] buffer;
+  }
+  else if(num_dims==2)
+  {
+    // Work in parallel
+  
+  #pragma omp parallel
+  {
+    // Allocate buffer
+    char *buffer = new char[size];
+
+    // Initialize array
+    #pragma omp for schedule(static)
+    for (unsigned int n = 0; n < num_elements; n++)
+    {
+      if (rev_endian)
+        for (unsigned int m = 0; m < size; m++)
+          std::memcpy(buffer + size - 1 - m, data_raw + n * size + m, 1);
+      else
+        std::memcpy(buffer, data_raw + n * size, size);
+      double_array(n) = static_cast<double>(*reinterpret_cast<float *>(buffer));
+    }
+
+    // Free buffer
+    delete[] buffer;
+  }
+}
 
   // Free buffer
-  delete[] buffer;
+  //delete[] buffer;
   return;
 }

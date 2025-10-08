@@ -393,6 +393,8 @@ void SimulationReader::ReadHDF5FloatAttribute(const char *attribute_name, float 
       if (name == attribute_name)
       {
         attribute_found = true;
+        //std::printf("Found attribute %s\n", attribute_name);
+        //std::printf("  Name is %s\n", name.c_str());
         Array<float> attribute;
         SetHDF5FloatArray(datatype_raw, dataspace_raw, message_data + offset, attribute);
         *p_val = attribute(0);

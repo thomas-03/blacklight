@@ -252,9 +252,11 @@ double SimulationReader::Read(int snapshot)
       // Read time
       if (simulation_format == SimulationFormat::athena)
       {
+        std::printf("Reading time for file %s\n", simulation_file_formatted.c_str());
         float time_temp;
         ReadHDF5FloatAttribute("Time", &time_temp);
         latest_time = time_temp;
+        std::printf("  Time is %f\n", latest_time);
       }
       else if (simulation_format == SimulationFormat::athenak)
         latest_time = athenak_time;
@@ -347,9 +349,13 @@ double SimulationReader::Read(int snapshot)
     // Read time
     if (simulation_format == SimulationFormat::athena)
     {
+
+      std::printf("Reading time for file %s\n", simulation_file_formatted.c_str());
       float time_temp;
-      ReadHDF5FloatAttribute("Time", &time_temp);
+      //ReadHDF5FloatAttribute("Time", &time_temp);
+      time_temp = 1637.0;
       time[n] = time_temp;
+      std::printf("  Time is %f\n", time[n]);
     }
     else if (simulation_format == SimulationFormat::athenak)
       time[n] = athenak_time;
@@ -614,12 +620,45 @@ double SimulationReader::Read(int snapshot)
     {
       if (simulation_format == SimulationFormat::athena)
       {
-        ReadHDF5FloatArray("x1f", x1f);
-        ReadHDF5FloatArray("x2f", x2f);
-        ReadHDF5FloatArray("x3f", x3f);
-        ReadHDF5FloatArray("x1v", x1v);
-        ReadHDF5FloatArray("x2v", x2v);
-        ReadHDF5FloatArray("x3v", x3v);
+        std::printf("Reading coordinates for file %s\n", simulation_file_formatted.c_str());
+        /*Array<double> x1fa, x2fa, x3fa, x1va, x2va, x3va;
+        ReadHDF5DoubleArray("x1f", x1fa);
+        std::printf("  Read %d x1f cells\n", x1fa.n2);
+        ReadHDF5DoubleArray("x2f", x2fa);
+        ReadHDF5DoubleArray("x3f", x3fa);
+        ReadHDF5DoubleArray("x1v", x1va);
+        ReadHDF5DoubleArray("x2v", x2va);
+        ReadHDF5DoubleArray("x3v", x3va);
+        std::printf("  Read %d x1 cells, %d x2 cells, %d x3 cells\n", x1va.n2, x2va.n2,
+            x3va.n2);
+        for(int j=0;j<x1fa.n1;j++){
+          for(int i=0;i<x1fa.n2;i++){
+            x1f(i,j) = static_cast<float>(x1fa(i,j));
+            x1v(i,j) = static_cast<float>(x1va(i,j));
+          }
+        }
+        for(int j=0;j<x2fa.n1;j++){
+          for(int i=0;i<x2fa.n2;i++){
+            x2f(i,j) = static_cast<float>(x2fa(i,j));
+            x2v(i,j) = static_cast<float>(x2va(i,j));
+          }
+        }
+        for(int j=0;j<x3fa.n1;j++){
+          for(int i=0;i<x3fa.n2;i++){
+            x3f(i,j) = static_cast<float>(x3fa(i,j));
+            x3v(i,j) = static_cast<float>(x3va(i,j));
+          }
+        }
+        std::printf("  Converted coordinates to single precision\n");*/
+        //TEGAN: make a choice within the input file whether to read as float or double
+        ReadHDF5DoubleArray("x1f", x1f);
+        ReadHDF5DoubleArray("x2f", x2f);
+        ReadHDF5DoubleArray("x3f", x3f);
+        ReadHDF5DoubleArray("x1v", x1v);
+        ReadHDF5DoubleArray("x2v", x2v);
+        ReadHDF5DoubleArray("x3v", x3v);
+        std::printf("  Read %d x1f cells, %d x2f cells, %d x3f cells\n", x1f.n2, x2f.n2,
+            x3f.n2);
         for(int j=0;j<x1f.n1;j++){
           for(int i=0;i<x1f.n2;i++){
             x1f(i,j) = simulation_r_rg*x1f(i,j);
