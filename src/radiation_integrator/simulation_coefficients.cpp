@@ -298,6 +298,12 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double rho_cgs = rho * d_unit;
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
+
+        /*double heabund = 0.09;
+        double nh = rho_cgs/Physics::m_p*(1+4*heabund);
+        double nhe = heabund*nh;
+        double n_i_cgs = nh + 4*nhe;
+        double n_e_cgs = nh + 2*nhe;*/
         //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
@@ -376,22 +382,14 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         {
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
-          double kb_tt_tot_cgs = 6.553e6*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
-          if(kb_tt_tot_cgs >= 1e7*Physics::k_b){
-            //std::cout<<"Warning: your one_temp electron temperature is exceeding 10^7 K. It reached "<<kb_tt_tot_cgs/Physics::k_b<<" K. \n"<<std::endl;
+          //double kb_tt_tot_cgs = Physics::k_b*6.553e6*pgas/ rho;
+          //kb_tt_e_cgs = 2* kb_tt_tot_cgs / (0.667);
 
-            /*double tempx1 = sample_pos[adaptive_level](m,n,1);
-            double tempx2 = sample_pos[adaptive_level](m,n,2);
-            double tempx3 = sample_pos[adaptive_level](m,n,3);
-            ConvertFromCKS(&tempx1, &tempx2, &tempx3);*/
-            /*std::ofstream kTFile;
-            kTFile.open("./debugOutput/findNewHighTemp.csv", std::ios_base::app);
-            kTFile<<kb_tt_tot_cgs/Physics::k_b<<std::endl;
-            kTFile.close();*/
-            //kb_tt_tot_cgs=1e7*Physics::k_b;
-          }
-          
+          double kb_tt_tot_cgs = 6.553e6*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
           kb_tt_e_cgs = kb_tt_tot_cgs;
+          //when I have it just the typical blacklight way, the temperatures are way too low
+          //when I have it based off of the MC, the temperatures are way too high and I get a really broad peak
+          //when I do 6.553e6*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs, the temperatures are too high still as well
           
           
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);

@@ -12,9 +12,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.constants as cons
 import astropy.units as u
-h=cons.h.cgs.value
 
 
+h_ev = 4.135667662e-15
 def get_flux(**kwargs):
 
   # Parameters
@@ -143,6 +143,7 @@ def get_flux(**kwargs):
       #tempImage[tempImage<1e-22]=1e-2
       flux = np.append(flux, (np.nanmean(tempImage) * width ** 2))
       #print(flux.shape)
+    flux /= eV
 
   # Calculate flux with adaptive refinement
   else:
@@ -244,13 +245,12 @@ def main(**kwargs):
       else:
         plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclination'][i])+' deg')
     if kwargs['luminosity']:
-      shaneResults = np.loadtxt('./spec.txt')
+      shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
       plt.plot(shaneResults[:,0],shaneResults[:,1],label='MC Results')
       plt.xscale('log')
-      plt.ylim(1e30, 1e50)
       plt.yscale('log')
       plt.xlabel('Frequency (Hz)')
-      plt.ylabel('$\\nu L_\\nu (erg cm^{-2} s^{-1})$ ')
+      plt.ylabel('$\\nu L_\\nu (eV cm^{-2} s^{-1})$ ')
       plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
   else:
     flux, frequencies = get_flux(**kwargs)
@@ -267,14 +267,13 @@ def main(**kwargs):
       else:
         print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
       print('')
-      plt.plot(frequencies,frequencies*flux)
-      shaneResults = np.loadtxt('./spec.txt')
-      plt.plot(shaneResults[:,0],shaneResults[:,1],label='MC Results')
+      plt.plot(frequencies*h_ev,frequencies*flux)
+      shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
+      plt.plot(shaneResults[:,0]*1e3,shaneResults[:,1],label='MC Results')
       plt.xscale('log')
-      plt.ylim(1e30, 1e50)
       plt.yscale('log')
-      plt.xlabel('Frequency (Hz)')
-      plt.ylabel('$\\nu L_\\nu (erg cm^{-2} s^{-1})$ ')
+      plt.xlabel('Frequency (eV)')
+      plt.ylabel('$\\nu L_\\nu (eV cm^{-2} s^{-1})$ ')
       plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
     else:
       plt.plot(frequencies,frequencies*flux)

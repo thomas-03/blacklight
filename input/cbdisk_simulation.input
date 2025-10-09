@@ -20,7 +20,7 @@ simulation_file         = data/input.cbdisk.out1.01637_float32.athdf  # file con
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = sks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
-simulation_m_msun       = 3.0e6          # black hole mass in solar masses
+simulation_m_msun       = 2.0e7          # black hole mass in solar masses
 simulation_rho_cgs      = 1.543e-3          # unit code density in g/cm^3
 simulation_v_cgs        = 3.335e-08             # unit code v0
 simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
@@ -59,7 +59,7 @@ image_light           = true      # flag indicating real image of radiation shou
 image_num_frequencies   = 20       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 3.3e11    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3.3e25    # last frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 3.3e18    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
