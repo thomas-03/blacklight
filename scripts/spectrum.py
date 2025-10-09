@@ -15,6 +15,8 @@ import astropy.units as u
 
 
 h_ev = 4.135667662e-15
+eV = 1.60218e-12
+h_erg = 6.626e-27
 def get_flux(**kwargs):
 
   # Parameters
@@ -22,7 +24,6 @@ def get_flux(**kwargs):
   gg_msun = 1.32712440018e26
   pc = 9.69394202136e18 / np.pi
   #jy = 1.0e-23
-  eV = 1.60218e-12
   data_format = np.float64
 
   # Prepare metadata
@@ -143,7 +144,6 @@ def get_flux(**kwargs):
       #tempImage[tempImage<1e-22]=1e-2
       flux = np.append(flux, (np.nanmean(tempImage) * width ** 2))
       #print(flux.shape)
-    flux /= eV
 
   # Calculate flux with adaptive refinement
   else:
@@ -224,6 +224,7 @@ def main(**kwargs):
   c = 2.99792458e10
   gg_msun = 1.32712440018e26
   rg = gg_msun * kwargs['mass'] / c ** 2
+  rg /= 1.0e6
   if kwargs['multiInc']:
     for i in range(len(kwargs['inclination'])):
       file = kwargs['files'][i]
@@ -254,6 +255,7 @@ def main(**kwargs):
       plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
   else:
     flux, frequencies = get_flux(**kwargs)
+    plt.figure(figsize=(8,6))
     if kwargs['luminosity']:
       #convert flux to luminosity
       distance_cm = (kwargs['distance']*rg)
@@ -267,7 +269,8 @@ def main(**kwargs):
       else:
         print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
       print('')
-      plt.plot(frequencies*h_ev,frequencies*flux)
+      plt.plot(frequencies*h_ev,frequencies*flux/eV)
+      print(np.sum(flux/eV))
       shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
       plt.plot(shaneResults[:,0]*1e3,shaneResults[:,1],label='MC Results')
       plt.xscale('log')
