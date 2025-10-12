@@ -224,7 +224,6 @@ def main(**kwargs):
   c = 2.99792458e10
   gg_msun = 1.32712440018e26
   rg = gg_msun * kwargs['mass'] / c ** 2
-  rg /= 1.0e6
   if kwargs['multiInc']:
     for i in range(len(kwargs['inclination'])):
       file = kwargs['files'][i]
