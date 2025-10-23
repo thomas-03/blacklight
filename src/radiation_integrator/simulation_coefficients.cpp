@@ -298,6 +298,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double rho_cgs = rho * d_unit;
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
+
         //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
@@ -310,7 +311,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         if(uu1_sim>=1 or uu2_sim>=1 or uu3_sim>=1){
           std::cout<<"Warning: you have a fluid velocity >= c in your simulation data. This is unphysical and will likely cause NaNs in the output. uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
         }
-
 
         // Calculate simulation metric
         CovariantSimulationMetric(x1, x2, x3, gcov_sim);
@@ -377,13 +377,33 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         {
           //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
           //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
-          double kb_tt_tot_cgs = 6.553e+06*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
-          
+          //double kb_tt_tot_cgs = Physics::k_b*6.553e6*pgas/ rho;
+          //kb_tt_e_cgs = 2* kb_tt_tot_cgs / (0.667);
+          /*if(kb_tt_tot_cgs<Physics::k_b*8e3){
+            //std::printf("temperature lower than floor");
+            kb_tt_tot_cgs=Physics::k_b*8e3;
+          }*/
+
+          //double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+          //kb_tt_e_cgs = kb_tt_tot_cgs;
+
+          //tgas_cgs = 6.553e+06 
+          //gamma-1 is 0.666667
+          double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+          //(plasma_mu * Physics::m_p* e_unit/d_unit)/Physics::k_b is =5.444098e+06
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
           
+
+          //when I have it just the typical blacklight way, the temperatures are way too low
+          //when I have it based off of the MC, the temperatures are way too high and I get a really broad peak
+          //when I do 6.553e6*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs, the temperatures are too high still as well
+          //if I do 6.553e6*Physics::k_b*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs, the temperatures are too low
+          //changing the number density stuff doesn't seem to make any difference
+          
           
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
+
         }
 
         // Calculate electron temperature for given electron entropy (E2 13)
@@ -601,6 +621,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double partA = 16.0*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
+           //std::printf("j coeff cgs: %e\n", partA*partB*std::sqrt(kb_tt_e_cgs/Physics::k_b));
 
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)*gaunt_factor;
 
@@ -612,8 +633,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            kTFile.open("./medianVSmean.csv", std::ios_base::app);
            kTFile<<kb_tt_e_cgs<<","<<nu_cgs<<","<<coefficient<<std::endl;
            kTFile.close();*/
-
-           
             if (image_light or image_emission or image_emission_ave)
               j_i[adaptive_level](l,m,n) += coefficient/(nu_cgs*nu_cgs);
 
@@ -634,7 +653,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
            
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
-            
+
+            //std::printf("alpha coeff cgs: %e\n", partA*partB*std::sqrt(kb_tt_e_cgs/Physics::k_b));
             if (image_light or image_emission or image_emission_ave)
             alpha_i[adaptive_level](l,m,n) += coefficient*nu_cgs;
             if (image_light and image_polarization)

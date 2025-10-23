@@ -280,8 +280,10 @@ void SimulationReader::ReadHDF5RootObjectHeader()
 
   // Check that appropriate messages were found
   if (not (root_grid_size_found and dataset_names_found and variable_names_found
-      and num_variables_found))
-    throw BlacklightException("Could not find needed file-level attributes.");
+      and num_variables_found)){
+        std::printf("root_grid_size_found:%d  dataset_names_found: %d  variable_names_found: %d num_variables_found: %d \n ",root_grid_size_found,dataset_names_found,variable_names_found,num_variables_found);
+        throw BlacklightException("Could not find needed file-level attributes.");
+      }
   if (num_variables.n1 != num_dataset_names)
     throw BlacklightException("DatasetNames and NumVariables file-level attribute mismatch.");
 
@@ -392,6 +394,7 @@ void SimulationReader::ReadHDF5FloatAttribute(const char *attribute_name, float 
       // Read and set desired attributes
       if (name == attribute_name)
       {
+        std::printf("Found attribute %s\n",attribute_name);
         attribute_found = true;
         //std::printf("Found attribute %s\n", attribute_name);
         //std::printf("  Name is %s\n", name.c_str());

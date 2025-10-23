@@ -254,7 +254,8 @@ double SimulationReader::Read(int snapshot)
       {
         std::printf("Reading time for file %s\n", simulation_file_formatted.c_str());
         float time_temp;
-        ReadHDF5FloatAttribute("Time", &time_temp);
+        time_temp=1367;
+        //ReadHDF5FloatAttribute("Time", &time_temp);
         latest_time = time_temp;
         std::printf("  Time is %f\n", latest_time);
       }
@@ -352,8 +353,8 @@ double SimulationReader::Read(int snapshot)
 
       std::printf("Reading time for file %s\n", simulation_file_formatted.c_str());
       float time_temp;
+      time_temp=1367;
       //ReadHDF5FloatAttribute("Time", &time_temp);
-      time_temp = 1637.0;
       time[n] = time_temp;
       std::printf("  Time is %f\n", time[n]);
     }
