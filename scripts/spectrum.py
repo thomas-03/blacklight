@@ -24,6 +24,8 @@ def get_flux(**kwargs):
   gg_msun = 1.32712440018e26
   pc = 9.69394202136e18 / np.pi
   #jy = 1.0e-23
+  eV = 1.60218e-12
+  h = cons.h.cgs.value
   data_format = np.float64
 
   # Prepare metadata

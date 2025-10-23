@@ -53,6 +53,8 @@ void RadiationIntegrator::ObtainGridData()
 
   // Copy cell values
   grid_prim = p_simulation_reader->prim;
+  //TEGAN: the prints from this show that the grid_prim values are being copied correctly
+  //std::printf("example pgas value: %f\n", grid_prim(0,0,0,ind_pgas));
 
   // Copy indices
   ind_rho = p_simulation_reader->ind_rho;
@@ -64,6 +66,9 @@ void RadiationIntegrator::ObtainGridData()
   ind_bb1 = p_simulation_reader->ind_bb1;
   ind_bb2 = p_simulation_reader->ind_bb2;
   ind_bb3 = p_simulation_reader->ind_bb3;
+  std::printf("example pgas value: %f\n", grid_prim[0](0,0,0,ind_pgas));
+  std::printf("example uu1 value: %f\n", grid_prim[0](0,0,0,ind_uu1));
+  std::printf("example bb1 value: %f\n", grid_prim[0](0,0,0,ind_bb1));
 
   // Copy coordinate interpolation map
   sks_map_r_in = p_simulation_reader->sks_map_r_in;
@@ -75,6 +80,7 @@ void RadiationIntegrator::ObtainGridData()
 
   // Copy input plasma parameters (possibly modified after contructors called)
   plasma_gamma = p_simulation_reader->plasma_gamma;
+  //TEGAN: my plasma_gamma is 0 but idk if that's right or not since it doesn't seem to be defined for athena files
   plasma_gamma_i = p_simulation_reader->plasma_gamma_i;
   plasma_gamma_e = p_simulation_reader->plasma_gamma_e;
 
@@ -791,6 +797,7 @@ void RadiationIntegrator::SampleSimulation()
       else if (not ((simulation_format == SimulationFormat::athena
           or simulation_format == SimulationFormat::athenak) and simulation_block_interp))
       {
+        //TEGAN: this is the loop we're in
         // Extract indices and coefficients
         int b = sample_inds[adaptive_level](m,n,0);
         int k = sample_inds[adaptive_level](m,n,1);
@@ -806,6 +813,7 @@ void RadiationIntegrator::SampleSimulation()
         // Calculate values without temporal interpolation
         if (not (slow_light_on and slow_interp))
         {
+          //TEGAN: most specifically right here is where we should be looking
           // Perform spatial interpolation
           double rho = InterpolateSimple(grid_prim[t], ind_rho, b, k, j, i, f_k, f_j, f_i);
           double pgas = InterpolateSimple(grid_prim[t], ind_pgas, b, k, j, i, f_k, f_j, f_i);
@@ -822,11 +830,13 @@ void RadiationIntegrator::SampleSimulation()
           // Account for possible invalid values
           if (rho <= 0.0)
             rho = static_cast<double>(grid_prim[t](ind_rho,b,k,j,i));
-          if (pgas <= 0.0)
+          if (pgas <= 0.0){
+            //std::cout<<"bad pgas value at step "<<n<<" on ray "<<m<<" of value "<<pgas<<"\n";
             pgas = static_cast<double>(grid_prim[t](ind_pgas,b,k,j,i));
+          }
           if (plasma_model == PlasmaModel::code_kappa and kappa <= 0.0)
             kappa = static_cast<double>(grid_prim[t](ind_kappa,b,k,j,i));
-
+          //std::cout<<"pgas: "<<pgas<<" uu1: "<<uu1<<"\n";
           // Assign values
           sample_rho[adaptive_level](m,n) = static_cast<float>(rho);
           sample_pgas[adaptive_level](m,n) = static_cast<float>(pgas);
