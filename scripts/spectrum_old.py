@@ -12,11 +12,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.constants as cons
 import astropy.units as u
+h=cons.h.cgs.value
 
 
-h_ev = 4.135667662e-15
-eV = 1.60218e-12
-h_erg = 6.626e-27
 def get_flux(**kwargs):
 
   # Parameters
@@ -24,6 +22,7 @@ def get_flux(**kwargs):
   gg_msun = 1.32712440018e26
   pc = 9.69394202136e18 / np.pi
   #jy = 1.0e-23
+  eV = 1.60218e-12
   data_format = np.float64
 
   # Prepare metadata
@@ -128,7 +127,7 @@ def get_flux(**kwargs):
   if width_rg is None:
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
-  width = 2.0 * np.arctan(0.5*width_rg /(distance))
+  width = 2.0 * np.arctan(0.5 * width_rg / (distance))
 
   # Prepare flag for NaN values
   nan_found = False
@@ -137,12 +136,67 @@ def get_flux(**kwargs):
   if max_level == 0:
     nan_found = np.any(np.isnan(image))
     for freq in range(len(frequencies)):
-      #this is in erg cm^-2 s^-1 Hz^-1
+      #this is in ergs cm^-2 s^-1 Hz^-1
+      #print(image[freq,:,:])
       tempImage = np.copy(image[freq,:,:])
-      flux = np.append(flux, (np.nanmean(tempImage)* width ** 2))
+      #I'm artifically setting a floor to the intensity 
+      #tempImage[tempImage<1e-22]=1e-2
+      flux = np.append(flux, (np.nanmean(tempImage) * width ** 2))
       #print(flux.shape)
+
+  # Calculate flux with adaptive refinement
+  else:
+
+    # Disassemble root image into blocks
+    block_res = image_adaptive[1].shape[-1]
+    num_blocks_root_linear = image.shape[-1] / block_res
+    image_adaptive[0] = np.reshape(image,
+        (-1, num_blocks_root_linear, block_res, num_blocks_root_linear, block_res))
+    image_adaptive[0] = np.swapaxes(image_adaptive[0], 2, 3)
+    image_adaptive[0] = np.reshape(image_adaptive[0], (-1, num_blocks[0], block_res, block_res))
+
+    # Describe disassembled image locations
+    block_locs[0] = np.empty((num_blocks[0], 2), dtype=int)
+    for block in range(num_blocks[0]):
+      block_locs[0][block,1] = block % num_blocks_root_linear
+      block_locs[0][block,0] = block / num_blocks_root_linear
+
+    # Prepare flags indicating blocks to be counted
+    flags = {}
+    for level in range(max_level + 1):
+      flags[level] = [True] * num_blocks[level]
+
+    # Determine which blocks are masked by those at higher levels
+    for level in range(1, max_level + 1):
+      for block_fine in range(num_blocks[level]):
+        x_loc_fine = block_locs[level][block_fine,1]
+        y_loc_fine = block_locs[level][block_fine,0]
+        x_loc_coarse = x_loc_fine / 2
+        y_loc_coarse = y_loc_fine / 2
+        for block_coarse in range(num_blocks[level-1]):
+          x_loc_coarse_test = block_locs[level-1][block_coarse,1]
+          y_loc_coarse_test = block_locs[level-1][block_coarse,0]
+          if x_loc_coarse == x_loc_coarse_test and y_loc_coarse == y_loc_coarse_test:
+            flags[level-1][block_coarse] = False
+
+    # Prepare fluxes
+    if polarization:
+      flux = np.zeros(4)
+    else:
+      flux = np.zeros(1)
+
+    # Calculate flux from non-masked blocks
+    block_width_root = width / num_blocks_root_linear
+    for level in range(max_level + 1):
+      block_width = block_width_root / 2 ** level
+      for block in range(num_blocks[level]):
+        if flags[level][block]:
+          if np.any(np.isnan(image_adaptive[level][:,block,:,:])):
+            nan_found = True
+          flux += np.nanmean(image_adaptive[level][:,block,:,:], axis=(1,2)) * block_width ** 2
     
-  flux/=eV
+    
+
   # Report results
   print('')
   if nan_found:
@@ -168,11 +222,38 @@ def main(**kwargs):
 
   c = 2.99792458e10
   gg_msun = 1.32712440018e26
-  rg = gg_msun * kwargs['mass'] / (c ** 2)
-
-  if not kwargs['multiInc']:
+  rg = gg_msun * kwargs['mass'] / c ** 2
+  if kwargs['multiInc']:
+    for i in range(len(kwargs['inclinations'])):
+      file = kwargs['files'][i]
+      kwargs['filename_data'] = file
+      flux, frequencies = get_flux(**kwargs)
+      if kwargs['luminosity']:
+        #convert flux to luminosity
+        distance_cm = (kwargs['distance']*rg)
+        flux = flux*4*np.pi*distance_cm**2
+        print('Luminosity:')
+        if len(flux)>1:
+          for freq in range(len(frequencies)):
+            print('frequency: {0}'.format(frequencies[freq]))
+            print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[freq])))
+        else:
+          print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
+        print('')
+        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclinations'][i])+' deg')
+      else:
+        plt.plot(frequencies,frequencies*flux,label=str(kwargs['inclinations'][i])+' deg')
+    if kwargs['luminosity']:
+      shaneResults = np.loadtxt('./spec.txt')
+      plt.plot(shaneResults[:,0],shaneResults[:,1],label='MC Results')
+      plt.xscale('log')
+      plt.ylim(1e30, 1e50)
+      plt.yscale('log')
+      plt.xlabel('Frequency (Hz)')
+      plt.ylabel('$\\nu L_\\nu (erg cm^{-2} s^{-1})$ ')
+      plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
+  else:
     flux, frequencies = get_flux(**kwargs)
-    plt.figure(figsize=(8,6))
     if kwargs['luminosity']:
       #convert flux to luminosity
       distance_cm = (kwargs['distance']*rg)
@@ -186,16 +267,20 @@ def main(**kwargs):
       else:
         print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
       print('')
-      plt.plot(frequencies*h_ev,frequencies*flux*eV)
-      shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
-      plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
+      plt.plot(frequencies,frequencies*flux)
+      shaneResults = np.loadtxt('./spec.txt')
+      plt.plot(shaneResults[:,0],shaneResults[:,1],label='MC Results')
       plt.xscale('log')
+      plt.ylim(1e30, 1e50)
       plt.yscale('log')
-      plt.xlabel('Frequency (eV)')
-      plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
+      plt.xlabel('Frequency (Hz)')
+      plt.ylabel('$\\nu L_\\nu (erg cm^{-2} s^{-1})$ ')
       plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
     else:
       plt.plot(frequencies,frequencies*flux)
+      #plt.plot(frequencies, (10**10)*frequencies**3, label=r"$(10^{22.5})*\nu^3$")
+      #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-7)), label=r"$10^{45}*e^{-\nu/(2*10^{-7})}$")
+      #plt.plot(frequencies, frequencies*1e25*np.exp(-frequencies*h/(2e-11)), label=r"$10^{45}*e^{-\nu/(2*10^{-11})}$")
       plt.xscale('log')
       plt.ylim(1e5, 1e25)
       plt.yscale('log')
@@ -221,7 +306,8 @@ if __name__ == '__main__':
       help='maximum adaptive level to use in calculation')
   parser.add_argument('--luminosity',type=bool,default=False,help='if true, plot luminosity instead of flux')
   parser.add_argument('--multiInc',type=bool,default=False,help='if true, plot multiple inclinations on one plot')
+  parser.add_argument('--inclinations',nargs='+',help='list of inclinations to plot if multiInc is true',type=float)
   parser.add_argument('--files',nargs='+',help='list of files to process',type=str)
-  parser.add_argument('--inclination',nargs='+',type=float,default=0.0,help='inclination of image (degrees)')
+  parser.add_argument('--inclination',type=float,default=0.0,help='inclination of image (degrees)')
   args = parser.parse_args()
   main(**vars(args))
