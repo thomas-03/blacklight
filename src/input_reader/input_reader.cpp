@@ -149,8 +149,6 @@ int InputReader::Read()
       simulation_v_cgs = std::stod(val);
     else if (key == "simulation_r_rg")
       simulation_r_rg = std::stod(val);
-    else if (key == "simulation_opacities_enabled")
-      simulation_opacities_enabled = ReadBool(val);
     else if (key == "simulation_kappa_name")
       simulation_kappa_name = val;
     else if (key == "simulation_interp")
@@ -273,6 +271,12 @@ int InputReader::Read()
       image_scattering = ReadBool(val);
     else if (key == "image_synchrotron")
       image_synchrotron = ReadBool(val);
+    else if (key == "image_sim_opacities")
+      image_sim_opacities = ReadBool(val);
+    else if (key == "image_planck_mean")
+      image_planck_mean = ReadBool(val);
+    else if (key == "image_rosseland_mean")
+      image_rosseland_mean = ReadBool(val);
 
     // Store rendering parameters
     else if (key.compare(0, 7, "render_") == 0)

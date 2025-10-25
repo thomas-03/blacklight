@@ -53,7 +53,6 @@ struct InputReader
   std::optional<double> simulation_rho_cgs;
   std::optional<double> simulation_v_cgs;
   std::optional<double> simulation_r_rg;
-  std::optional<bool> simulation_opacities_enabled;
   std::optional<std::string> simulation_kappa_name;
   std::optional<bool> simulation_interp;
   std::optional<bool> simulation_block_interp;
@@ -120,6 +119,9 @@ struct InputReader
   std::optional<bool> image_free_free;
   std::optional<bool> image_scattering;
   std::optional<bool> image_synchrotron;
+  std::optional<bool> image_sim_opacities;
+  std::optional<bool> image_planck_mean;
+  std::optional<bool> image_rosseland_mean;
 
   // Data - rendering parameters
   std::optional<int> render_num_images;

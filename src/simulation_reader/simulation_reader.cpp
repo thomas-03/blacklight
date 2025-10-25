@@ -61,7 +61,7 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
     simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
     simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
     simulation_r_rg = p_input_reader->simulation_r_rg.value();
-    simulation_opacities_enabled = p_input_reader->simulation_opacities_enabled.value();
+    image_sim_opacities = p_input_reader->image_sim_opacities.value();
   }
 
   // Copy slow-light parameters
@@ -1203,7 +1203,7 @@ void SimulationReader::VerifyVariablesAthena()
   if (ind_uu3 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel3\" slice of \"prim\" in data file.");
   //TEGAN TO DO: put the actual variable name that the opacities would be under here.
-  if (simulation_opacities_enabled){
+  if (image_sim_opacities){
     for (ind_sigma_s = prim_offset; ind_sigma_s < prim_offset + num_variables(ind_hydro); ind_sigma_s++)
       if (variable_names[ind_sigma_s] == "sigma"){
         break;

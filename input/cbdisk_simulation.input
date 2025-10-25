@@ -24,7 +24,6 @@ simulation_m_msun       = 2.0e7          # black hole mass in solar masses
 simulation_rho_cgs      = 1.543e-3          # unit code density in g/cm^3
 simulation_v_cgs        = 0.001             # unit code v0
 simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
-simulation_opacities_enabled = false
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 
@@ -77,6 +76,7 @@ image_crossings       = false     # flag for counting plane crossings of geodesi
 image_free_free       = true  # flag for specifying whether to include free-free emission terms
 image_scattering      = false     # flag for specifying whether to include compton scattering
 image_synchrotron     = false
+image_opacities_enabled = false
 
 # Rendering parameters
 render_num_images = 0  # number of false-color renderings
