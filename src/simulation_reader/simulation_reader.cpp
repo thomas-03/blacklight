@@ -1153,7 +1153,9 @@ void SimulationReader::VerifyVariablesAthena()
 {
   // Check that array of all primitives is present
   int prim_offset = 0;
-  
+  for (int i=0; i < num_variable_names; i++){
+    std::cout << "Variable name " << i << ": " << variable_names[i] << std::endl;
+  }
   for (ind_hydro = 0; ind_hydro < num_dataset_names; ind_hydro++)
     if (dataset_names[ind_hydro] == "prim")
       break;

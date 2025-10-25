@@ -66,9 +66,6 @@ void RadiationIntegrator::ObtainGridData()
   ind_bb1 = p_simulation_reader->ind_bb1;
   ind_bb2 = p_simulation_reader->ind_bb2;
   ind_bb3 = p_simulation_reader->ind_bb3;
-  std::printf("example pgas value: %f\n", grid_prim[0](0,0,0,ind_pgas));
-  std::printf("example uu1 value: %f\n", grid_prim[0](0,0,0,ind_uu1));
-  std::printf("example bb1 value: %f\n", grid_prim[0](0,0,0,ind_bb1));
 
   // Copy coordinate interpolation map
   sks_map_r_in = p_simulation_reader->sks_map_r_in;
