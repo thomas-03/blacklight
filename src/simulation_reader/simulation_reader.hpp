@@ -42,6 +42,7 @@ struct SimulationReader
   double simulation_rho_cgs;
   double simulation_v_cgs;
   double simulation_r_rg;
+  bool simulation_opacities_enabled;
   std::string simulation_kappa_name;
 
   // Input data - slow-light parameters
@@ -96,7 +97,7 @@ struct SimulationReader
   int ind_rho, ind_pgas, ind_kappa;
   int ind_u0, ind_uu1, ind_uu2, ind_uu3;
   int ind_b0, ind_bb1, ind_bb2, ind_bb3;
-  int ind_rad;
+  int ind_sigma_s, ind_sigma_a;
   int num_arrays;
   int latest_file_number;
   const double extrapolation_tolerance = 1.0;

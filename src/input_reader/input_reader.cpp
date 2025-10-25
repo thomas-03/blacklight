@@ -149,6 +149,8 @@ int InputReader::Read()
       simulation_v_cgs = std::stod(val);
     else if (key == "simulation_r_rg")
       simulation_r_rg = std::stod(val);
+    else if (key == "simulation_opacities_enabled")
+      simulation_opacities_enabled = ReadBool(val);
     else if (key == "simulation_kappa_name")
       simulation_kappa_name = val;
     else if (key == "simulation_interp")

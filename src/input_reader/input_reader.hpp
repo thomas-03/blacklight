@@ -53,6 +53,7 @@ struct InputReader
   std::optional<double> simulation_rho_cgs;
   std::optional<double> simulation_v_cgs;
   std::optional<double> simulation_r_rg;
+  std::optional<bool> simulation_opacities_enabled;
   std::optional<std::string> simulation_kappa_name;
   std::optional<bool> simulation_interp;
   std::optional<bool> simulation_block_interp;

@@ -61,6 +61,7 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
     simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
     simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
     simulation_r_rg = p_input_reader->simulation_r_rg.value();
+    simulation_opacities_enabled = p_input_reader->simulation_opacities_enabled.value();
   }
 
   // Copy slow-light parameters
@@ -772,6 +773,7 @@ double SimulationReader::Read(int snapshot)
     // Read cell data
     if (simulation_format == SimulationFormat::athena)
     {
+      //TEGAN: here's where we read in data from athena files 
       if (first_time)
       {
         VerifyVariablesAthena();
@@ -1153,6 +1155,7 @@ void SimulationReader::VerifyVariablesAthena()
 {
   // Check that array of all primitives is present
   int prim_offset = 0;
+  //TEGAN: printing variable names
   for (int i=0; i < num_variable_names; i++){
     std::cout << "Variable name " << i << ": " << variable_names[i] << std::endl;
   }
@@ -1199,10 +1202,22 @@ void SimulationReader::VerifyVariablesAthena()
       break;
   if (ind_uu3 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel3\" slice of \"prim\" in data file.");
-  //TEGAN TO DO: put the actual variable name that the kappas would be under here. 
-  /*for (ind_rad = prim_offset; ind_rad < prim_offset + num_variables(ind_hydro); ind_rad++)
-    if (variable_names[ind_rad] == "vel4")
-      break;*/
+  //TEGAN TO DO: put the actual variable name that the opacities would be under here.
+  if (simulation_opacities_enabled){
+    for (ind_sigma_s = prim_offset; ind_sigma_s < prim_offset + num_variables(ind_hydro); ind_sigma_s++)
+      if (variable_names[ind_sigma_s] == "sigma"){
+        break;
+      }
+    if (ind_sigma_s == num_variables(ind_hydro))
+      throw BlacklightException("Unable to locate \"sigma\" slice of \"prim\" in data file.");
+
+    for (ind_sigma_a = prim_offset; ind_sigma_a < prim_offset + num_variables(ind_hydro); ind_sigma_a++)
+      if (variable_names[ind_sigma_a] == "sigma"){
+        break;
+      }
+    if (ind_sigma_a == num_variables(ind_hydro))
+      throw BlacklightException("Unable to locate \"sigma\" slice of \"prim\" in data file.");
+  }
 
   // Check that array of all magnetic field components is present
   int bb_offset = 0;
