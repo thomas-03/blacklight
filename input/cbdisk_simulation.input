@@ -4,7 +4,7 @@ num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/r1600_w800_pinhole_cbdisk_inc45_ph90.npz  # file to be (over)written with output data
+output_file   = output/r1600_w800_pinhole_cbdisk_inc0.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -31,8 +31,8 @@ simulation_block_interp = false            # flag indicating interpolation shoul
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
 camera_r          = 1600.0  # KS radial coordinate r in gravitational units
-camera_th         = 45.0   # KS polar coordinate theta in degrees (0/180 for N/S)
-camera_ph         = 90.0    # KS azimuthal coordinate phi in degrees
+camera_th         = 0.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
 camera_uphn       = 0.0    # contravariant KS normal ph-velocity (using radians)
@@ -56,7 +56,7 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 
 # Image parameters
 image_light           = true      # flag indicating real image of radiation should be produced
-image_num_frequencies   = 20       # number of observation frequencies
+image_num_frequencies   = 10       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 2e13    # first frequency in Hz if image_frequency_num > 1
 image_frequency_end     = 3e17    # last frequency in Hz if image_frequency_num > 1
@@ -76,7 +76,9 @@ image_crossings       = false     # flag for counting plane crossings of geodesi
 image_free_free       = true  # flag for specifying whether to include free-free emission terms
 image_scattering      = false     # flag for specifying whether to include compton scattering
 image_synchrotron     = false
-image_opacities_enabled = false
+image_sim_opacities = false
+image_planck_mean = false
+image_rosseland_mean = false
 
 # Rendering parameters
 render_num_images = 0  # number of false-color renderings
