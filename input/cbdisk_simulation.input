@@ -27,6 +27,10 @@ simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_un
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 
+#opacity table parameters
+use_opacity_table = true
+opacity_file = data/out_opacity_table_nfreq16.txt
+
 
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)

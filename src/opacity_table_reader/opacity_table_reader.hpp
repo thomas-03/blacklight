@@ -32,6 +32,7 @@ struct OpacityTableReader
 
   // Input data - opacity parameters
   std::string opacity_file;
+  bool use_opacity_table;
 
   // Input data - slow-light parameters
   bool slow_light_on;
@@ -111,7 +112,7 @@ struct OpacityTableReader
   double Read(int snapshot);
 
   // Internal functions - opacity_reader.cpp
-  std::string FormatFilename(int file_number);
+  //std::string FormatFilename(int file_number);
 
   // Internal functions - hdf5_format_arrays.cpp
   void ReadHDF5StringArray(const char *name, bool allocate, std::string **p_string_array,

@@ -38,6 +38,8 @@ OpacityTableReader::OpacityTableReader(const InputReader *p_input_reader_)
 {
   // Copy general input data
   model_type = p_input_reader->model_type.value();
+  use_opacity_table = p_input_reader->use_opacity_table.value();
+  opacity_file = p_input_reader->opacity_file.value();
 
   // Copy simulation parameters
   /*if (model_type == ModelType::simulation)
@@ -144,31 +146,40 @@ OpacityTableReader::OpacityTableReader(const InputReader *p_input_reader_)
 // Simulation reader destructor
 OpacityTableReader::~OpacityTableReader()
 {
-  if (num_dataset_names > 0)
-    delete[] dataset_names;
-  if (num_variable_names > 0)
-    delete[] variable_names;
+  if (num_freqs > 0){
+    freq_grid.Deallocate();
+  }
+  if (num_temps > 0){
+    temp_grid.Deallocate();
+  }
+  if (num_rho > 0){
+    rho_grid.Deallocate();
+  }
+  if (num_freqs > 0 && num_temps > 0 && num_rho > 0){
+    ross_tab.Deallocate();
+    plan_tab.Deallocate();
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
 
-// Simulation reader read and initialize function
+// Opacity table reader read and initialize function
 // Inputs:
 //   snapshot: index (starting at 0) of which snapshot is about to be prepared
 // Outputs:
 //   returned value: execution time in seconds
 // Notes:
-//   Does nothing if model does not need to be read from file.
-//   The output file offset is always equal to snapshot; the input file offset is equal to snapshot
-//       if slow_light_on == false.
-//   Opens and closes stream for reading.
-//   Initializes all member objects.
-//   Implements a subset of the HDF5 standard:
-//       portal.hdfgroup.org/display/HDF5/File+Format+Specification
+//   Reads opacity table from file specified in input file.
+//   This function is largely adapted from code written by Shane Davis
+//   specifically the function MonteCarlo::InitUserMonteCarloData() in athena/src/pgen/mc_tde.cpp
 double OpacityTableReader::Read(int snapshot)
 {
+
+  std::cout << "Reading opacity table from file..." << opacity_file << std::endl;
   // Only proceed if needed
   if (model_type != ModelType::simulation)
+    return 0.0;
+  if(!use_opacity_table)
     return 0.0;
   double time_start = omp_get_wtime();
 
@@ -178,19 +189,21 @@ double OpacityTableReader::Read(int snapshot)
 
   // Determine file name
   std::string opacity_file_formatted = opacity_file;
-  opacity_file_formatted = FormatFilename(-1);
+  std::cout << "Formatted opacity file name: " << opacity_file_formatted << std::endl;
 
   // Open input file
-  if ( (opac_file=fopen("out_opacity_table_num_freqsq32.txt","r"))==NULL) {
+  if ( (opac_file=fopen(opacity_file_formatted.c_str(),"r"))==NULL) {
     std::stringstream msg;
-    msg << "FATAL ERROR: Could not open out_opacity_table_num_freqsq16.txt." << std::endl;
+    msg << "FATAL ERROR: Could not open " << opacity_file_formatted << "." << std::endl;
     throw BlacklightException(msg.str().c_str());
   }
   // Read basic data about file
   fscanf(opac_file,"%d",&(num_freqs));
   fscanf(opac_file,"%d",&(num_temps));
   fscanf(opac_file,"%d",&(num_rho));
-
+  std::cout << "Number of frequency groups: " << num_freqs << std::endl;
+  std::cout << "Number of temperature points: " << num_temps << std::endl;
+  std::cout << "Number of density points: " << num_rho << std::endl;
   // allocate arrays
   freq_grid.Allocate(num_freqs+1);
   temp_grid.Allocate(num_temps);
@@ -200,6 +213,8 @@ double OpacityTableReader::Read(int snapshot)
 
   for(int i=1; i<=num_freqs; ++i){
     fscanf(opac_file,"%lf",&(freq_grid(i)));
+    //std::cout << "Frequency " << i << " : " << freq_grid(i) << std::endl;
+    //frequencies are read in properly
   }
 
   freq_grid(0) = freq_grid(1)*freq_grid(1)/freq_grid(2);
@@ -213,6 +228,8 @@ double OpacityTableReader::Read(int snapshot)
   // temperature grid (keV)
   for(int i=0; i<num_temps; ++i){
     fscanf(opac_file,"%lf",&(temp_grid(i)));
+    //std::cout << "Temperature " << i << " : " << temp_grid(i) << std::endl;
+    //temperature is read in properly
   }
   // convert to kelvin
   for(int i=0; i<num_temps; ++i)
@@ -225,6 +242,7 @@ double OpacityTableReader::Read(int snapshot)
   // density grid (g/cm^3)
   for(int i=0; i<num_rho; ++i) {
     fscanf(opac_file,"%lf",&(rho_grid(i)));
+    //std::cout << "Density " << i << " : " << rho_grid(i) << std::endl;
   }
   rmin = std::log10(rho_grid(0));
   rmax = std::log10(rho_grid(num_rho-1));
@@ -253,6 +271,7 @@ double OpacityTableReader::Read(int snapshot)
       for(int i=0; i<num_rho; ++i) {
         fscanf(opac_file,"%lf",&(ross_tab(k,j,i)));
         ross_tab(k,j,i) *= rho_grid(i);
+        //std::cout << "Rosseland opacity " << k << " " << j << " " << i << " : " << ross_tab(k,j,i) << std::endl;
       }
     }
   }
@@ -263,6 +282,7 @@ double OpacityTableReader::Read(int snapshot)
       for(int i=0; i<num_rho; ++i) {
         fscanf(opac_file,"%lf",&(plan_tab(k,j,i)));
         plan_tab(k,j,i) *= rho_grid(i);
+        std::cout << "Planck opacity " << k << " " << j << " " << i << " : " << plan_tab(k,j,i) << std::endl;
       }
     }
   }
@@ -318,7 +338,7 @@ double OpacityTableReader::Read(int snapshot)
       }
     }
   }
-    
+  
     // Read time
     
 
@@ -344,37 +364,4 @@ double OpacityTableReader::Read(int snapshot)
 
 //--------------------------------------------------------------------------------------------------
 
-// Function to construct filename formatted with file number
-// Inputs:
-//   file_number: number of simulation file to construct
-// Outputs:
-//   returned_value: string containing formatted filename
-std::string OpacityTableReader::FormatFilename(int file_number)
-{
-  // Locate braces
-  std::string::size_type opacity_pos_open = opacity_file.find_first_of('{');
-  std::string::size_type opacity_pos_close = opacity_file.find_first_of('}', opacity_pos_open);
-
-  // Parse integer format string
-  int opacity_field_length = 0;
-  if (opacity_pos_close - opacity_pos_open > 2)
-    opacity_field_length = std::stoi(opacity_file.substr(opacity_pos_open + 1,
-        opacity_pos_close - opacity_pos_open - 2));
-  int file_number_length = std::snprintf(nullptr, 0, "%d", file_number);
-  if (file_number_length < 0)
-    throw BlacklightException("Could not format file name.");
-  int num_zeros = 0;
-  if (file_number_length < opacity_field_length)
-    num_zeros = opacity_field_length - file_number_length;
-
-  // Create filename
-  std::ostringstream opacity_filename;
-  opacity_filename << opacity_file.substr(0, opacity_pos_open);
-  for (int n = 0; n < num_zeros; n++)
-    opacity_filename << "0";
-  opacity_filename << file_number;
-  opacity_filename << opacity_file.substr(opacity_pos_close + 1);
-  std::string opacity_file_formatted = opacity_filename.str();
-  return opacity_file_formatted;
-}
 

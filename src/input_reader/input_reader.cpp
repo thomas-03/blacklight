@@ -156,6 +156,12 @@ int InputReader::Read()
     else if (key == "simulation_block_interp")
       simulation_block_interp = ReadBool(val);
 
+    // Store opacity table parameters
+    else if (key == "use_opacity_table")
+      use_opacity_table = ReadBool(val);
+    else if (key == "opacity_file")
+      opacity_file = val;
+
     // Store formula parameters
     else if (key == "formula_mass")
       formula_mass = std::stod(val);
