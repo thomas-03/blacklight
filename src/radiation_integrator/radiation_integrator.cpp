@@ -13,6 +13,7 @@
 #include "../geodesic_integrator/geodesic_integrator.hpp"  // GeodesicIntegrator
 #include "../input_reader/input_reader.hpp"                // InputReader
 #include "../simulation_reader/simulation_reader.hpp"      // SimulationReader
+#include "../opacity_table_reader/opacity_table_reader.hpp"  // OpacityTableReader
 #include "../utils/array.hpp"                              // Array
 #include "../utils/exceptions.hpp"                         // BlacklightException, BlacklightWarning
 
@@ -24,8 +25,8 @@
 //   p_geodesic_integrator: pointer to object containing ray data
 //   p_simulation_reader_: pointer to object containing raw simulation data
 RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
-    const GeodesicIntegrator *p_geodesic_integrator, const SimulationReader *p_simulation_reader_)
-  : p_simulation_reader(p_simulation_reader_)
+    const GeodesicIntegrator *p_geodesic_integrator, const SimulationReader *p_simulation_reader_, const OpacityTableReader *p_opacity_table_reader_)
+  : p_simulation_reader(p_simulation_reader_), p_opacity_table_reader(p_opacity_table_reader_)
 {
   // Copy general input data
   model_type = p_input_reader->model_type.value();

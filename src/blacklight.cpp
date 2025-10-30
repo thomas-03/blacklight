@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
   try
   {
     p_radiation_integrator =
-        new RadiationIntegrator(p_input_reader, p_geodesic_integrator, p_simulation_reader);
+        new RadiationIntegrator(p_input_reader, p_geodesic_integrator, p_simulation_reader, p_opacity_table_reader);
   }
   catch (const BlacklightException &exception)
   {

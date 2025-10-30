@@ -282,7 +282,7 @@ double OpacityTableReader::Read(int snapshot)
       for(int i=0; i<num_rho; ++i) {
         fscanf(opac_file,"%lf",&(plan_tab(k,j,i)));
         plan_tab(k,j,i) *= rho_grid(i);
-        std::cout << "Planck opacity " << k << " " << j << " " << i << " : " << plan_tab(k,j,i) << std::endl;
+        //std::cout << "Planck opacity " << k << " " << j << " " << i << " : " << plan_tab(k,j,i) << std::endl;
       }
     }
   }
