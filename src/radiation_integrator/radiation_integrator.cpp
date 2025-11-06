@@ -117,6 +117,8 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   image_tau = p_input_reader->image_tau.value();
   image_free_free = p_input_reader->image_free_free.value();
   image_scattering = p_input_reader->image_scattering.value();
+
+  opacity_table = p_input_reader->opacity_table.value();
   
   if (model_type == ModelType::simulation)
   {

@@ -38,7 +38,7 @@ OpacityTableReader::OpacityTableReader(const InputReader *p_input_reader_)
 {
   // Copy general input data
   model_type = p_input_reader->model_type.value();
-  use_opacity_table = p_input_reader->use_opacity_table.value();
+  opacity_table = p_input_reader->opacity_table.value();
   opacity_file = p_input_reader->opacity_file.value();
 
   // Copy simulation parameters
@@ -135,10 +135,7 @@ OpacityTableReader::OpacityTableReader(const InputReader *p_input_reader_)
   }*/
 
   // Determine how many files will be held in memory simultaneously
-  num_arrays = 0;
-  if (model_type == ModelType::simulation)
-    num_arrays = slow_light_on ? slow_chunk_size : 1;
-
+  
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -179,7 +176,7 @@ double OpacityTableReader::Read(int snapshot)
   // Only proceed if needed
   if (model_type != ModelType::simulation)
     return 0.0;
-  if(!use_opacity_table)
+  if(!opacity_table)
     return 0.0;
   double time_start = omp_get_wtime();
 
@@ -361,7 +358,3 @@ double OpacityTableReader::Read(int snapshot)
   return omp_get_wtime() - time_start;
 
 }
-
-//--------------------------------------------------------------------------------------------------
-
-

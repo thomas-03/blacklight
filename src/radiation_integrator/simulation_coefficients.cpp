@@ -525,6 +525,37 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           double nu_c_cgs = Physics::e * bb_cgs / (2.0 * Math::pi * Physics::m_e * Physics::c);
           double nu_s_cgs = 2.0 / 9.0 * nu_c_cgs * theta_e * theta_e * sin_theta_b;
 
+          double table_opacity_value=0.0;
+          if(opacity_table){
+            //std::cout<<p_opacity_table_reader->plan_tab(0,0,0)<<std::endl;
+            //std::cout<<p_opacity_table_reader->num_freqs<<", "<<p_opacity_table_reader->num_temps<<", "<<p_opacity_table_reader->num_rho<<std::endl;
+            
+            
+            //table_opacity_value = GetOpacity(nu_cgs, kb_tt_e_cgs, rho_cgs);
+            double log_freq = std::log10(nu_cgs*Physics::h);
+            log_freq = (log_freq < p_opacity_table_reader->fmin) ? p_opacity_table_reader->fmin : log_freq;
+            log_freq = (log_freq > p_opacity_table_reader->fmax) ? p_opacity_table_reader->fmax : log_freq;
+            double log_temp = std::log10(kb_tt_e_cgs);
+            log_temp = (log_temp < p_opacity_table_reader->tmin) ? p_opacity_table_reader->tmin : log_temp;
+            log_temp = (log_temp > p_opacity_table_reader->tmax) ? p_opacity_table_reader->tmax : log_temp;
+            double log_rho = std::log10(rho_cgs);
+            log_rho = (log_rho < p_opacity_table_reader->rmin) ? p_opacity_table_reader->rmin : log_rho;
+            log_rho = (log_rho > p_opacity_table_reader->rmax) ? p_opacity_table_reader->rmax : log_rho;
+
+            double xi = (log_rho - p_opacity_table_reader->rmin)/p_opacity_table_reader->dlr;
+            double xj = (log_temp - p_opacity_table_reader->tmin)/p_opacity_table_reader->dlt;
+            double xk = (log_freq - p_opacity_table_reader->fmin)/p_opacity_table_reader->dlf;
+
+            int i = std::floor(xi);
+            int j = std::floor(xj);
+            int k = std::floor(xk);
+            if(i>p_opacity_table_reader->num_rho-1 || j>p_opacity_table_reader->num_temps-1 || k>p_opacity_table_reader->num_freqs-1){
+              std::cout << "Out of bounds: " << i << ", " << j << ", " << k <<" for num_rho: " << p_opacity_table_reader->num_rho << ", num_temps: " << p_opacity_table_reader->num_temps << ", num_freqs: " << p_opacity_table_reader->num_freqs << std::endl;
+            }
+
+            alpha_i[adaptive_level](l,m,n)= p_opacity_table_reader->plan_tab(k,j,i);
+          }
+
           // Calculate thermal synchrotron emissivities (M 28,30)
           double j_i_val;
           if (plasma_thermal_frac != 0.0 and image_synchrotron)
@@ -556,7 +587,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate thermal synchrotron absorptivities from Kirchoff's law (M 31)
-          if (plasma_thermal_frac != 0.0 and image_synchrotron)
+          if (plasma_thermal_frac != 0.0 and image_synchrotron and !opacity_table)
           {
             // Calculate absorptivities
             double b_nu_nu_3_cgs = 2.0 * Physics::h / (Physics::c * Physics::c)
@@ -646,7 +677,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
           //Calculate thermal free-free absorptivities (Rybicki & Lightman, eqn 5.18a)
           //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission
-          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
+          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free and !opacity_table)
           {
            double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
@@ -683,7 +714,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron)
           {
             double var_a = std::pow(nu_cgs / (nu_c_cgs * sin_theta_b), -(plasma_p - 1.0) / 2.0);
-            //TEGAN: here is the coefficient for the power-law synchrotron emissivities!!
             double coefficient = plasma_power_frac * n_e_cgs * Physics::e * Physics::e * nu_c_cgs
                 / (Physics::c * nu_2_cgs) * power_jj * sin_theta_b * var_a;
             j_i[adaptive_level](l,m,n) += coefficient;

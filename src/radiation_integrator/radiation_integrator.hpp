@@ -86,6 +86,8 @@ struct RadiationIntegrator
   bool image_scattering;
   bool image_synchrotron;
 
+  bool opacity_table;
+
   // Input data - rendering parameters
   int render_num_images;
   int *render_num_features = nullptr;

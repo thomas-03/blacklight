@@ -58,7 +58,7 @@ struct InputReader
   std::optional<bool> simulation_block_interp;
 
   //Data - opacity table parameters
-  std::optional<bool> use_opacity_table;
+  std::optional<bool> opacity_table;
   std::optional<std::string> opacity_file;
 
   // Data - formula parameters

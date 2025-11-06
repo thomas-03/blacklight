@@ -157,8 +157,8 @@ int InputReader::Read()
       simulation_block_interp = ReadBool(val);
 
     // Store opacity table parameters
-    else if (key == "use_opacity_table")
-      use_opacity_table = ReadBool(val);
+    else if (key == "opacity_table")
+      opacity_table = ReadBool(val);
     else if (key == "opacity_file")
       opacity_file = val;
 
