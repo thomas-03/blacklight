@@ -60,10 +60,10 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 
 # Image parameters
 image_light           = true      # flag indicating real image of radiation should be produced
-image_num_frequencies   = 20       # number of observation frequencies
+image_num_frequencies   = 16       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 2e13    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3e17    # last frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 1.36e14    # first frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 1.359e18    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = camera  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized

@@ -553,7 +553,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               std::cout << "Out of bounds: " << i << ", " << j << ", " << k <<" for num_rho: " << p_opacity_table_reader->num_rho << ", num_temps: " << p_opacity_table_reader->num_temps << ", num_freqs: " << p_opacity_table_reader->num_freqs << std::endl;
             }
 
-            alpha_i[adaptive_level](l,m,n)= p_opacity_table_reader->plan_tab(k,j,i);
+            alpha_i[adaptive_level](l,m,n)= p_opacity_table_reader->ross_tab(k,j,i);
           }
 
           // Calculate thermal synchrotron emissivities (M 28,30)
@@ -677,7 +677,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
           //Calculate thermal free-free absorptivities (Rybicki & Lightman, eqn 5.18a)
           //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission
-          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free and !opacity_table)
+          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
           {
            double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));

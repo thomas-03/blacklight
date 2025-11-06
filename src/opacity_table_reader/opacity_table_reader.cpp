@@ -198,9 +198,7 @@ double OpacityTableReader::Read(int snapshot)
   fscanf(opac_file,"%d",&(num_freqs));
   fscanf(opac_file,"%d",&(num_temps));
   fscanf(opac_file,"%d",&(num_rho));
-  std::cout << "Number of frequency groups: " << num_freqs << std::endl;
-  std::cout << "Number of temperature points: " << num_temps << std::endl;
-  std::cout << "Number of density points: " << num_rho << std::endl;
+  
   // allocate arrays
   freq_grid.Allocate(num_freqs+1);
   temp_grid.Allocate(num_temps);
@@ -210,8 +208,6 @@ double OpacityTableReader::Read(int snapshot)
 
   for(int i=1; i<=num_freqs; ++i){
     fscanf(opac_file,"%lf",&(freq_grid(i)));
-    //std::cout << "Frequency " << i << " : " << freq_grid(i) << std::endl;
-    //frequencies are read in properly
   }
 
   freq_grid(0) = freq_grid(1)*freq_grid(1)/freq_grid(2);
@@ -222,12 +218,13 @@ double OpacityTableReader::Read(int snapshot)
   fmin = std::log10(freq_grid(1));
   fmax = std::log10(freq_grid(num_freqs-1));
   dlf = (fmax-fmin)/(num_freqs-2);
+  std::cout<<"Opacity table frequency range from "<<freq_grid(0)/Physics::h<<" to "<<freq_grid(num_freqs)/Physics::h<< " Hz with "<<num_freqs<<" frequencies in total."<<std::endl;
+
   // temperature grid (keV)
   for(int i=0; i<num_temps; ++i){
     fscanf(opac_file,"%lf",&(temp_grid(i)));
-    //std::cout << "Temperature " << i << " : " << temp_grid(i) << std::endl;
-    //temperature is read in properly
   }
+
   // convert to kelvin
   for(int i=0; i<num_temps; ++i)
     temp_grid(i) *= keverg/Physics::k_b;
@@ -239,7 +236,6 @@ double OpacityTableReader::Read(int snapshot)
   // density grid (g/cm^3)
   for(int i=0; i<num_rho; ++i) {
     fscanf(opac_file,"%lf",&(rho_grid(i)));
-    //std::cout << "Density " << i << " : " << rho_grid(i) << std::endl;
   }
   rmin = std::log10(rho_grid(0));
   rmax = std::log10(rho_grid(num_rho-1));
@@ -309,6 +305,7 @@ double OpacityTableReader::Read(int snapshot)
     }*/
 
   // planck mean for each frequency group
+  /*
   for(int j=0; j<num_temps; ++j) {
     for(int i=0; i<num_rho; ++i) {
       double min = 1.e40;
@@ -335,6 +332,7 @@ double OpacityTableReader::Read(int snapshot)
       }
     }
   }
+    */
   
     // Read time
     
