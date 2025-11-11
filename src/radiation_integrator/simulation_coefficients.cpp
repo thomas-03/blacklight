@@ -525,14 +525,21 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           double nu_c_cgs = Physics::e * bb_cgs / (2.0 * Math::pi * Physics::m_e * Physics::c);
           double nu_s_cgs = 2.0 / 9.0 * nu_c_cgs * theta_e * theta_e * sin_theta_b;
 
+          //TEGAN: here is the table opacity 
           double table_opacity_value=0.0;
           if(opacity_table){
+            // i should add check here to change it so that if nu, temp, or rho are out of bounds, we default to free free
+            // we additionally need to check the seg fault error, which I can possibly due by turning off optimization during compilation and then using gdb
+
             //std::cout<<p_opacity_table_reader->plan_tab(0,0,0)<<std::endl;
             //std::cout<<p_opacity_table_reader->num_freqs<<", "<<p_opacity_table_reader->num_temps<<", "<<p_opacity_table_reader->num_rho<<std::endl;
             
             
             //table_opacity_value = GetOpacity(nu_cgs, kb_tt_e_cgs, rho_cgs);
             double log_freq = std::log10(nu_cgs*Physics::h);
+            //std::printf("f_min: %.5e \n", p_opacity_table_reader->fmin);
+            bool tempbool = log_freq < p_opacity_table_reader->fmin;
+            //std::printf("log_freq < fmin: %d \n", tempbool);
             log_freq = (log_freq < p_opacity_table_reader->fmin) ? p_opacity_table_reader->fmin : log_freq;
             log_freq = (log_freq > p_opacity_table_reader->fmax) ? p_opacity_table_reader->fmax : log_freq;
             double log_temp = std::log10(kb_tt_e_cgs);
@@ -552,13 +559,27 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             if(i>p_opacity_table_reader->num_rho-1 || j>p_opacity_table_reader->num_temps-1 || k>p_opacity_table_reader->num_freqs-1){
               std::cout << "Out of bounds: " << i << ", " << j << ", " << k <<" for num_rho: " << p_opacity_table_reader->num_rho << ", num_temps: " << p_opacity_table_reader->num_temps << ", num_freqs: " << p_opacity_table_reader->num_freqs << std::endl;
             }
+            double xd = xi - i;
+            double yd = xj - j;
+            double zd = xk - k;
+            double c00 = p_opacity_table_reader->plan_tab(k,j,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i)*xd;
+            double c10 = p_opacity_table_reader->plan_tab(k,j+1,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i)*xd;
+            double c01 = p_opacity_table_reader->plan_tab(k,j,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i+1)*xd;
+            double c11 = p_opacity_table_reader->plan_tab(k,j+1,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i+1)*xd;
+            double c0 = c00*(1 - yd) + c10*yd;
+            double c1 = c01*(1 - yd) + c11*yd;
+            table_opacity_value = c0*(1 - zd) + c1*zd;
 
-            alpha_i[adaptive_level](l,m,n)= p_opacity_table_reader->ross_tab(k,j,i);
+            alpha_i[adaptive_level](l,m,n)= table_opacity_value*nu_cgs;
+
+            double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
+                / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
+            j_i[adaptive_level](l,m,n) = alpha_i[adaptive_level](l,m,n) * planck_function/(nu_cgs*nu_cgs);
           }
 
           // Calculate thermal synchrotron emissivities (M 28,30)
           double j_i_val;
-          if (plasma_thermal_frac != 0.0 and image_synchrotron)
+          if (plasma_thermal_frac != 0.0 and image_synchrotron and !opacity_table)
           {
             double xx = nu_cgs / nu_s_cgs;
             double xx_1_2 = std::sqrt(xx);
@@ -647,7 +668,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           //Calculate thermal free-free emissivities (Rybicki & Lightman, eqn 5.14a)
-          if (plasma_thermal_frac != 0.0 and image_free_free)
+          if (plasma_thermal_frac != 0.0 and image_free_free and !opacity_table)
           {
            double partA = 16.0*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
@@ -677,7 +698,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
           //Calculate thermal free-free absorptivities (Rybicki & Lightman, eqn 5.18a)
           //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission
-          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free)
+          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free and !opacity_table)
           {
            double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
@@ -711,7 +732,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
 
           // Calculate power-law synchrotron emissivities (M 28,38)
-          if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron)
+          if (plasma_power_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron and !opacity_table)
           {
             double var_a = std::pow(nu_cgs / (nu_c_cgs * sin_theta_b), -(plasma_p - 1.0) / 2.0);
             double coefficient = plasma_power_frac * n_e_cgs * Physics::e * Physics::e * nu_c_cgs
@@ -727,7 +748,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate power-law synchrotron absorptivities (M 29,39)
-          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_synchrotron)
+          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_synchrotron and !opacity_table)
           {
             double var_a = std::pow(nu_cgs / (nu_c_cgs * sin_theta_b), -(plasma_p + 2.0) / 2.0);
             double coefficient = plasma_power_frac * n_e_cgs * Physics::e * Physics::e
@@ -760,7 +781,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate kappa-distribution synchrotron emissivities (M 28,43-46)
-          if (plasma_kappa_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron)
+          if (plasma_kappa_frac != 0.0 and (image_light or image_emission or image_emission_ave) and image_synchrotron and !opacity_table)
           {
             double nu_kappa_cgs =
                 nu_c_cgs * plasma_w * plasma_w * plasma_kappa * plasma_kappa * sin_theta_b;
@@ -793,7 +814,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate kappa-distribution synchrotron absoptivities (M 29,47-50)
-          if (plasma_kappa_frac != 0.0 and (image_light or image_tau or image_tau_int))
+          if (plasma_kappa_frac != 0.0 and (image_light or image_tau or image_tau_int) and !opacity_table)
           {
             double nu_kappa_cgs =
                 nu_c_cgs * plasma_w * plasma_w * plasma_kappa * plasma_kappa * sin_theta_b;

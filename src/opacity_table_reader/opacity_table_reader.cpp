@@ -305,7 +305,7 @@ double OpacityTableReader::Read(int snapshot)
     }*/
 
   // planck mean for each frequency group
-  /*
+  
   for(int j=0; j<num_temps; ++j) {
     for(int i=0; i<num_rho; ++i) {
       double min = 1.e40;
@@ -332,7 +332,7 @@ double OpacityTableReader::Read(int snapshot)
       }
     }
   }
-    */
+  
   
     // Read time
     

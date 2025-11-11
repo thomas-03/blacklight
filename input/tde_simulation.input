@@ -4,7 +4,7 @@ num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/r800_rayfalse_plane_correctvnr_tde1335.npz  # file to be (over)written with output data
+output_file   = output/r800_pinhole_tde1335_inc45_opacitytable.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -26,6 +26,9 @@ simulation_r_rg         = 2.0              # flag indicating r_g/simulation r_un
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 
+#opacity table parameters
+opacity_table = true
+opacity_file = data/out_opacity_table_nfreq16.txt
 
 # Camera parameters
 camera_type       = plane  # type of camera (plane, pinhole)
@@ -55,12 +58,12 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 
 # Image parameters
 image_light           = true      # flag indicating real image of radiation should be produced
-image_num_frequencies   = 10       # number of observation frequencies
+image_num_frequencies   = 20       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 3.3e11    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3.3e22    # last frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 3e14    # first frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 3e17    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
-image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
+image_normalization   = camera  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
 image_rotation_split  = false     # flag for Strang splitting rotation from emission/absorption
 image_time            = false     # flag for producing image of geodesic times

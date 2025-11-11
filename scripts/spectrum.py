@@ -145,6 +145,7 @@ def get_flux(**kwargs):
       #print(flux.shape)
     
   flux/=eV
+  '''
   # Report results
   print('')
   if nan_found:
@@ -163,6 +164,7 @@ def get_flux(**kwargs):
     else:
       print('F_nu = {0} eV cm^-2 s^-1 Hz^-1'.format(repr(flux[0])))
   print('')
+  '''
   return flux, frequencies
 
 
