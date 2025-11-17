@@ -527,54 +527,72 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
           //TEGAN: here is the table opacity 
           double table_opacity_value=0.0;
+          
+          bool default_to_free_free = false;
           if(opacity_table){
-            // i should add check here to change it so that if nu, temp, or rho are out of bounds, we default to free free
-            // we additionally need to check the seg fault error, which I can possibly due by turning off optimization during compilation and then using gdb
-
-            //std::cout<<p_opacity_table_reader->plan_tab(0,0,0)<<std::endl;
-            //std::cout<<p_opacity_table_reader->num_freqs<<", "<<p_opacity_table_reader->num_temps<<", "<<p_opacity_table_reader->num_rho<<std::endl;
-            
-            
-            //table_opacity_value = GetOpacity(nu_cgs, kb_tt_e_cgs, rho_cgs);
-            double log_freq = std::log10(nu_cgs*Physics::h);
-            //std::printf("f_min: %.5e \n", p_opacity_table_reader->fmin);
-            bool tempbool = log_freq < p_opacity_table_reader->fmin;
-            //std::printf("log_freq < fmin: %d \n", tempbool);
-            log_freq = (log_freq < p_opacity_table_reader->fmin) ? p_opacity_table_reader->fmin : log_freq;
-            log_freq = (log_freq > p_opacity_table_reader->fmax) ? p_opacity_table_reader->fmax : log_freq;
-            double log_temp = std::log10(kb_tt_e_cgs);
-            log_temp = (log_temp < p_opacity_table_reader->tmin) ? p_opacity_table_reader->tmin : log_temp;
-            log_temp = (log_temp > p_opacity_table_reader->tmax) ? p_opacity_table_reader->tmax : log_temp;
-            double log_rho = std::log10(rho_cgs);
-            log_rho = (log_rho < p_opacity_table_reader->rmin) ? p_opacity_table_reader->rmin : log_rho;
-            log_rho = (log_rho > p_opacity_table_reader->rmax) ? p_opacity_table_reader->rmax : log_rho;
-
-            double xi = (log_rho - p_opacity_table_reader->rmin)/p_opacity_table_reader->dlr;
-            double xj = (log_temp - p_opacity_table_reader->tmin)/p_opacity_table_reader->dlt;
-            double xk = (log_freq - p_opacity_table_reader->fmin)/p_opacity_table_reader->dlf;
-
-            int i = std::floor(xi);
-            int j = std::floor(xj);
-            int k = std::floor(xk);
-            if(i>p_opacity_table_reader->num_rho-1 || j>p_opacity_table_reader->num_temps-1 || k>p_opacity_table_reader->num_freqs-1){
-              std::cout << "Out of bounds: " << i << ", " << j << ", " << k <<" for num_rho: " << p_opacity_table_reader->num_rho << ", num_temps: " << p_opacity_table_reader->num_temps << ", num_freqs: " << p_opacity_table_reader->num_freqs << std::endl;
+            //if we have NaN frequency, just treat it as blacklight does normally
+            if(nu_cgs != nu_cgs){
+              default_to_free_free = true;
             }
-            double xd = xi - i;
-            double yd = xj - j;
-            double zd = xk - k;
-            double c00 = p_opacity_table_reader->plan_tab(k,j,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i)*xd;
-            double c10 = p_opacity_table_reader->plan_tab(k,j+1,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i)*xd;
-            double c01 = p_opacity_table_reader->plan_tab(k,j,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i+1)*xd;
-            double c11 = p_opacity_table_reader->plan_tab(k,j+1,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i+1)*xd;
-            double c0 = c00*(1 - yd) + c10*yd;
-            double c1 = c01*(1 - yd) + c11*yd;
-            table_opacity_value = c0*(1 - zd) + c1*zd;
+            double log_freq = std::log10(nu_cgs*Physics::h);
+            double log_temp = std::log10(kb_tt_e_cgs);
+            double log_rho = std::log10(rho_cgs);
+            if(log_freq < p_opacity_table_reader->fmin || log_freq > p_opacity_table_reader->fmax){
+              //std::printf("log_freq underflow: %d \n", log_freq);
+              //std::printf("log_freq: %f, fmin: %f, fmax: %f \n", log_freq, p_opacity_table_reader->fmin, p_opacity_table_reader->fmax);
+              default_to_free_free = true;
+            }
+            if(log_temp < p_opacity_table_reader->tmin || log_temp > p_opacity_table_reader->tmax){
+              //std::printf("log_temp underflow: %d \n", log_temp);
+              
+              //std::printf("temp: %f, log_temp: %f, tmin: %f, tmax: %f \n",  kb_tt_e_cgs, log_temp, p_opacity_table_reader->tmin, p_opacity_table_reader->tmax);
+              default_to_free_free = true;
+            }
+            if(log_rho < p_opacity_table_reader->rmin || log_rho > p_opacity_table_reader->rmax){
+              //std::printf("log_rho underflow: %d \n", log_rho);
+              //std::printf("log_rho: %f, rmin: %f, rmax: %f \n", log_rho, p_opacity_table_reader->rmin, p_opacity_table_reader->rmax);
+              default_to_free_free = true;
+            }
 
-            alpha_i[adaptive_level](l,m,n)= table_opacity_value*nu_cgs;
 
-            double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
-                / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
-            j_i[adaptive_level](l,m,n) = alpha_i[adaptive_level](l,m,n) * planck_function/(nu_cgs*nu_cgs);
+            if(!default_to_free_free){
+              double xi = (log_rho - p_opacity_table_reader->rmin)/p_opacity_table_reader->dlr;
+              double xj = (log_temp - p_opacity_table_reader->tmin)/p_opacity_table_reader->dlt;
+              double xk = (log_freq - p_opacity_table_reader->fmin)/p_opacity_table_reader->dlf;
+              
+
+              int i = std::floor(xi);
+              int j = std::floor(xj);
+              int k = std::floor(xk);
+              if(i<0){
+                //std::printf("i underflow: %d \n", i);
+                i=0;
+              }
+              if(j<0){
+                j=0;
+              }
+              if(k<0){
+                //std::printf("k underflow: k=%d log_temp =%f log_freq=%f log_rho=%f kb_tt_e_cgs=%f nu_cgs_h=%f rho_cgs=%f\n", k, log_temp, log_freq, log_rho,kb_tt_e_cgs,nu_cgs*Physics::h,rho_cgs);
+                k=0;
+              }
+
+              double xd = xi - i;
+              double yd = xj - j;
+              double zd = xk - k;
+              double c00 = p_opacity_table_reader->plan_tab(k,j,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i)*xd;
+              double c10 = p_opacity_table_reader->plan_tab(k,j+1,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i)*xd;
+              double c01 = p_opacity_table_reader->plan_tab(k,j,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i+1)*xd;
+              double c11 = p_opacity_table_reader->plan_tab(k,j+1,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i+1)*xd;
+              double c0 = c00*(1 - yd) + c10*yd;
+              double c1 = c01*(1 - yd) + c11*yd;
+              table_opacity_value = c0*(1 - zd) + c1*zd;
+
+              alpha_i[adaptive_level](l,m,n)= table_opacity_value*nu_cgs;
+
+              double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
+                  / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
+              j_i[adaptive_level](l,m,n) = alpha_i[adaptive_level](l,m,n) * planck_function/(nu_cgs*nu_cgs);
+            }
           }
 
           // Calculate thermal synchrotron emissivities (M 28,30)
@@ -668,8 +686,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           //Calculate thermal free-free emissivities (Rybicki & Lightman, eqn 5.14a)
-          if (plasma_thermal_frac != 0.0 and image_free_free and !opacity_table)
+          if (plasma_thermal_frac != 0.0 and image_free_free and (!opacity_table || default_to_free_free))
           {
+           //std::printf("free-free emission active\n");
            double partA = 16.0*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
@@ -698,7 +717,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
           //Calculate thermal free-free absorptivities (Rybicki & Lightman, eqn 5.18a)
           //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission
-          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free and !opacity_table)
+          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free and (!opacity_table || default_to_free_free))
           {
            double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
