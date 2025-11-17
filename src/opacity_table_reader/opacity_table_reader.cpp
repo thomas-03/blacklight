@@ -218,7 +218,6 @@ double OpacityTableReader::Read(int snapshot)
   fmin = std::log10(freq_grid(1));
   fmax = std::log10(freq_grid(num_freqs-1));
   dlf = (fmax-fmin)/(num_freqs-2);
-  std::cout<<"Opacity table frequency range from "<<freq_grid(0)/Physics::h<<" to "<<freq_grid(num_freqs)/Physics::h<< " Hz with "<<num_freqs<<" frequencies in total."<<std::endl;
 
   // temperature grid (keV)
   for(int i=0; i<num_temps; ++i){
@@ -240,6 +239,12 @@ double OpacityTableReader::Read(int snapshot)
   rmin = std::log10(rho_grid(0));
   rmax = std::log10(rho_grid(num_rho-1));
   dlr = (rmax-rmin)/(num_rho-1);
+
+
+  std::cout<<"Opacity table frequency range from "<<freq_grid(0)/Physics::h<<" to "<<freq_grid(num_freqs)/Physics::h<< " Hz with "<<num_freqs<<" frequencies in total."<<std::endl;
+  std::cout<<"Opacity table temperature range from "<<temp_grid(0)<<" to "<<temp_grid(num_temps-1)<<" K with "<<num_temps<<" temperatures in total."<<std::endl;
+  std::cout<<"Opacity table density range from "<<rho_grid(0)<<" to "<<rho_grid(num_rho-1)<<" g/cm^3 with "<<num_rho<<" densities in total."<<std::endl;
+
 
   // frequency integrated rosseland mean
   // Read in but not used

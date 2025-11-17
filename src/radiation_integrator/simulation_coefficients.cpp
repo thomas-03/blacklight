@@ -533,9 +533,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             //if we have NaN frequency, just treat it as blacklight does normally
             if(nu_cgs != nu_cgs){
               default_to_free_free = true;
-            }
+            }else{
             double log_freq = std::log10(nu_cgs*Physics::h);
-            double log_temp = std::log10(kb_tt_e_cgs);
+            double log_temp = std::log10(kb_tt_e_cgs/Physics::k_b);
             double log_rho = std::log10(rho_cgs);
             if(log_freq < p_opacity_table_reader->fmin || log_freq > p_opacity_table_reader->fmax){
               //std::printf("log_freq underflow: %d \n", log_freq);
@@ -543,8 +543,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               default_to_free_free = true;
             }
             if(log_temp < p_opacity_table_reader->tmin || log_temp > p_opacity_table_reader->tmax){
-              //std::printf("log_temp underflow: %d \n", log_temp);
-              
+              //std::printf("log_temp underflow: %d logK , %lf K \n", log_temp, kb_tt_e_cgs);
               //std::printf("temp: %f, log_temp: %f, tmin: %f, tmax: %f \n",  kb_tt_e_cgs, log_temp, p_opacity_table_reader->tmin, p_opacity_table_reader->tmax);
               default_to_free_free = true;
             }
@@ -553,9 +552,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               //std::printf("log_rho: %f, rmin: %f, rmax: %f \n", log_rho, p_opacity_table_reader->rmin, p_opacity_table_reader->rmax);
               default_to_free_free = true;
             }
-
-
+          
             if(!default_to_free_free){
+              //std::printf("using opacity table value \n");
               double xi = (log_rho - p_opacity_table_reader->rmin)/p_opacity_table_reader->dlr;
               double xj = (log_temp - p_opacity_table_reader->tmin)/p_opacity_table_reader->dlt;
               double xk = (log_freq - p_opacity_table_reader->fmin)/p_opacity_table_reader->dlf;
@@ -582,6 +581,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
                   / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
               j_i[adaptive_level](l,m,n) = alpha_i[adaptive_level](l,m,n) * planck_function/(nu_cgs*nu_cgs);
             }
+          }
           }
 
           // Calculate thermal synchrotron emissivities (M 28,30)
@@ -684,7 +684,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            //std::printf("j coeff cgs: %e\n", partA*partB*std::sqrt(kb_tt_e_cgs/Physics::k_b));
 
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)*gaunt_factor;
-
+           
            /*double tempx1 = sample_pos[adaptive_level](m,n,1);
            double tempx2 = sample_pos[adaptive_level](m,n,2);
            double tempx3 = sample_pos[adaptive_level](m,n,3);
