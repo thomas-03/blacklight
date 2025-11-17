@@ -564,18 +564,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               int i = std::floor(xi);
               int j = std::floor(xj);
               int k = std::floor(xk);
-              if(i<0){
-                //std::printf("i underflow: %d \n", i);
-                i=0;
-              }
-              if(j<0){
-                j=0;
-              }
-              if(k<0){
-                //std::printf("k underflow: k=%d log_temp =%f log_freq=%f log_rho=%f kb_tt_e_cgs=%f nu_cgs_h=%f rho_cgs=%f\n", k, log_temp, log_freq, log_rho,kb_tt_e_cgs,nu_cgs*Physics::h,rho_cgs);
-                k=0;
-              }
-
+              
               double xd = xi - i;
               double yd = xj - j;
               double zd = xk - k;
