@@ -579,7 +579,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
                   / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
-              j_i[adaptive_level](l,m,n) = alpha_i[adaptive_level](l,m,n) * planck_function/(nu_cgs*nu_cgs);
+              j_i[adaptive_level](l,m,n) = table_opacity_value* planck_function/(nu_cgs*nu_cgs);
             }
           }
           }

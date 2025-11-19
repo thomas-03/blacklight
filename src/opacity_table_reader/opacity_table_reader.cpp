@@ -285,30 +285,6 @@ double OpacityTableReader::Read(int snapshot)
     }
   }
 
-  // Replaces plan_tab with free-free values
-  /*Real dummy;
-  for(int k=0; k<num_freqs; ++k) {
-    Real ffnrm = 3.692146e8;
-    Real heabund = 0.09; //hardcode for now (should be parameter)
-    Real mp = 1.67262192369e-24;
-    Real h = 6.62607015e-27;
-    Real kb = 1.380649e-16;
-    Real nu = freq_grid(k) / h;
-    for(int j=0; j<num_temps; ++j) {
-      Real tgas = temp_grid(j);
-      Real ehnu = exp(-h*nu / (kb * tgas) );
-      for(int i=0; i<num_rho; ++i) {
-        Real nh = rho_grid(i) / (mp*(1.+4.*heabund));
-        Real nhe = nh*heabund;
-        Real ne = nh + 2.*nhe;
-        fscanf(opac_file,"%lf",&(dummy));
-        Real aff = ffnrm/sqrt(tgas)/pow(nu,3);
-        Real opac = ne * (nh + 4. * nhe) * aff * (1. - ehnu);
-        plan_tab(k,j,i) = opac;
-      }
-    }
-    }*/
-
   // planck mean for each frequency group
   
   for(int j=0; j<num_temps; ++j) {
