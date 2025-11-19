@@ -380,7 +380,8 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
           // Set fallback values if off grid
           if (b_new == n_b)
           {
-            if (fallback_nan)
+            // for the inner r region, we always assume fallback is NaN
+            if (fallback_nan || (x1 < x1_min_block))
               sample_nan[adaptive_level](m,n) = true;
             else
               sample_fallback[adaptive_level](m,n) = true;
