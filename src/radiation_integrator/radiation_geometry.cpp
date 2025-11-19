@@ -486,6 +486,8 @@ void RadiationIntegrator::CovariantSimulationMetric(double x, double y, double z
     gcov[3][1] = -(1.0 + 2.0 * bh_m * r / sigma) * bh_a * sth2;
     gcov[3][2] = 0.0;
     gcov[3][3] = (r2 + a2 + 2.0 * bh_m * a2 * r * sth2 / sigma) * sth2;
+  } else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put here the covariant metric for SPM coordinates 
   }
   return;
 }
@@ -568,6 +570,10 @@ void RadiationIntegrator::ContravariantSimulationMetric(double x, double y, doub
     gcon[3][1] = bh_a / sigma;
     gcon[3][2] = 0.0;
     gcon[3][3] = 1.0 / (sigma * sth2);
+  }
+
+  else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put here the contravariant metric for SPM coordinates 
   }
   return;
 }
