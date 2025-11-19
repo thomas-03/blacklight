@@ -16,6 +16,7 @@
 #include "output_writer/output_writer.hpp"                // OutputWriter
 #include "radiation_integrator/radiation_integrator.hpp"  // RadiationIntegrator
 #include "simulation_reader/simulation_reader.hpp"        // SimulationReader
+#include "opacity_table_reader/opacity_table_reader.hpp"  // OpacityTableReader
 #include "utils/exceptions.hpp"                           // BlacklightException
 
 //--------------------------------------------------------------------------------------------------
@@ -34,6 +35,7 @@ int main(int argc, char *argv[])
   double time_start = omp_get_wtime();
   double time_geodesic = 0.0;
   double time_read = 0.0;
+  double time_opacity = 0.0;
   double time_sample = 0.0;
   double time_image = 0.0;
   double time_render = 0.0;
@@ -50,6 +52,7 @@ int main(int argc, char *argv[])
   InputReader *p_input_reader;
   GeodesicIntegrator *p_geodesic_integrator;
   SimulationReader *p_simulation_reader;
+  OpacityTableReader *p_opacity_table_reader;
   RadiationIntegrator *p_radiation_integrator;
   OutputWriter *p_output_writer;
 
@@ -130,11 +133,33 @@ int main(int argc, char *argv[])
     return 1;
   }
 
+  // Set up opacity table reader
+  try
+  {
+    p_opacity_table_reader = new OpacityTableReader(p_input_reader);
+  }
+  catch (const BlacklightException &exception)
+  {
+    std::cout << exception.what();
+    return 1;
+  }
+  catch (const std::bad_optional_access &exception)
+  {
+    std::cout << "Error: OpacityTableReader unable to find all needed values in input file.\n";
+    return 1;
+  }
+  catch (...)
+  {
+    std::cout << "Error: Could not set up OpacityTableReader.\n";
+    return 1;
+  }
+
+  
   // Set up radiation integrator
   try
   {
     p_radiation_integrator =
-        new RadiationIntegrator(p_input_reader, p_geodesic_integrator, p_simulation_reader);
+        new RadiationIntegrator(p_input_reader, p_geodesic_integrator, p_simulation_reader, p_opacity_table_reader);
   }
   catch (const BlacklightException &exception)
   {
@@ -190,6 +215,22 @@ int main(int argc, char *argv[])
     catch (...)
     {
       std::cout << "Error: Could not read simulation file.\n";
+      return 1;
+    }
+
+    // Read opacity file
+    try
+    {
+      time_opacity += p_opacity_table_reader->Read(n);
+    }
+    catch (const BlacklightException &exception)
+    {
+      std::cout << exception.what();
+      return 1;
+    }
+    catch (...)
+    {
+      std::cout << "Error: Could not read opacity table file.\n";
       return 1;
     }
 
@@ -253,6 +294,7 @@ int main(int argc, char *argv[])
   delete p_output_writer;
   delete p_radiation_integrator;
   delete p_simulation_reader;
+  delete p_opacity_table_reader;
   delete p_geodesic_integrator;
   delete p_input_reader;
 
@@ -263,6 +305,7 @@ int main(int argc, char *argv[])
   std::cout << "\nElapsed time:            " << time_full << " s";
   std::cout << "\n  Integrating geodesics: " << time_geodesic << " s";
   std::cout << "\n  Reading simulation:    " << time_read << " s";
+  std::cout << "\n  Reading opacity table: " << time_opacity << " s";
   std::cout << "\n  Sampling simulation:   " << time_sample << " s";
   std::cout << "\n  Integrating image:     " << time_image << " s";
   std::cout << "\n  Rendering:             " << time_render << " s";

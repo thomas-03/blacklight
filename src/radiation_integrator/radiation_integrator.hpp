@@ -8,6 +8,7 @@
 #include "../geodesic_integrator/geodesic_integrator.hpp"  // GeodesicIntegrator
 #include "../input_reader/input_reader.hpp"                // InputReader
 #include "../simulation_reader/simulation_reader.hpp"      // SimulationReader
+#include "../opacity_table_reader/opacity_table_reader.hpp"  // OpacityTableReader
 #include "../utils/array.hpp"                              // Array
 
 //--------------------------------------------------------------------------------------------------
@@ -18,13 +19,15 @@ struct RadiationIntegrator
   // Constructors and destructor
   RadiationIntegrator(const InputReader *p_input_reader,
       const GeodesicIntegrator *p_geodesic_integrator,
-      const SimulationReader *p_simulation_reader_);
+      const SimulationReader *p_simulation_reader_,
+      const OpacityTableReader *p_opacity_table_reader_);
   RadiationIntegrator(const RadiationIntegrator &source) = delete;
   RadiationIntegrator &operator=(const RadiationIntegrator &source) = delete;
   ~RadiationIntegrator();
 
   // Pointers to other objects
   const SimulationReader *p_simulation_reader;
+  const OpacityTableReader *p_opacity_table_reader;
 
   // Input data - general
   ModelType model_type;
@@ -82,6 +85,8 @@ struct RadiationIntegrator
   bool image_free_free;
   bool image_scattering;
   bool image_synchrotron;
+
+  bool opacity_table;
 
   // Input data - rendering parameters
   int render_num_images;
