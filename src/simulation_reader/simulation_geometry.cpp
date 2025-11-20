@@ -26,6 +26,7 @@
 //     Allocates and sets x2v_alt to save modified coordinates for regular MKS.
 //     Transforms x1f, x2f, x1v, and x2v.
 //     Operates in serial, given all arrays are 1D and likely to be small.
+//   Only used for iharm3d or harm3d data.
 void SimulationReader::ConvertCoordinates()
 {
   // Extract parameters

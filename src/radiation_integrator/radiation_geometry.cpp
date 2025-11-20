@@ -54,6 +54,9 @@ void RadiationIntegrator::ConvertFromCKS(double *p_x1, double *p_x2, double *p_x
     *p_x3 = ph;
   }else if(simulation_coord == Coordinates::spm){
     //TEGAN: put conversion here!
+    //or in general I should ask if it would be better to have the interpolation grid use spm coords directly
+    //because realistically CKS and SKS and FMKS all describe the same spacetime, so conversion btwn them is straightforward
+    //but SPM is a different spacetime altogether so maybe be better to interpolate directly over that flat spacetime
   }
   return;
 }
@@ -607,7 +610,7 @@ void RadiationIntegrator::ContravariantSimulationMetric(double x, double y, doub
     double cth = z / r;
     double cth2 = cth * cth;
     double sth2 = 1.0 - cth2;
-    
+
     gcon[0][0] = -1.0;
     gcon[0][1] = 0.0;
     gcon[0][2] = 0.0;
