@@ -52,6 +52,8 @@ void RadiationIntegrator::ConvertFromCKS(double *p_x1, double *p_x2, double *p_x
     *p_x1 = r;
     *p_x2 = th;
     *p_x3 = ph;
+  }else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put conversion here!
   }
   return;
 }
@@ -121,6 +123,10 @@ void RadiationIntegrator::CoordinateJacobian(double x, double y, double z, doubl
     jacobian[3][1] = cth;
     jacobian[3][2] = -r * sth;
     jacobian[3][3] = 0.0;
+  }
+  else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put Jacobian btwn spherical polar minkowski and cartesian minkowski here!
+    //check that it is actually for comparison to cartesian minkowski or for comparison to cartesian kerr-schild
   }
   return;
 }
@@ -488,6 +494,27 @@ void RadiationIntegrator::CovariantSimulationMetric(double x, double y, double z
     gcov[3][3] = (r2 + a2 + 2.0 * bh_m * a2 * r * sth2 / sigma) * sth2;
   } else if(simulation_coord == Coordinates::spm){
     //TEGAN: put here the covariant metric for SPM coordinates 
+    double rr2 = x * x + y * y + z * z;
+    double cth = z / r;
+    double cth2 = cth * cth;
+    double sth2 = 1.0 - cth2;
+
+    gcov[0][0] = -1.0;
+    gcov[0][1] = 0.0;
+    gcov[0][2] = 0.0;
+    gcov[0][3] = 0.0;
+    gcov[1][0] = 0.0;
+    gcov[1][1] = 1.0;
+    gcov[1][2] = 0.0;
+    gcov[1][3] = 0.0;
+    gcov[2][0] = 0.0;
+    gcov[2][1] = 0.0;
+    gcov[2][2] = rr2;
+    gcov[2][3] = 0.0;
+    gcov[3][0] = 0.0;
+    gcov[3][1] = 0.0;
+    gcov[3][2] = 0.0;
+    gcov[3][3] = rr2*sth2;
   }
   return;
 }
@@ -574,6 +601,22 @@ void RadiationIntegrator::ContravariantSimulationMetric(double x, double y, doub
 
   else if(simulation_coord == Coordinates::spm){
     //TEGAN: put here the contravariant metric for SPM coordinates 
+    gcov[0][0] = -1.0;
+    gcov[0][1] = 0.0;
+    gcov[0][2] = 0.0;
+    gcov[0][3] = 0.0;
+    gcov[1][0] = 0.0;
+    gcov[1][1] = 1.0;
+    gcov[1][2] = 0.0;
+    gcov[1][3] = 0.0;
+    gcov[2][0] = 0.0;
+    gcov[2][1] = 0.0;
+    gcov[2][2] = 1.0/(rr2);
+    gcov[2][3] = 0.0;
+    gcov[3][0] = 0.0;
+    gcov[3][1] = 0.0;
+    gcov[3][2] = 0.0;
+    gcov[3][3] = 1.0/(rr2*sth2);
   }
   return;
 }
