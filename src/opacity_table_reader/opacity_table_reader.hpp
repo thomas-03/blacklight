@@ -55,6 +55,7 @@ struct OpacityTableReader
   
   // External function
   double Read(int snapshot);
+  void InterpolateToUniformTLog();
 
   // Internal functions - opacity_reader.cpp
   //std::string FormatFilename(int file_number);

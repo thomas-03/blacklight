@@ -286,7 +286,6 @@ double OpacityTableReader::Read(int snapshot)
   }
 
   // planck mean for each frequency group
-  
   for(int j=0; j<num_temps; ++j) {
     for(int i=0; i<num_rho; ++i) {
       double min = 1.e40;
@@ -335,5 +334,60 @@ double OpacityTableReader::Read(int snapshot)
 
   // Calculate elapsed time
   return omp_get_wtime() - time_start;
+
+}
+
+void OpacityTableReader::InterpolateToUniformTLog(){
+  //have a holder for the original, non-uniform temp grid so that we can refer to it
+  Array<double> temp_grid_holder = temp_grid;
+  int temp_indices[num_temps];
+  int num_found = 0;
+
+  temp_indices[0] = 0;
+  //we start at the second index because we know the first and the last must be the same btwn both grids
+  for(int i=1; i<num_temps; ++i){
+    //update the true temp_grid to be uniform in log
+    temp_grid(i) = pow(10.0, tmin + i * dlt);
+
+    //identify which two points in the non-uniform grid you are between by performing binary search
+    temp_indices[i] = temp_indices[i-1]+1;
+    int high = num_temps - 1;
+    while (temp_indices[i] < high) {
+        int mid = temp_indices[i] + (high - temp_indices[i]) / 2;
+        if (temp_grid_holder(mid)< temp_grid(i) && temp_grid_holder(mid+1) >= temp_grid(i)) {
+            temp_indices[i] = mid;
+            break;
+        }
+        else if (temp_grid_holder(mid) < temp_grid(i)) {
+            temp_indices[i] = mid + 1;
+        }
+        else {
+            high = mid - 1;
+        }
+    }
+
+    std::cout<<temp_grid(i)<<" vs "<<temp_grid_holder(i)<<std::endl;
+
+    //now that you have your upper and lower t bounds, interpolate the opacities to the uniform log T grid
+    for(int f=0;f<num_freqs;++f){
+      for(int r=0;r<num_rho;++r){
+        double plan_opacity_low = plan_tab(f,temp_indices[i],r);
+        double ross_opacity;
+
+        //TEGAN: TO DO 
+
+      }
+    }
+  }
+
+  for(int t=0;t<num_temps;++t){
+
+    
+  }
+
+  
+
+
+
 
 }
