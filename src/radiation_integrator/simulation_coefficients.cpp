@@ -580,13 +580,15 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               }*/
               alpha_i[adaptive_level](l,m,n)= table_opacity_value*nu_cgs;
               if(alpha_i[adaptive_level](l,m,n)<0){
-                double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
+                /*double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
                 double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
                 double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
                 
                 double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
 
-                std::printf("negative opacity: %e , table opacity at nearby point %e, table_opacity_value %e , free-free value %e \n", alpha_i[adaptive_level](l,m,n), p_opacity_table_reader->plan_tab(k,j,i), table_opacity_value,coefficient*nu_cgs);
+                std::printf("negative opacity: %e , table opacity at nearby point %e, table_opacity_value %e , free-free value %e , i %d, j %d, k %d , xi %f, xj %f, xk %f \n", alpha_i[adaptive_level](l,m,n), p_opacity_table_reader->plan_tab(k,j,i), table_opacity_value,coefficient*nu_cgs, i, j, k, xi, xj, xk);*/
+                //p_opacity_table_reader->plan_tab(k,j,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i)*xd;
+                //std::printf("interpolation variables: plan0 %e (1-xd) %f plan1 %e xd %f table_opacity_value %e \n",p_opacity_table_reader->plan_tab(k,j,i), (1-xd), p_opacity_table_reader->plan_tab(k+1,j,i), xd, table_opacity_value);
               }
 
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs

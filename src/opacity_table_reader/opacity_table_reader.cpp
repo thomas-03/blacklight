@@ -241,7 +241,7 @@ double OpacityTableReader::Read(int snapshot)
   dlr = (rmax-rmin)/(num_rho-1);
 
 
-  std::cout<<"Opacity table frequency range from "<<freq_grid(0)/Physics::h<<" to "<<freq_grid(num_freqs)/Physics::h<< " Hz with "<<num_freqs<<" frequencies in total."<<std::endl;
+  std::cout<<"Opacity table frequency range from "<<freq_grid(0)/Physics::h<<" to "<<freq_grid(num_freqs-1)/Physics::h<< " Hz with "<<num_freqs<<" frequencies in total."<<std::endl;
   std::cout<<"Opacity table temperature range from "<<temp_grid(0)<<" to "<<temp_grid(num_temps-1)<<" K with "<<num_temps<<" temperatures in total."<<std::endl;
   std::cout<<"Opacity table density range from "<<rho_grid(0)<<" to "<<rho_grid(num_rho-1)<<" g/cm^3 with "<<num_rho<<" densities in total."<<std::endl;
 
@@ -288,7 +288,7 @@ double OpacityTableReader::Read(int snapshot)
   // planck mean for each frequency group
   for(int j=0; j<num_temps; ++j) {
     for(int i=0; i<num_rho; ++i) {
-      /*double min = 1.e40;
+      double min = 1.e40;
       double max = 1.e-40;
       for(int k=0; k<num_freqs; ++k) {
         min = (min > plan_tab(k,j,i)) ? plan_tab(k,j,i) : min;
@@ -309,9 +309,9 @@ double OpacityTableReader::Read(int snapshot)
           //printf("%d %g %g %g %g\n",k,temp_grid(i),rho_grid(j),plan_tab(k,j,i),opac);
           plan_tab(k,j,i) = opac;
         }
-      }*/
+      }
      //my version of the free-free opacity calculation
-     for(int k=0; k<num_freqs; ++k) {
+     /*for(int k=0; k<num_freqs; ++k) {
            double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
            double partB = std::sqrt(2.0*Math::pi/(3.0*Physics::k_b*temp_grid(j)*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
@@ -319,7 +319,7 @@ double OpacityTableReader::Read(int snapshot)
            double nu = freq_grid(k) / Physics::h;
            double coefficient = partA*partB*(rho_grid(i)/(0.6*Physics::m_p))*(rho_grid(i)/(0.6*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
            plan_tab(k,j,i) = coefficient;
-      }
+      }*/
     }
   }
   //shane's version of free-free opacity calculation
@@ -343,10 +343,10 @@ double OpacityTableReader::Read(int snapshot)
       }
     }
     }*/
-  std::cout<<"planck opacity before: "<<plan_tab(10,10,10)<<std::endl;
+  //std::cout<<"planck opacity before: "<<plan_tab(10,10,10)<<std::endl;
   //interpolate to uniform log T grid
   InterpolateToUniformTLog();
-  std::cout<<"planck opacity after: "<<plan_tab(10,10,10)<<std::endl;
+  //std::cout<<"planck opacity after: "<<plan_tab(10,10,10)<<std::endl;
   
   
     // Read time
@@ -377,41 +377,51 @@ void OpacityTableReader::InterpolateToUniformTLog(){
   Array<double> temp_grid_holder;
   temp_grid_holder.Allocate(num_temps);
   temp_grid_holder.CopyFrom(temp_grid,0,0,num_temps);
+  Array<double> plan_tab_holder;
+  plan_tab_holder.Allocate(num_freqs,num_temps,num_rho);
+  plan_tab_holder.CopyFrom(plan_tab,0,0,plan_tab.GetNumBytes()/sizeof(double));
+  Array<double> ross_tab_holder;
+  ross_tab_holder.Allocate(num_freqs,num_temps,num_rho);
+  ross_tab_holder.CopyFrom(ross_tab,0,0,ross_tab.GetNumBytes()/sizeof(double));
   int temp_indices[num_temps];
   int num_found = 0;
 
   temp_indices[0] = 0;
+
   //we start at the second index because we know the first and the last must be the same btwn both grids
-  for(int i=1; i<num_temps; ++i){
+  for(int i=1; i<num_temps-1; ++i){
     //update the true temp_grid to be uniform in log
     temp_grid(i) = pow(10.0, tmin + i * dlt);
 
     //identify which two points in the non-uniform grid you are between by performing binary search
-    temp_indices[i] = temp_indices[i-1]+1;
-    int high = num_temps - 1;
-    while (temp_indices[i] < high) {
-        int mid = temp_indices[i] + (high - temp_indices[i]) / 2;
+    //temp_indices[i] = temp_indices[i-1]+1;
+    int low = temp_indices[i-1];
+    temp_indices[i] = low;
+    int high = num_temps - 2;
+    
+    while (low <= high) {
+        int mid = low + std::floor((high - low) / 2);
+        
         if (temp_grid_holder(mid)< temp_grid(i) && temp_grid_holder(mid+1) >= temp_grid(i)) {
             temp_indices[i] = mid;
             break;
         }
-        else if (temp_grid_holder(mid) < temp_grid(i)) {
-            temp_indices[i] = mid + 1;
+        else if (temp_grid_holder(mid+1) <= temp_grid(i)) {
+            low = mid + 1;
         }
         else {
             high = mid - 1;
         }
     }
-
     //std::cout<<temp_grid(i)<<" vs "<<temp_grid_holder(i)<<std::endl;
 
     //now that you have your upper and lower t bounds, interpolate the opacities to the uniform log T grid
     for(int f=0;f<num_freqs;++f){
       for(int r=0;r<num_rho;++r){
-        double plan_opacity_low = plan_tab(f,temp_indices[i],r);
-        double ross_opacity_low = ross_tab(f,temp_indices[i],r);
-        double plan_opacity_high = plan_tab(f,temp_indices[i]+1,r);
-        double ross_opacity_high = ross_tab(f,temp_indices[i]+1,r);
+        double plan_opacity_low = plan_tab_holder(f,temp_indices[i],r);
+        double ross_opacity_low = ross_tab_holder(f,temp_indices[i],r);
+        double plan_opacity_high = plan_tab_holder(f,temp_indices[i]+1,r);
+        double ross_opacity_high = ross_tab_holder(f,temp_indices[i]+1,r);
 
         double t_low = temp_grid_holder(temp_indices[i]);
         double t_high = temp_grid_holder(temp_indices[i]+1);
@@ -420,20 +430,18 @@ void OpacityTableReader::InterpolateToUniformTLog(){
         plan_tab(f,i,r) = plan_opacity_low + (plan_opacity_high - plan_opacity_low)*(t_target - t_low)/(t_high - t_low);
         ross_tab(f,i,r) = ross_opacity_low + (ross_opacity_high - ross_opacity_low)*(t_target - t_low)/(t_high - t_low);
 
-        /*if(plan_tab(f,i,r)>1e-10){
-          std::cout<<"Warning: very high planck opacity after interpolation at f index "<<f<<", t index "<<i<<", rho index "<<r<<": "<<plan_tab(f,i,r)<<std::endl;
-        }*/
+        if(plan_tab(f,i,r)<0){
+          std::cout<<"negative opacity. prev value "<<plan_opacity_low<< " next value "<<plan_opacity_high<<" indice "<<temp_indices[i]<<std::endl;
+        }
+
+        //std::cout<<"calculated free-free opacity at f "<<f<<" t "<<i<<" r "<<r<<" : "<<coefficient<<" my table interpolated value: "<<plan_tab(f,i,r)<<std::endl;
+        //plan_tab(f,i,r) = coefficient; //override with calculated free-free opacity
       }
     }
+    //std::cout<<"temp before: "<<temp_grid_holder(i)<<" temp after: "<<temp_grid(i)<<" lower index: "<<temp_indices[i]<<" upper index: "<<temp_indices[i]+1<<std::endl;
   }
 
-
-  /*double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
-  double partB = std::sqrt(2.0*Math::pi/(3.0*Physics::k_b*temp_grid(10)*Physics::m_e));
-  double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
-  //double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
-  double nu = freq_grid(10) / Physics::h;
-  double coefficient = partA*partB*(rho_grid(10)/(0.6*Physics::m_p))*(rho_grid(10)/(0.6*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(10))))*gaunt_factor/(nu*nu*nu);
-  std::cout<<"calculated free-free opacity at index 10: "<<coefficient<<" my table interpolated value: "<<plan_tab(10,10,10)<<std::endl;*/
+  //std::cout<<"calculated free-free opacity at index 10: "<<coefficient<<" my table interpolated value: "<<plan_tab(10,10,10)<<std::endl;
   temp_grid_holder.Deallocate();
+  plan_tab_holder.Deallocate();
 }
