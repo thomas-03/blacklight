@@ -200,24 +200,27 @@ double OpacityTableReader::Read(int snapshot)
   fscanf(opac_file,"%d",&(num_rho));
   
   // allocate arrays
-  freq_grid.Allocate(num_freqs+1);
+  freq_grid.Allocate(num_freqs);
   temp_grid.Allocate(num_temps);
   rho_grid.Allocate(num_rho);
   ross_tab.Allocate(num_freqs,num_temps,num_rho);
   plan_tab.Allocate(num_freqs,num_temps,num_rho);
 
-  for(int i=1; i<=num_freqs; ++i){
+  for(int i=0; i<num_freqs; ++i){
     fscanf(opac_file,"%lf",&(freq_grid(i)));
   }
-
-  freq_grid(0) = freq_grid(1)*freq_grid(1)/freq_grid(2);
+  //why do we do this?
+  //i also don't quite get why we set fmin as freq_grid(1) and fmax as freq_grid(num_freqs-1)
+  //freq_grid(0) = freq_grid(1)*freq_grid(1)/freq_grid(2);
+  std::cout<<"First frequency in table: "<<freq_grid(0)<<"second "<<freq_grid(1)<<"third "<<freq_grid(2)<<std::endl;
+  //even fixing it though still results in very similar graph
   // convert to erg
   double keverg = 1.602176634e-9;
-  for(int i=0; i<=num_freqs; ++i)
+  for(int i=0; i<num_freqs; ++i)
     freq_grid(i) *= keverg;
-  fmin = std::log10(freq_grid(1));
+  fmin = std::log10(freq_grid(0));
   fmax = std::log10(freq_grid(num_freqs-1));
-  dlf = (fmax-fmin)/(num_freqs-2);
+  dlf = (fmax-fmin)/(num_freqs-1);
 
   // temperature grid (keV)
   for(int i=0; i<num_temps; ++i){
@@ -269,7 +272,6 @@ double OpacityTableReader::Read(int snapshot)
       for(int i=0; i<num_rho; ++i) {
         fscanf(opac_file,"%lf",&(ross_tab(k,j,i)));
         ross_tab(k,j,i) *= rho_grid(i);
-        //std::cout << "Rosseland opacity " << k << " " << j << " " << i << " : " << ross_tab(k,j,i) << std::endl;
       }
     }
   }
@@ -280,7 +282,6 @@ double OpacityTableReader::Read(int snapshot)
       for(int i=0; i<num_rho; ++i) {
         fscanf(opac_file,"%lf",&(plan_tab(k,j,i)));
         plan_tab(k,j,i) *= rho_grid(i);
-        //std::cout << "Planck opacity " << k << " " << j << " " << i << " : " << plan_tab(k,j,i) << std::endl;
       }
     }
   }
@@ -295,20 +296,24 @@ double OpacityTableReader::Read(int snapshot)
         max = (max < plan_tab(k,j,i)) ? plan_tab(k,j,i) : max;
       }
       if (max/min < 1.2) {
-        double ffnrm = 3.692146e8;
-        double heabund = 0.09; //hardcode for now (should be parameter)
-        double tgas = temp_grid(j);
-        double nh = rho_grid(i) / (Physics::m_p*(1.+4.*heabund));
-        double nhe = nh*heabund;
-        double ne = nh + 2.*nhe;
         for(int k=0; k<num_freqs; ++k) {
+          double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
+          double partB = std::sqrt(2.0*Math::pi/(3.0*Physics::k_b*temp_grid(j)*Physics::m_e));
+          double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
           double nu = freq_grid(k) / Physics::h;
-          double ehnu = exp(-Physics::h*nu / (Physics::k_b * tgas) );
-          double aff = ffnrm/sqrt(tgas)/pow(nu,3);
-          double opac = ne * (nh + 4. * nhe) * aff * (1. - ehnu);
-          //printf("%d %g %g %g %g\n",k,temp_grid(i),rho_grid(j),plan_tab(k,j,i),opac);
-          plan_tab(k,j,i) = opac;
+          //note that I hardcoded in the 0.6 mean molecular weight here
+          double coefficient = partA*partB*(rho_grid(i)/(0.6*Physics::m_p))*(rho_grid(i)/(0.6*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
+          plan_tab(k,j,i) = coefficient;
         }
+      }else{
+        /*for(int k=0; k<num_freqs; ++k) {
+          double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
+          double partB = std::sqrt(2.0*Math::pi/(3.0*Physics::k_b*temp_grid(j)*Physics::m_e));
+          double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
+          double nu = freq_grid(k) / Physics::h;
+          double coefficient = partA*partB*(rho_grid(i)/(0.6*Physics::m_p))*(rho_grid(i)/(0.6*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
+          //std::cout<<"table opacity value "<<plan_tab(k,j,i)<<" free-free value "<<coefficient<<" ratio "<<plan_tab(k,j,i)/coefficient<< " at freq "<<nu<<" temp "<<temp_grid(j)<<" rho "<<rho_grid(i)<<std::endl;
+        }*/
       }
      //my version of the free-free opacity calculation
      /*for(int k=0; k<num_freqs; ++k) {
@@ -322,47 +327,9 @@ double OpacityTableReader::Read(int snapshot)
       }*/
     }
   }
-  //shane's version of free-free opacity calculation
-  /*for(int k=0; k<num_freqs; ++k) {
-    double ffnrm = 3.692146e8;
-    double heabund = 0.09; //hardcode for now (should be parameter)
-    double mp = 1.67262192369e-24;
-    double h = 6.62607015e-27;
-    double kb = 1.380649e-16;
-    double nu = freq_grid(k) / h;
-    for(int j=0; j<num_temps; ++j) {
-      double tgas = temp_grid(j);
-      double ehnu = exp(-h*nu / (kb * tgas) );
-      for(int i=0; i<num_rho; ++i) {
-        double nh = rho_grid(i) / (mp*(1.+4.*heabund));
-        double nhe = nh*heabund;
-        double ne = nh + 2.*nhe;
-        double aff = ffnrm/sqrt(tgas)/pow(nu,3);
-        double opac = ne * (nh + 4. * nhe) * aff * (1. - ehnu);
-        plan_tab(k,j,i) = opac;
-      }
-    }
-    }*/
-  //std::cout<<"planck opacity before: "<<plan_tab(10,10,10)<<std::endl;
+
   //interpolate to uniform log T grid
   InterpolateToUniformTLog();
-  //std::cout<<"planck opacity after: "<<plan_tab(10,10,10)<<std::endl;
-  
-  
-    // Read time
-    
-
-      // Convert internal energy to pressure
-      /*#pragma omp parallel for schedule(static) collapse(3)
-      for (int block = 0; block < athenak_num_blocks; block++)
-        for (int k = 0; k < athenak_block_nz; k++)
-          for (int j = 0; j < athenak_block_ny; j++)
-            for (int i = 0; i < athenak_block_nx; i++)
-              prim[n](ind_pgas,block,k,j,i) *= static_cast<float>(plasma_gamma - 1.0);
-    */
-
-
-    
 
   // Close input file
   fclose(opac_file);
@@ -393,8 +360,7 @@ void OpacityTableReader::InterpolateToUniformTLog(){
     //update the true temp_grid to be uniform in log
     temp_grid(i) = pow(10.0, tmin + i * dlt);
 
-    //identify which two points in the non-uniform grid you are between by performing binary search
-    //temp_indices[i] = temp_indices[i-1]+1;
+    //identify which two points in the non-uniform grid you are between by performing binary searc
     int low = temp_indices[i-1];
     temp_indices[i] = low;
     int high = num_temps - 2;
@@ -413,7 +379,6 @@ void OpacityTableReader::InterpolateToUniformTLog(){
             high = mid - 1;
         }
     }
-    //std::cout<<temp_grid(i)<<" vs "<<temp_grid_holder(i)<<std::endl;
 
     //now that you have your upper and lower t bounds, interpolate the opacities to the uniform log T grid
     for(int f=0;f<num_freqs;++f){
@@ -433,15 +398,11 @@ void OpacityTableReader::InterpolateToUniformTLog(){
         if(plan_tab(f,i,r)<0){
           std::cout<<"negative opacity. prev value "<<plan_opacity_low<< " next value "<<plan_opacity_high<<" indice "<<temp_indices[i]<<std::endl;
         }
-
-        //std::cout<<"calculated free-free opacity at f "<<f<<" t "<<i<<" r "<<r<<" : "<<coefficient<<" my table interpolated value: "<<plan_tab(f,i,r)<<std::endl;
-        //plan_tab(f,i,r) = coefficient; //override with calculated free-free opacity
       }
     }
-    //std::cout<<"temp before: "<<temp_grid_holder(i)<<" temp after: "<<temp_grid(i)<<" lower index: "<<temp_indices[i]<<" upper index: "<<temp_indices[i]+1<<std::endl;
   }
 
-  //std::cout<<"calculated free-free opacity at index 10: "<<coefficient<<" my table interpolated value: "<<plan_tab(10,10,10)<<std::endl;
   temp_grid_holder.Deallocate();
   plan_tab_holder.Deallocate();
+  ross_tab_holder.Deallocate();
 }
