@@ -209,11 +209,7 @@ double OpacityTableReader::Read(int snapshot)
   for(int i=0; i<num_freqs; ++i){
     fscanf(opac_file,"%lf",&(freq_grid(i)));
   }
-  //why do we do this?
-  //i also don't quite get why we set fmin as freq_grid(1) and fmax as freq_grid(num_freqs-1)
-  //freq_grid(0) = freq_grid(1)*freq_grid(1)/freq_grid(2);
-  std::cout<<"First frequency in table: "<<freq_grid(0)<<"second "<<freq_grid(1)<<"third "<<freq_grid(2)<<std::endl;
-  //even fixing it though still results in very similar graph
+
   // convert to erg
   double keverg = 1.602176634e-9;
   for(int i=0; i<num_freqs; ++i)
@@ -327,9 +323,15 @@ double OpacityTableReader::Read(int snapshot)
       }*/
     }
   }
-
+  std::cout<<"opacity at 13,15,31 "<<plan_tab(13,15,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(15))<<" rho "<<rho_grid(31)<<std::endl;
+  std::cout<<"opacity at 13,21,31 "<<plan_tab(13,21,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(21))<<" rho "<<rho_grid(31)<<std::endl;
+  std::cout<<"opacity at 13,22,31 "<<plan_tab(13,22,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(22))<<" rho "<<rho_grid(31)<<std::endl;
   //interpolate to uniform log T grid
   InterpolateToUniformTLog();
+
+  std::cout<<"opacity at 13,21,31 after interp "<<plan_tab(13,21,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(21))<<" rho "<<rho_grid(31)<<std::endl;
+  std::cout<<"opacity at 13,22,31 after interp "<<plan_tab(13,22,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(22))<<" rho "<<rho_grid(31)<<std::endl;
+  std::cout<<"opacity at 13,30,31 after interp "<<plan_tab(13,30,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(30))<<" rho "<<rho_grid(31)<<std::endl;
 
   // Close input file
   fclose(opac_file);

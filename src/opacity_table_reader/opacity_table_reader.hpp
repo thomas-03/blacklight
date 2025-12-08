@@ -43,9 +43,11 @@ struct OpacityTableReader
   int num_rho;
 
   Array<double> freq_grid;
+  //Array<double>* freq_grid_ptr = &freq_grid;
   Array<double> temp_grid;
+  //Array<double>* temp_grid_ptr = &temp_grid;
   Array<double> rho_grid;
-
+  //Array<double>* rho_grid_ptr = &rho_grid;
   Array<double> ross_tab;
   Array<double> plan_tab;
 

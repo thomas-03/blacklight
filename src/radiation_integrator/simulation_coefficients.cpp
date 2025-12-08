@@ -555,6 +555,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           
             if(!default_to_free_free){
               //std::printf("using opacity table value \n");
+              //check if here instead of using logs I should be using regular linear values
               double xi = (log_rho - p_opacity_table_reader->rmin)/p_opacity_table_reader->dlr;
               double xj = (log_temp - p_opacity_table_reader->tmin)/p_opacity_table_reader->dlt;
               double xk = (log_freq - p_opacity_table_reader->fmin)/p_opacity_table_reader->dlf;
@@ -578,22 +579,25 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               /*if(std::abs(table_opacity_value - p_opacity_table_reader->plan_tab(k,j,i))>1e-15){
                 std::printf("notable interpolation impact: %e \n", table_opacity_value - p_opacity_table_reader->plan_tab(k,j,i));
               }*/
-              alpha_i[adaptive_level](l,m,n)= table_opacity_value*nu_cgs;
-              if(alpha_i[adaptive_level](l,m,n)<0){
-                /*double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
-                double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
-                double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
-                
-                double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
-
-                std::printf("negative opacity: %e , table opacity at nearby point %e, table_opacity_value %e , free-free value %e , i %d, j %d, k %d , xi %f, xj %f, xk %f \n", alpha_i[adaptive_level](l,m,n), p_opacity_table_reader->plan_tab(k,j,i), table_opacity_value,coefficient*nu_cgs, i, j, k, xi, xj, xk);*/
-                //p_opacity_table_reader->plan_tab(k,j,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i)*xd;
-                //std::printf("interpolation variables: plan0 %e (1-xd) %f plan1 %e xd %f table_opacity_value %e \n",p_opacity_table_reader->plan_tab(k,j,i), (1-xd), p_opacity_table_reader->plan_tab(k+1,j,i), xd, table_opacity_value);
+              alpha_i[adaptive_level](l,m,n)+= table_opacity_value*nu_cgs;
+              //maybe try seeing if it improves if I store kappa and then multiply by nu_cgs
+              
+              double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
+              double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
+              double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
+              
+              double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
+              if(table_opacity_value*1e-14>coefficient){
+                //std::printf("warning: large discrepancy between table opacity and free-free opacity: %e vs %e \n", table_opacity_value, coefficient);
+                //std::printf("true log_temp (K): %f , estimated log_temp: %f \n", std::log10(kb_tt_e_cgs/Physics::k_b), p_opacity_table_reader->tmin + j*p_opacity_table_reader->dlt);
+                //std::printf("true log_rho (g/cm3): %f , estimated log_rho: %f \n", std::log10(rho_cgs), p_opacity_table_reader->rho_grid_ptr->operator()(i));
+                //std::printf("true log_freq (Hz): %f , estimated log_freq: %f \n", std::log10(nu_cgs*Physics::h), p_opacity_table_reader->fmin + k*p_opacity_table_reader->dlf);
+                //std::printf("example plan_tab value: %e at indices (%d, %d, %d)\n", p_opacity_table_reader->plan_tab(k,j,i), k, j, i);
               }
 
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
                   / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
-              j_i[adaptive_level](l,m,n) = table_opacity_value* planck_function/(nu_cgs*nu_cgs);
+              j_i[adaptive_level](l,m,n) += table_opacity_value* planck_function/(nu_cgs*nu_cgs);
             }
           }
           }
