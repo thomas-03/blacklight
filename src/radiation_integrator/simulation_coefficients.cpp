@@ -560,20 +560,20 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               double xj = (log_temp - p_opacity_table_reader->tmin)/p_opacity_table_reader->dlt;
               double xk = (log_freq - p_opacity_table_reader->fmin)/p_opacity_table_reader->dlf;
               
-
               int i = std::floor(xi);
               int j = std::floor(xj);
               int k = std::floor(xk);
+              //it seems like the indices I get for each one seems reasonable. 
 
               double xd = xi - i;
               double yd = xj - j;
               double zd = xk - k;
-              double c00 = p_opacity_table_reader->plan_tab(k,j,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i)*xd;
-              double c10 = p_opacity_table_reader->plan_tab(k,j+1,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i)*xd;
-              double c01 = p_opacity_table_reader->plan_tab(k,j,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i+1)*xd;
-              double c11 = p_opacity_table_reader->plan_tab(k,j+1,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i+1)*xd;
-              double c0 = c00*(1 - yd) + c10*yd;
-              double c1 = c01*(1 - yd) + c11*yd;
+              double c00 = p_opacity_table_reader->plan_tab(k,j,i)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j,i)*yd;
+              double c10 = p_opacity_table_reader->plan_tab(k,j,i+1)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j,i+1)*yd;
+              double c01 = p_opacity_table_reader->plan_tab(k+1,j,i)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j+1,i)*yd;
+              double c11 = p_opacity_table_reader->plan_tab(k+1,j,i+1)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j+1,i+1)*yd;
+              double c0 = c00*(1 - xd) + c10*xd;
+              double c1 = c01*(1 - xd) + c11*xd;
               table_opacity_value = c0*(1 - zd) + c1*zd;
 
               /*if(std::abs(table_opacity_value - p_opacity_table_reader->plan_tab(k,j,i))>1e-15){
@@ -588,11 +588,24 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               
               double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
               if(table_opacity_value*1e-14>coefficient){
-                //std::printf("warning: large discrepancy between table opacity and free-free opacity: %e vs %e \n", table_opacity_value, coefficient);
-                //std::printf("true log_temp (K): %f , estimated log_temp: %f \n", std::log10(kb_tt_e_cgs/Physics::k_b), p_opacity_table_reader->tmin + j*p_opacity_table_reader->dlt);
-                //std::printf("true log_rho (g/cm3): %f , estimated log_rho: %f \n", std::log10(rho_cgs), p_opacity_table_reader->rho_grid_ptr->operator()(i));
+                //the surrounding table values for my i,j,and k all look around what the table_opacity_value is, but they are super large compared to the free-free values
+
+                //maybe because I set dlt early and not post-uniform grid that's what messed it up? --> if that's the case then I should be seeing temperatures very different from what we actually get, however they all seem reasonable
+                //the rho values also seem reasonable in that it's not far off and the low value is indeed lower and the high value is indeed higher
+                //the frequency values also seem reasonable in the same way as above
+
+                //next to check is that when I go to calculate the distances in log space for the interpolation if I messed something up there
+                //the distances in log space for frequency and temperature seem reasonable
+                
+                //maybe I should check what happens if I do the same exact method as shane (no interpolation and just look around for the correct temp)
+                //free-free is like 1e-25 and I'm getting stuff around 1e-10
+
+                //std::printf("warning: large discrepancy between table opacity and free-free opacity: %e vs %e \n  true log_rho (g/cm3): %f , estimated log_rho: %f \n  example plan_tab value: %e %e at indices (%d, %d, %d) and temp +1 indice\n", table_opacity_value, coefficient,std::log10(rho_cgs), std::log10(p_opacity_table_reader->rho_grid(i)), p_opacity_table_reader->plan_tab(k,j,i),p_opacity_table_reader->plan_tab(k+1,j,i), k, j, i);
+                //std::printf("true log_temp: %f , estimated log_temp: %f , log_temp +1 : %f , xd = %f \n", std::log10(kb_tt_e_cgs/Physics::k_b), std::log10(p_opacity_table_reader->temp_grid(j)), std::log10(p_opacity_table_reader->temp_grid(j+1)),yd);
+                //std::printf("true log_rho (g/cm3): %f , estimated log_rho: %f \n", std::log10(rho_cgs), std::log10(p_opacity_table_reader->rho_grid(i)));
                 //std::printf("true log_freq (Hz): %f , estimated log_freq: %f \n", std::log10(nu_cgs*Physics::h), p_opacity_table_reader->fmin + k*p_opacity_table_reader->dlf);
-                //std::printf("example plan_tab value: %e at indices (%d, %d, %d)\n", p_opacity_table_reader->plan_tab(k,j,i), k, j, i);
+                //std::printf("example plan_tab value: %e %e at indices (%d, %d, %d) and temp +1 indice\n", p_opacity_table_reader->plan_tab(k,j,i),p_opacity_table_reader->plan_tab(k,j+1,i), k, j, i);
+                //std::printf("big deviation. free free value %e, table interpolated value %e \n kji %e , kji+1 %e, kj+1i %e, kj+1i+1 %e \n k+1ji %e , k+1ji+1 %e, k+1j+1i %e, k+1j+1i+1 %e \n", coefficient, table_opacity_value, p_opacity_table_reader->plan_tab(k,j,i), p_opacity_table_reader->plan_tab(k,j,i+1), p_opacity_table_reader->plan_tab(k,j+1,i), p_opacity_table_reader->plan_tab(k,j+1,i+1), p_opacity_table_reader->plan_tab(k+1,j,i), p_opacity_table_reader->plan_tab(k+1,j,i+1), p_opacity_table_reader->plan_tab(k+1,j+1,i), p_opacity_table_reader->plan_tab(k+1,j+1,i+1));
               }
 
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs

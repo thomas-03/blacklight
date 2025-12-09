@@ -281,7 +281,9 @@ double OpacityTableReader::Read(int snapshot)
       }
     }
   }
-
+  std::ofstream kTFile;
+  kTFile.open("./opacityTableCheck.csv", std::ios_base::app);
+  kTFile<<"table value"<<","<<"free-free value"<<","<<"ratio"<<","<<"frequency(Hz)"<<","<<"temperature(K)"<<","<<"density(g/cm3)"<<std::endl;
   // planck mean for each frequency group
   for(int j=0; j<num_temps; ++j) {
     for(int i=0; i<num_rho; ++i) {
@@ -302,14 +304,16 @@ double OpacityTableReader::Read(int snapshot)
           plan_tab(k,j,i) = coefficient;
         }
       }else{
-        /*for(int k=0; k<num_freqs; ++k) {
+        //manually check if the tables always deviated from free free or if it's a new thing
+
+        for(int k=0; k<num_freqs; ++k) {
           double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
           double partB = std::sqrt(2.0*Math::pi/(3.0*Physics::k_b*temp_grid(j)*Physics::m_e));
           double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
           double nu = freq_grid(k) / Physics::h;
           double coefficient = partA*partB*(rho_grid(i)/(0.6*Physics::m_p))*(rho_grid(i)/(0.6*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
-          //std::cout<<"table opacity value "<<plan_tab(k,j,i)<<" free-free value "<<coefficient<<" ratio "<<plan_tab(k,j,i)/coefficient<< " at freq "<<nu<<" temp "<<temp_grid(j)<<" rho "<<rho_grid(i)<<std::endl;
-        }*/
+          kTFile<<plan_tab(k,j,i)<<","<<coefficient<<","<<plan_tab(k,j,i)/coefficient<< ","<<nu<<","<<temp_grid(j)<<","<<rho_grid(i)<<std::endl;
+        }
       }
      //my version of the free-free opacity calculation
      /*for(int k=0; k<num_freqs; ++k) {
@@ -323,9 +327,11 @@ double OpacityTableReader::Read(int snapshot)
       }*/
     }
   }
+  kTFile.close();
   std::cout<<"opacity at 13,15,31 "<<plan_tab(13,15,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(15))<<" rho "<<rho_grid(31)<<std::endl;
   std::cout<<"opacity at 13,21,31 "<<plan_tab(13,21,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(21))<<" rho "<<rho_grid(31)<<std::endl;
   std::cout<<"opacity at 13,22,31 "<<plan_tab(13,22,31)<<" at freq "<<freq_grid(13)/Physics::h<<" temp "<<std::log10(temp_grid(22))<<" rho "<<rho_grid(31)<<std::endl;
+  
   //interpolate to uniform log T grid
   InterpolateToUniformTLog();
 
