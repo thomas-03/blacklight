@@ -95,6 +95,8 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
           double expm1 = std::expm1(delta_tau);
           bool optically_thin = delta_tau <= delta_tau_max;
 
+          int trace_pixel = m;
+
           // Integrate light
           if (image_light)
           {

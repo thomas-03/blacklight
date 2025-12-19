@@ -568,12 +568,12 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               double xd = xi - i;
               double yd = xj - j;
               double zd = xk - k;
-              double c00 = p_opacity_table_reader->plan_tab(k,j,i)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j,i)*yd;
-              double c10 = p_opacity_table_reader->plan_tab(k,j,i+1)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j,i+1)*yd;
-              double c01 = p_opacity_table_reader->plan_tab(k+1,j,i)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j+1,i)*yd;
-              double c11 = p_opacity_table_reader->plan_tab(k+1,j,i+1)*(1 - yd) + p_opacity_table_reader->plan_tab(k+1,j+1,i+1)*yd;
-              double c0 = c00*(1 - xd) + c10*xd;
-              double c1 = c01*(1 - xd) + c11*xd;
+              double c00 = p_opacity_table_reader->plan_tab(k,j,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i)*xd;
+              double c01 = p_opacity_table_reader->plan_tab(k,j,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j,i+1)*xd;
+              double c10 = p_opacity_table_reader->plan_tab(k,j+1,i)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i)*xd;
+              double c11 = p_opacity_table_reader->plan_tab(k,j+1,i+1)*(1 - xd) + p_opacity_table_reader->plan_tab(k+1,j+1,i+1)*xd;
+              double c0 = c00*(1 - yd) + c10*yd;
+              double c1 = c01*(1 - yd) + c11*yd;
               table_opacity_value = c0*(1 - zd) + c1*zd;
 
               /*if(std::abs(table_opacity_value - p_opacity_table_reader->plan_tab(k,j,i))>1e-15){

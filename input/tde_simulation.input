@@ -8,7 +8,8 @@ output_file   = output/r1200_pinhole_tde1335_inc15_opacitytable_test.npz  # file
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
-checkpoint_geodesic_save = false  # flag indicating geodesics should be saved
+checkpoint_geodesic_save = true  # flag indicating geodesics should be saved
+checkpoint_geodesic_file = output/tde_inc15_r1200_geodesics.dat
 checkpoint_geodesic_load = false  # flag indicating geodesics should be loaded
 checkpoint_sample_save   = false  # flag indicating simulation sampling should be saved
 checkpoint_sample_load   = false  # flag indicating simulation sampling should be loaded
