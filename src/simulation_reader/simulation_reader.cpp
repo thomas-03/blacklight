@@ -24,7 +24,7 @@
 #include "../utils/array.hpp"                // Array
 #include "../utils/exceptions.hpp"           // BlacklightException, BlacklightWarning
 #include "../utils/file_io.hpp"              // ReadBinary
-
+//TEGAN: I think that I've edited all that I need for the implementation of spm coordinates
 //--------------------------------------------------------------------------------------------------
 
 // Simulation reader constructor
@@ -349,6 +349,7 @@ double SimulationReader::Read(int snapshot)
     if (simulation_format == SimulationFormat::athena)
     {
       float time_temp;
+      //TEGAN: fix this so it's not hardcoded
       time_temp=1367;
       //ReadHDF5FloatAttribute("Time", &time_temp);
       time[n] = time_temp;
@@ -372,7 +373,7 @@ double SimulationReader::Read(int snapshot)
       ReadHDF5StringArray("header/metric", true, &p_temp_metric, &temp_count);
       metric = *p_temp_metric;
       delete[] p_temp_metric;
-      if (simulation_coord == Coordinates::sks or simulation_coord == Coordinates::fmks)
+      if (simulation_coord == Coordinates::sks or simulation_coord == Coordinates::fmks or simulation_coord == Coordinates::spm)
       {
         std::string metric_lower = metric;
         for (unsigned int c = 0; c < metric_lower.size(); c++)
@@ -732,7 +733,7 @@ double SimulationReader::Read(int snapshot)
     // Check coordinates
     if (first_time)
     {
-      if (simulation_coord == Coordinates::sks and x2f.n2 == 1)
+      if ((simulation_coord == Coordinates::sks or simulation_coord == Coordinates::spm) and x2f.n2 == 1)
       {
         bool error_low = std::abs(x2f(0,0)) > (x2f(0,1) - x2f(0,0)) * angular_domain_tolerance;
         bool error_high = std::abs(x2f(0,x2f.n1-1) - Math::pi)
@@ -749,7 +750,7 @@ double SimulationReader::Read(int snapshot)
           x2f(0,x2f.n1-1) = Math::pi;
         }
       }
-      if ((simulation_coord == Coordinates::sks or simulation_coord == Coordinates::fmks)
+      if ((simulation_coord == Coordinates::sks or simulation_coord == Coordinates::fmks or simulation_coord == Coordinates::spm)
           and x3f.n2 == 1)
       {
         bool error_low = std::abs(x3f(0,0)) > (x3f(0,1) - x3f(0,0)) * angular_domain_tolerance;

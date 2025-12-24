@@ -26,6 +26,7 @@
 //     Allocates and sets x2v_alt to save modified coordinates for regular MKS.
 //     Transforms x1f, x2f, x1v, and x2v.
 //     Operates in serial, given all arrays are 1D and likely to be small.
+//   Only used for iharm3d or harm3d data.
 void SimulationReader::ConvertCoordinates()
 {
   // Extract parameters
@@ -92,6 +93,7 @@ void SimulationReader::ConvertCoordinates()
 //   Assumes x1v and x2v are set in standard coordinates.
 //   Assumes x2v_alt is set in modified coordinates.
 //   Assumes ind_uu1, ind_uu2, ind_uu3, ind_bb1, ind_bb2, and ind_bb3 are set.
+//   Only used for iharm3d or harm3d data.
 void SimulationReader::ConvertPrimitives3(Array<float> &primitives)
 {
   // Extract parameters
@@ -239,6 +241,7 @@ void SimulationReader::ConvertPrimitives3(Array<float> &primitives)
 //   Assumes x1v and x2v are set in standard coordinates.
 //   Assumes x2v_alt is set in modified coordinates.
 //   Assumes ind_u0, ind_uu1, ind_uu2, ind_uu3, ind_b0, ind_bb1, ind_bb2, and ind_bb3 are set.
+//   Only used for iharm3d or harm3d data.
 void SimulationReader::ConvertPrimitives4(Array<float> &primitives)
 {
   // Extract parameters

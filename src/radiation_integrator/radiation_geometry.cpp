@@ -52,6 +52,23 @@ void RadiationIntegrator::ConvertFromCKS(double *p_x1, double *p_x2, double *p_x
     *p_x1 = r;
     *p_x2 = th;
     *p_x3 = ph;
+  }else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put conversion here!
+    //or in general I should ask if it would be better to have the interpolation grid use spm coords directly
+    //because realistically CKS and SKS and FMKS all describe the same spacetime, so conversion btwn them is straightforward
+    //but SPM is a different spacetime altogether so maybe be better to interpolate directly over that flat spacetime
+    double x = *p_x1;
+    double y = *p_x2;
+    double z = *p_x3;
+    double r2 = x * x + y * y + z * z;
+    double r = std::sqrt(r2);
+    double th = std::acos(z / r);
+    double ph = std::atan2(y, x);
+    ph += ph < 0.0 ? 2.0 * Math::pi : 0.0;
+    ph -= ph >= 2.0 * Math::pi ? 2.0 * Math::pi : 0.0;
+    *p_x1 = r;
+    *p_x2 = th;
+    *p_x3 = ph;
   }
   return;
 }
@@ -117,6 +134,35 @@ void RadiationIntegrator::CoordinateJacobian(double x, double y, double z, doubl
     jacobian[2][1] = sth * sph;
     jacobian[2][2] = cth * (r * sph + bh_a * cph);
     jacobian[2][3] = sth * (r * cph - bh_a * sph);
+    jacobian[3][0] = 0.0;
+    jacobian[3][1] = cth;
+    jacobian[3][2] = -r * sth;
+    jacobian[3][3] = 0.0;
+  }
+  else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put Jacobian btwn spherical polar minkowski and cartesian minkowski here!
+    //check that it is actually for comparison to cartesian minkowski or for comparison to cartesian kerr-schild
+    double r2 = x * x + y * y + z * z;
+    double r = std::sqrt(r2);
+    double cth = z / r;
+    double sth = std::sqrt(1.0 - cth * cth);
+    double ph = std::atan2(y, x);
+    double sph = std::sin(ph);
+    double cph = std::cos(ph);
+
+    // Calculate Jacobian of transformation
+    jacobian[0][0] = 1.0;
+    jacobian[0][1] = 0.0;
+    jacobian[0][2] = 0.0;
+    jacobian[0][3] = 0.0;
+    jacobian[1][0] = 0.0;
+    jacobian[1][1] = sth * cph;
+    jacobian[1][2] = cth * (r * cph);
+    jacobian[1][3] = sth * (-r * sph);
+    jacobian[2][0] = 0.0;
+    jacobian[2][1] = sth * sph;
+    jacobian[2][2] = cth * (r * sph);
+    jacobian[2][3] = sth * (r * cph);
     jacobian[3][0] = 0.0;
     jacobian[3][1] = cth;
     jacobian[3][2] = -r * sth;
@@ -486,6 +532,30 @@ void RadiationIntegrator::CovariantSimulationMetric(double x, double y, double z
     gcov[3][1] = -(1.0 + 2.0 * bh_m * r / sigma) * bh_a * sth2;
     gcov[3][2] = 0.0;
     gcov[3][3] = (r2 + a2 + 2.0 * bh_m * a2 * r * sth2 / sigma) * sth2;
+  } else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put here the covariant metric for SPM coordinates 
+    double rr2 = x * x + y * y + z * z;
+    double r = std::sqrt(rr2);
+    double cth = z / r;
+    double cth2 = cth * cth;
+    double sth2 = 1.0 - cth2;
+
+    gcov[0][0] = -1.0;
+    gcov[0][1] = 0.0;
+    gcov[0][2] = 0.0;
+    gcov[0][3] = 0.0;
+    gcov[1][0] = 0.0;
+    gcov[1][1] = 1.0;
+    gcov[1][2] = 0.0;
+    gcov[1][3] = 0.0;
+    gcov[2][0] = 0.0;
+    gcov[2][1] = 0.0;
+    gcov[2][2] = rr2;
+    gcov[2][3] = 0.0;
+    gcov[3][0] = 0.0;
+    gcov[3][1] = 0.0;
+    gcov[3][2] = 0.0;
+    gcov[3][3] = rr2*sth2;
   }
   return;
 }
@@ -568,6 +638,32 @@ void RadiationIntegrator::ContravariantSimulationMetric(double x, double y, doub
     gcon[3][1] = bh_a / sigma;
     gcon[3][2] = 0.0;
     gcon[3][3] = 1.0 / (sigma * sth2);
+  }
+
+  else if(simulation_coord == Coordinates::spm){
+    //TEGAN: put here the contravariant metric for SPM coordinates 
+    double rr2 = x * x + y * y + z * z;
+    double r = std::sqrt(rr2);
+    double cth = z / r;
+    double cth2 = cth * cth;
+    double sth2 = 1.0 - cth2;
+
+    gcon[0][0] = -1.0;
+    gcon[0][1] = 0.0;
+    gcon[0][2] = 0.0;
+    gcon[0][3] = 0.0;
+    gcon[1][0] = 0.0;
+    gcon[1][1] = 1.0;
+    gcon[1][2] = 0.0;
+    gcon[1][3] = 0.0;
+    gcon[2][0] = 0.0;
+    gcon[2][1] = 0.0;
+    gcon[2][2] = 1.0/(rr2);
+    gcon[2][3] = 0.0;
+    gcon[3][0] = 0.0;
+    gcon[3][1] = 0.0;
+    gcon[3][2] = 0.0;
+    gcon[3][3] = 1.0/(rr2*sth2);
   }
   return;
 }
