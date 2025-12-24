@@ -57,6 +57,18 @@ void RadiationIntegrator::ConvertFromCKS(double *p_x1, double *p_x2, double *p_x
     //or in general I should ask if it would be better to have the interpolation grid use spm coords directly
     //because realistically CKS and SKS and FMKS all describe the same spacetime, so conversion btwn them is straightforward
     //but SPM is a different spacetime altogether so maybe be better to interpolate directly over that flat spacetime
+    double x = *p_x1;
+    double y = *p_x2;
+    double z = *p_x3;
+    double r2 = x * x + y * y + z * z;
+    double r = std::sqrt(r2);
+    double th = std::acos(z / r);
+    double ph = std::atan2(y, x);
+    ph += ph < 0.0 ? 2.0 * Math::pi : 0.0;
+    ph -= ph >= 2.0 * Math::pi ? 2.0 * Math::pi : 0.0;
+    *p_x1 = r;
+    *p_x2 = th;
+    *p_x3 = ph;
   }
   return;
 }
@@ -130,6 +142,31 @@ void RadiationIntegrator::CoordinateJacobian(double x, double y, double z, doubl
   else if(simulation_coord == Coordinates::spm){
     //TEGAN: put Jacobian btwn spherical polar minkowski and cartesian minkowski here!
     //check that it is actually for comparison to cartesian minkowski or for comparison to cartesian kerr-schild
+    double r2 = x * x + y * y + z * z;
+    double r = std::sqrt(r2);
+    double cth = z / r;
+    double sth = std::sqrt(1.0 - cth * cth);
+    double ph = std::atan2(y, x);
+    double sph = std::sin(ph);
+    double cph = std::cos(ph);
+
+    // Calculate Jacobian of transformation
+    jacobian[0][0] = 1.0;
+    jacobian[0][1] = 0.0;
+    jacobian[0][2] = 0.0;
+    jacobian[0][3] = 0.0;
+    jacobian[1][0] = 0.0;
+    jacobian[1][1] = sth * cph;
+    jacobian[1][2] = cth * (r * cph);
+    jacobian[1][3] = sth * (-r * sph);
+    jacobian[2][0] = 0.0;
+    jacobian[2][1] = sth * sph;
+    jacobian[2][2] = cth * (r * sph);
+    jacobian[2][3] = sth * (r * cph);
+    jacobian[3][0] = 0.0;
+    jacobian[3][1] = cth;
+    jacobian[3][2] = -r * sth;
+    jacobian[3][3] = 0.0;
   }
   return;
 }
