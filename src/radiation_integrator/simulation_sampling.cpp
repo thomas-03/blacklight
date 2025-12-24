@@ -26,7 +26,7 @@
 void RadiationIntegrator::ObtainGridData()
 {
   // Copy grid metadata
-  if (simulation_format == SimulationFormat::athena and simulation_coord == Coordinates::sks
+  if (simulation_format == SimulationFormat::athena and (simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm)
       and simulation_interp and simulation_block_interp)
     n_3_root = p_simulation_reader->n_3_root;
 
@@ -82,7 +82,7 @@ void RadiationIntegrator::ObtainGridData()
   plasma_gamma_e = p_simulation_reader->plasma_gamma_e;
 
   // Calculate maximum refinement level and number of blocks in x^3-direction at each level
-  if (simulation_format == SimulationFormat::athena and simulation_coord == Coordinates::sks
+  if (simulation_format == SimulationFormat::athena and (simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm)
       and simulation_interp and simulation_block_interp)
   {
     int n_b = x1f.n2;
@@ -1072,7 +1072,7 @@ void RadiationIntegrator::SampleSimulation()
 //   If the requested cell is not on the grid, values are copied from the unique cell on the grid
 //       closest to the appropriate ghost cell, effectively resulting in constant (rather than
 //       linear) extrapolation near the edges of the grid.
-//   In the case of simulation_coord being Coordinates::sks or Coordinates::fmks, neighboring blocks
+//   In the case of simulation_coord being Coordinates::sks, Coordinates::spm, or Coordinates::fmks, neighboring blocks
 //       are understood to cross the periodic boundary in x^3 (phi), but the domain is not stitched
 //       together at the poles.
 void RadiationIntegrator::FindNearbyInds(int b, int k, int j, int i, int k_c, int j_c, int i_c,
@@ -1189,7 +1189,7 @@ void RadiationIntegrator::FindNearbyInds(int b, int k, int j, int i, int k_c, in
     }
 
     // Check x^3-direction across periodic boundary
-    if (x3_off_grid and simulation_coord == Coordinates::sks and k == -1 and location_k == 0)
+    if (x3_off_grid and (simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == -1 and location_k == 0)
     {
       bool same_level_exists = level_alt == level;
       same_level_exists = same_level_exists and location_i_alt == location_i;
@@ -1208,7 +1208,7 @@ void RadiationIntegrator::FindNearbyInds(int b, int k, int j, int i, int k_c, in
       if (same_level_exists or coarser_level_exists or finer_level_exists)
         x3_off_grid = false;
     }
-    if (x3_off_grid and simulation_coord == Coordinates::sks and k == n_k
+    if (x3_off_grid and (simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == n_k
         and location_k == n_3_level(level) - 1)
     {
       bool same_level_exists = level_alt == level;
@@ -1251,9 +1251,9 @@ void RadiationIntegrator::FindNearbyInds(int b, int k, int j, int i, int k_c, in
   int location_i_sought = i == i_safe ? location_i : i == -1 ? location_i - 1 : location_i + 1;
   int location_j_sought = j == j_safe ? location_j : j == -1 ? location_j - 1 : location_j + 1;
   int location_k_sought = k == k_safe ? location_k : k == -1 ? location_k - 1 : location_k + 1;
-  if (simulation_coord == Coordinates::sks and k == -1 and location_k == 0)
+  if ((simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == -1 and location_k == 0)
     location_k_sought = n_3_level(level_sought) - 1;
-  if (simulation_coord == Coordinates::sks and k == n_k and location_k == n_3_level(level) - 1)
+  if ((simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == n_k and location_k == n_3_level(level) - 1)
     location_k_sought = 0;
   int i_sought = i == i_safe ? i : i == -1 ? n_i - 1 : 0;
   int j_sought = j == j_safe ? j : j == -1 ? n_j - 1 : 0;
@@ -1279,9 +1279,9 @@ void RadiationIntegrator::FindNearbyInds(int b, int k, int j, int i, int k_c, in
         j == j_safe ? location_j / 2 : j == -1 ? (location_j - 1) / 2 : (location_j + 1) / 2;
     location_k_sought =
         k == k_safe ? location_k / 2 : k == -1 ? (location_k - 1) / 2 : (location_k + 1) / 2;
-    if (simulation_coord == Coordinates::sks and k == -1 and location_k == 0)
+    if ((simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == -1 and location_k == 0)
       location_k_sought = n_3_level(level_sought) - 1;
-    if (simulation_coord == Coordinates::sks and k == n_k and location_k == n_3_level(level) - 1)
+    if ((simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == n_k and location_k == n_3_level(level) - 1)
       location_k_sought = 0;
     i_sought = i == i_safe ? (location_i % 2 * n_i + i) / 2 : i == -1 ? n_i - 1 : 0;
     j_sought = j == j_safe ? (location_j % 2 * n_j + j) / 2 : j == -1 ? n_j - 1 : 0;
@@ -1303,10 +1303,10 @@ void RadiationIntegrator::FindNearbyInds(int b, int k, int j, int i, int k_c, in
   location_i_sought = location_i * 2 + (i == i_safe ? 0 : i == -1 ? -1 : 1) + (upper_i ? 1 : 0);
   location_j_sought = location_j * 2 + (j == j_safe ? 0 : j == -1 ? -1 : 1) + (upper_j ? 1 : 0);
   location_k_sought = location_k * 2 + (k == k_safe ? 0 : k == -1 ? -1 : 1) + (upper_k ? 1 : 0);
-  if (simulation_coord == Coordinates::sks and k == -1 and location_k == 0
+  if ((simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == -1 and location_k == 0
       and level_sought <= max_level)
     location_k_sought = n_3_level(level_sought) - 1;
-  if (simulation_coord == Coordinates::sks and k == n_k and location_k == n_3_level(level) - 1)
+  if ((simulation_coord == Coordinates::sks or simulation_coord==Coordinates::spm) and k == n_k and location_k == n_3_level(level) - 1)
     location_k_sought = 0;
   i_sought = i == i_safe ? (upper_i ? (i - n_i / 2) * 2 : i * 2) : i == -1 ? n_i - 2 : 0;
   j_sought = j == j_safe ? (upper_j ? (j - n_j / 2) * 2 : j * 2) : j == -1 ? n_j - 2 : 0;
