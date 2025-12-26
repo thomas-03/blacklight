@@ -4,11 +4,11 @@ num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/r1200_pinhole_tde1335_inc15_opacitytable_test.npz  # file to be (over)written with output data
+output_file   = output/r1200_pinhole_tde1335_inc15_opacitytable.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
-checkpoint_geodesic_save = true  # flag indicating geodesics should be saved
+checkpoint_geodesic_save = false  # flag indicating geodesics should be saved
 checkpoint_geodesic_file = output/tde_inc15_r1200_geodesics.dat
 checkpoint_geodesic_load = false  # flag indicating geodesics should be loaded
 checkpoint_sample_save   = false  # flag indicating simulation sampling should be saved

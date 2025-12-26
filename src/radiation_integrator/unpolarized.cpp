@@ -67,6 +67,13 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             camera_x[1] * x1_init + camera_x[2] * x2_init + camera_x[3] * x3_init > 0.0;
         int crossings_count = 0;
 
+        if(m == 960 && l==11){
+          std::ofstream debugFile;
+          debugFile.open("./debugOutput/debug_opacity.csv",std::ios::out);
+          debugFile<<"step,nu,x1,x2,x3,kcov0,kcov1,kcov2,kcov3,j_i,alpha_i,optically_thin"<<std::endl;
+          debugFile.close();
+        }
+
         // Go through samples
         for (int n = 0; n < num_steps; n++)
         {
@@ -109,6 +116,13 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             }
             else
               image[adaptive_level](l,m) += j * delta_lambda_cgs;
+          }
+
+          if(m==960&&l==11){
+            std::ofstream debugFile;
+            debugFile.open("./debugOutput/debug_opacity.csv",std::ios::app);
+            debugFile<<n<<","<<image_frequencies(l)<<","<<x1<<","<<x2<<","<<x3<<","<<kcov[0]<<","<<kcov[1]<<","<<kcov[2]<<","<<kcov[3]<<","<<j<<","<<alpha<<","<<optically_thin<<std::endl;
+            debugFile.close();
           }
 
           // Integrate alternative image quantities
