@@ -63,10 +63,12 @@ void RadiationIntegrator::ObtainGridData()
   ind_uu1 = p_simulation_reader->ind_uu1;
   ind_uu2 = p_simulation_reader->ind_uu2;
   ind_uu3 = p_simulation_reader->ind_uu3;
-  ind_bb1 = p_simulation_reader->ind_bb1;
-  ind_bb2 = p_simulation_reader->ind_bb2;
-  ind_bb3 = p_simulation_reader->ind_bb3;
-
+  if( !simulation_hd_only)
+  {
+    ind_bb1 = p_simulation_reader->ind_bb1;
+    ind_bb2 = p_simulation_reader->ind_bb2;
+    ind_bb3 = p_simulation_reader->ind_bb3;
+  }
   // Copy coordinate interpolation map
   sks_map_r_in = p_simulation_reader->sks_map_r_in;
   sks_map_r_out = p_simulation_reader->sks_map_r_out;
@@ -654,6 +656,7 @@ void RadiationIntegrator::SampleSimulation()
     sample_uu1[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     sample_uu2[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     sample_uu3[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
+    //still allocate the array even in the case that we don't use magnetic fields, because it'll just get filled with fallback values
     sample_bb1[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     sample_bb2[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     sample_bb3[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);

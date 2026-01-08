@@ -56,6 +56,7 @@ struct InputReader
   std::optional<std::string> simulation_kappa_name;
   std::optional<bool> simulation_interp;
   std::optional<bool> simulation_block_interp;
+  std::optional<bool> simulation_hd_only;
 
   //Data - opacity table parameters
   std::optional<bool> opacity_table;

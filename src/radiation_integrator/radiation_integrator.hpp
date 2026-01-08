@@ -47,6 +47,7 @@ struct RadiationIntegrator
   double simulation_r_rg;
   bool simulation_interp;
   bool simulation_block_interp;
+  bool simulation_hd_only;
 
   // Input data - formula parameters
   double formula_mass;

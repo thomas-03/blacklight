@@ -288,6 +288,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double bb1_sim = sample_bb1[adaptive_level](m,n);
         double bb2_sim = sample_bb2[adaptive_level](m,n);
         double bb3_sim = sample_bb3[adaptive_level](m,n);
+        //std::cout<<"bb1_sim = "<<bb1_sim<<", bb2_sim = "<<bb2_sim<<", bb3_sim = "<<bb3_sim<<std::endl;
+        //std::cout<<"uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
 
         //scale model velocities appropriately
         uu1_sim *= v_unit;
@@ -587,6 +589,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
               
               double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
+              /*std::ofstream opacity_file;
+              opacity_file.open("./debugOutput/opacity_comparison.csv", std::ios_base::app);
+              opacity_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<image_frequencies(l)<<","<<coefficient<<","<<table_opacity_value<<"\n";
+              opacity_file.close();*/
               if(table_opacity_value*1e-14>coefficient){
                 //the surrounding table values for my i,j,and k all look around what the table_opacity_value is, but they are super large compared to the free-free values
 
@@ -611,7 +617,12 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
                   / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
               j_i[adaptive_level](l,m,n) += table_opacity_value* planck_function/(nu_cgs*nu_cgs);
-            }
+            }/*else{
+              std::ofstream opacity_file;
+              opacity_file.open("./debugOutput/ignored_opacities.csv", std::ios_base::app);
+              opacity_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<image_frequencies(l)<<"\n";
+              opacity_file.close();
+            }*/
           }
           }
 

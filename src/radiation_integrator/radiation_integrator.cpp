@@ -67,6 +67,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
       simulation_block_interp = p_input_reader->simulation_block_interp.value();
     else if (p_input_reader->simulation_block_interp.has_value())
       BlacklightWarning("Ignoring simulation_block_interp selection.");
+    simulation_hd_only = p_input_reader->simulation_hd_only.value();
   }
 
   // Copy formula parameters
@@ -714,6 +715,7 @@ bool RadiationIntegrator::Integrate(int snapshot, double *p_time_sample, double 
     else if (slow_light_on)
       CalculateSimulationSampling(snapshot);
     SampleSimulation();
+    std::printf("sample_bb1[0](0,0): %e\n", sample_bb1[0](0,0));
     //std::printf("example sample rho: %e\n", sample_rho[0](0,0));
     time_sample_end = omp_get_wtime();
   }

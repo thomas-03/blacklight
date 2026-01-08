@@ -155,6 +155,11 @@ int InputReader::Read()
       simulation_interp = ReadBool(val);
     else if (key == "simulation_block_interp")
       simulation_block_interp = ReadBool(val);
+    else if (key == "simulation_hd_only"){
+      simulation_hd_only = ReadBool(val);
+      std::cout<<"Note: simulation_hd_only set to "<<(simulation_hd_only?"true":"false")<<std::endl;
+    }
+      
 
     // Store opacity table parameters
     else if (key == "opacity_table")
