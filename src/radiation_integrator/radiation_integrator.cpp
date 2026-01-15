@@ -73,7 +73,9 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   // Copy formula parameters
   if (model_type == ModelType::formula)
   {
+    formula_name = p_input_reader->formula_name.value();
     formula_mass = p_input_reader->formula_mass.value();
+    if(formula_name == "Gold+2020"){
     formula_r0 = p_input_reader->formula_r0.value();
     formula_h = p_input_reader->formula_h.value();
     formula_l0 = p_input_reader->formula_l0.value();
@@ -83,6 +85,13 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     formula_alpha = p_input_reader->formula_alpha.value();
     formula_a = p_input_reader->formula_a.value();
     formula_beta = p_input_reader->formula_beta.value();
+    }else if(formula_name == "spherical"){
+    formula_rho = p_input_reader->formula_rho.value();
+    formula_T = p_input_reader->formula_T.value();
+    formula_r_out = p_input_reader->formula_r_out.value();
+    plasma_mu = p_input_reader->plasma_mu.value();
+    plasma_ne_ni = p_input_reader->plasma_ne_ni.value();
+    }
   }
 
   // Copy camera parameters
@@ -435,8 +444,13 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   else if (model_type == ModelType::formula)
   {
     bh_m = 1.0;
-    bh_a = p_input_reader->formula_spin.value();
-    mass_msun = formula_mass * Physics::c * Physics::c / Physics::gg_msun;
+    if(formula_name == "Gold+2020"){
+      bh_a = p_input_reader->formula_spin.value();
+      mass_msun = formula_mass * Physics::c * Physics::c / Physics::gg_msun;
+    }else if(formula_name == "spherical"){
+      bh_a = 0.0;
+      mass_msun = formula_mass;
+    }
   }
 
   // Allocate space for image data

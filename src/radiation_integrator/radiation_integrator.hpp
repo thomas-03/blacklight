@@ -50,6 +50,7 @@ struct RadiationIntegrator
   bool simulation_hd_only;
 
   // Input data - formula parameters
+  std::string formula_name;
   double formula_mass;
   double formula_r0;
   double formula_h;
@@ -60,6 +61,9 @@ struct RadiationIntegrator
   double formula_alpha;
   double formula_a;
   double formula_beta;
+  double formula_rho;
+  double formula_T;
+  double formula_r_out;
 
   // Input data - camera parameters
   double camera_r;

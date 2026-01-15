@@ -168,6 +168,8 @@ int InputReader::Read()
       opacity_file = val;
 
     // Store formula parameters
+    else if( key == "formula_name")
+      formula_name = val;
     else if (key == "formula_mass")
       formula_mass = std::stod(val);
     else if (key == "formula_spin")
@@ -190,6 +192,12 @@ int InputReader::Read()
       formula_a = std::stod(val);
     else if (key == "formula_beta")
       formula_beta = std::stod(val);
+    else if (key == "formula_rho")
+      formula_rho = std::stod(val);
+    else if (key == "formula_T")
+      formula_T = std::stod(val);
+    else if (key == "formula_r_out")
+      formula_r_out = std::stod(val);
 
     // Store camera parameters
     else if (key == "camera_type")

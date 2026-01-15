@@ -114,7 +114,12 @@ GeodesicIntegrator::GeodesicIntegrator(const InputReader *p_input_reader)
   else if (model_type == ModelType::formula)
   {
     bh_m = 1.0;
-    bh_a = p_input_reader->formula_spin.value();
+    std::string formula_name = p_input_reader->formula_name.value();
+    if(formula_name == "Gold+2020"){
+      bh_a = p_input_reader->formula_spin.value();
+    }else if(formula_name == "spherical"){
+      bh_a = 0.0;
+    }
   }
   r_horizon = bh_m + std::sqrt(bh_m * bh_m - bh_a * bh_a);
   if (ray_terminate == RayTerminate::photon)
