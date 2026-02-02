@@ -118,12 +118,6 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
               image[adaptive_level](l,m) += j * delta_lambda_cgs;
           }
 
-          /*if(m==960&&l==17){
-            std::ofstream debugFile;
-            debugFile.open("./debugOutput/high_freq_debug_opacity.csv",std::ios::app);
-            debugFile<<n<<","<<image_frequencies(l)<<","<<x1<<","<<x2<<","<<x3<<","<<kcov[0]<<","<<kcov[1]<<","<<kcov[2]<<","<<kcov[3]<<","<<j<<","<<alpha<<","<<delta_lambda_cgs<<","<<optically_thin<<std::endl;
-            debugFile.close();
-          }*/
 
           // Integrate alternative image quantities
           if (image_time and l == 0)

@@ -91,6 +91,15 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     formula_r_out = p_input_reader->formula_r_out.value();
     plasma_mu = p_input_reader->plasma_mu.value();
     plasma_ne_ni = p_input_reader->plasma_ne_ni.value();
+    }else if(formula_name == "disk"){
+    formula_rho = p_input_reader->formula_rho.value();
+    formula_T = p_input_reader->formula_T.value();
+    formula_r_out = p_input_reader->formula_r_out.value();
+    plasma_mu = p_input_reader->plasma_mu.value();
+    plasma_ne_ni = p_input_reader->plasma_ne_ni.value();
+    formula_height = p_input_reader->formula_height.value();
+    }else{
+      throw BlacklightException("Unknown formula_name.");
     }
   }
 
@@ -447,7 +456,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     if(formula_name == "Gold+2020"){
       bh_a = p_input_reader->formula_spin.value();
       mass_msun = formula_mass * Physics::c * Physics::c / Physics::gg_msun;
-    }else if(formula_name == "spherical"){
+    }else if(formula_name == "spherical" || formula_name == "disk"){
       bh_a = 0.0;
       mass_msun = formula_mass;
     }

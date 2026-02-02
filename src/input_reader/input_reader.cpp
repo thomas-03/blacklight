@@ -198,6 +198,8 @@ int InputReader::Read()
       formula_T = std::stod(val);
     else if (key == "formula_r_out")
       formula_r_out = std::stod(val);
+    else if(key == "formula_height")
+      formula_height = std::stod(val);
 
     // Store camera parameters
     else if (key == "camera_type")

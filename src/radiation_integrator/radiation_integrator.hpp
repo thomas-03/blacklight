@@ -64,6 +64,7 @@ struct RadiationIntegrator
   double formula_rho;
   double formula_T;
   double formula_r_out;
+  double formula_height;
 
   // Input data - camera parameters
   double camera_r;

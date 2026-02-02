@@ -4,7 +4,7 @@ num_threads = 8        # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                         # format of output file (npz, npy, raw)
-output_file   = output/example_spherical_formula.npz  # file to be (over)written with output data
+output_file   = output/example_spherical_formula_r2400.npz  # file to be (over)written with output data
 output_camera = false                       # flag for saving camera details
 
 # Checkpoint parameters
@@ -16,7 +16,7 @@ formula_name = spherical
 formula_mass = 1e6
 formula_rho = 1e-2
 formula_T = 1e6
-formula_r_out = 100
+formula_r_out = 200
 
 #opacity table parameters
 opacity_table = false
@@ -24,7 +24,7 @@ opacity_file = data/out_opacity_table_nfreq64.txt
 
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
-camera_r          = 1200.0  # KS radial coordinate r in gravitational units
+camera_r          = 2400.0  # KS radial coordinate r in gravitational units
 camera_th         = 5.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
@@ -34,8 +34,8 @@ camera_k_r        = 1.0    # covariant KS r-momentum of photons
 camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radians)
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
-camera_width      = 200.0   # full width of image in gravitational units
-camera_resolution = 64     # number of pixels per side
+camera_width      = 500.0   # full width of image in gravitational units
+camera_resolution = 96     # number of pixels per side
 
 # Ray-tracing parameters
 ray_flat        = true           # flag indicating ray tracing should assume flat spacetime
@@ -52,7 +52,7 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 image_light           = true      # flag indicating real image of radiation should be produced
 image_num_frequencies   = 50       # number of observation frequencies
 image_frequency         = 3.3e16  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 3e14    # first frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 3e8    # first frequency in Hz if image_frequency_num > 1
 image_frequency_end     = 3e18   # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = camera  # frequency location (camera [w/ velocity], infinity [rest])

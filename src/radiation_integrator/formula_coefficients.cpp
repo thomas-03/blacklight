@@ -183,13 +183,30 @@ void RadiationIntegrator::CalculateFormulaCoefficients()
 
         //for spherical case. we just want a spherical ball of unmoving gas with constant rho and T
         //the below is modified from the simulation coefficients code to achieve this. you simply set uu1,2,3 to 0 and use minkowski values for both simulation and geodesic metrics
-        if(formula_name == "spherical"){
-          if(r > formula_r_out){
-            //outside of the sphere, no emission or absorption
-            j_i[adaptive_level](l,m,n) = 0.0;
-            alpha_i[adaptive_level](l,m,n) = 0.0;
-            continue;
+        if(formula_name == "spherical" || formula_name == "disk"){
+          if(formula_name == "spherical"){
+            if(r > formula_r_out){
+              //outside of the sphere, no emission or absorption
+              j_i[adaptive_level](l,m,n) = 0.0;
+              alpha_i[adaptive_level](l,m,n) = 0.0;
+              continue;
+            }
+          }else{
+            if(r > formula_r_out){
+              //outside of the disk, no emission or absorption
+              j_i[adaptive_level](l,m,n) = 0.0;
+              alpha_i[adaptive_level](l,m,n) = 0.0;
+              continue;
+            }
+            if(z > formula_height/2 || z < -formula_height/2){
+              //outside of the disk, no emission or absorption
+              j_i[adaptive_level](l,m,n) = 0.0;
+              alpha_i[adaptive_level](l,m,n) = 0.0;
+              continue;
+            }
           }
+        
+        //std::printf("calculating spherical/disk formula coefficients at r=%.5f, theta=%.5f\n",r,std::acos(z/r));
         double kcov[4];
         kcov[0] = sample_dir[adaptive_level](m,n,0);
         kcov[1] = sample_dir[adaptive_level](m,n,1);
@@ -366,11 +383,7 @@ void RadiationIntegrator::CalculateFormulaCoefficients()
               }
             }
           }
-          //std::printf("alpha_I: %.5e, j_I: %.5e \n",alpha_i[adaptive_level](l,m,n), j_i[adaptive_level](l,m,n));
-          if(alpha_i[adaptive_level](l,m,n) ==0.0){
-            std::printf("kbT: %.5e, rho: %.5e, nu: %.5e \n",kb_tt_e_cgs, rho_cgs, nu_cgs);
-          }
-
+          
         }
       }
     }

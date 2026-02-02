@@ -78,6 +78,7 @@ struct InputReader
   std::optional<double> formula_rho;
   std::optional<double> formula_T;
   std::optional<double> formula_r_out;
+  std::optional<double> formula_height;
 
   // Data - camera parameters
   std::optional<Camera> camera_type;
