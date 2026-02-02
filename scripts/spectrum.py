@@ -30,13 +30,13 @@ def get_flux(**kwargs):
 
   # Prepare metadata
   distance = kwargs['distance']
-  mass_msun = kwargs['mass']
-  width_rg = kwargs['width']
   max_level = kwargs['max_level']
 
   # Read data from .npz file
   if kwargs['filename_data'][-4:] == '.npz':
     with np.load(kwargs['filename_data']) as f:
+      mass_msun = f['mass_msun']
+      width_rg = f['width']
 
       # Read metadata
       if mass_msun is None:
@@ -56,12 +56,7 @@ def get_flux(**kwargs):
         polarization = False
       multiple_frequencies = True if len(f['frequency']) > 1 else False
       frequencies = f['frequency'][:]
-      if multiple_frequencies:
-        if kwargs['frequency_num'] is None:
-          raise RuntimeError('Must specify frequency_num.')
-      else:
-        if kwargs['frequency_num'] is not None and kwargs['frequency_num'] != 1:
-          raise RuntimeError('Only single frequency found in file.')
+      freq_num = len(frequencies)
 
       # Read root image
       try:
@@ -69,19 +64,11 @@ def get_flux(**kwargs):
       except KeyError:
         raise RuntimeError('No intensity data in file.')
       if polarization:
-        if multiple_frequencies:
-          i_nu = i_nu[kwargs['frequency_num']-1,...]
-          q_nu = f['Q_nu'][kwargs['frequency_num']-1,...]
-          u_nu = f['U_nu'][kwargs['frequency_num']-1,...]
-          v_nu = f['V_nu'][kwargs['frequency_num']-1,...]
-        else:
-          q_nu = f['Q_nu'][:]
-          u_nu = f['U_nu'][:]
-          v_nu = f['V_nu'][:]
+        q_nu = f['Q_nu'][:]
+        u_nu = f['U_nu'][:]
+        v_nu = f['V_nu'][:]
         image = np.vstack((i_nu[None,:,:], q_nu[None,:,:], u_nu[None,:,:], v_nu[None,:,:]))
       else:
-        #if multiple_frequencies:
-        #i_nu = i_nu[kwargs['frequency_num']-1,...]
         image = np.copy(i_nu[:,:,:])
 
       # Read adaptive image
@@ -102,16 +89,10 @@ def get_flux(**kwargs):
             key_q = 'adaptive_Q_nu_{0}'.format(level)
             key_u = 'adaptive_U_nu_{0}'.format(level)
             key_v = 'adaptive_V_nu_{0}'.format(level)
-            if multiple_frequencies:
-              i_nu = f[key_i][kwargs['frequency_num']-1,...]
-              q_nu = f[key_q][kwargs['frequency_num']-1,...]
-              u_nu = f[key_u][kwargs['frequency_num']-1,...]
-              v_nu = f[key_v][kwargs['frequency_num']-1,...]
-            else:
-              i_nu = f[key_i][:]
-              q_nu = f[key_q][:]
-              u_nu = f[key_u][:]
-              v_nu = f[key_v][:]
+            i_nu = f[key_i][:]
+            q_nu = f[key_q][:]
+            u_nu = f[key_u][:]
+            v_nu = f[key_v][:]
             image_adaptive[level] = \
                 np.vstack((i_nu[None,:,:,:], q_nu[None,:,:,:], u_nu[None,:,:,:], v_nu[None,:,:,:]))
           else:
@@ -170,7 +151,10 @@ def get_flux(**kwargs):
 
 def get_luminosity(**kwargs):
   flux, freqs = get_flux(**kwargs)
-  rg = gg_msun * kwargs['mass'] / c ** 2
+  if kwargs['filename_data'][-4:] == '.npz':
+    with np.load(kwargs['filename_data']) as f:
+      mass_msun = f['mass_msun']
+  rg = gg_msun * mass_msun / c ** 2
   dA = 4*np.pi*(kwargs['distance']*rg)**2
   return flux*dA, freqs
 
@@ -179,7 +163,6 @@ def main(**kwargs):
 
   c = 2.99792458e10
   gg_msun = 1.32712440018e26
-  rg = gg_msun * kwargs['mass'] / (c ** 2)
 
   if not kwargs['multiInc']:
     plt.figure(figsize=(8,6))
@@ -188,6 +171,7 @@ def main(**kwargs):
       for file in files:
         kwargs['filename_data'] = file
         lum,frequencies = get_luminosity(**kwargs)
+        print(f"file:{file} luminosity:{lum} ")
         if kwargs['labels'] is not None:
           plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
         else:
@@ -221,8 +205,6 @@ if __name__ == '__main__':
   parser.add_argument('-m', '--mass', type=float, help='black hole mass in solar masses')
   parser.add_argument('-w', '--width', type=float,
       help='full width of image in gravitational radii')
-  parser.add_argument('-f', '--frequency_num', type=int,
-      help='index (1-indexed) of frequency to use if multiple present')
   parser.add_argument('-l', '--max_level', type=int,
       help='maximum adaptive level to use in calculation')
   parser.add_argument('--luminosity',type=bool,default=False,help='if true, plot luminosity instead of flux')

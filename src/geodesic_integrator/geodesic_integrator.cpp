@@ -128,6 +128,8 @@ GeodesicIntegrator::GeodesicIntegrator(const InputReader *p_input_reader)
     r_terminate = r_horizon * ray_factor;
   else if (ray_terminate == RayTerminate::additive)
     r_terminate = r_horizon + ray_factor;
+  else if (ray_terminate == RayTerminate::absolute)
+    r_terminate = ray_factor;
 
   // Calculate number of pixels
   camera_num_pix = camera_resolution * camera_resolution;

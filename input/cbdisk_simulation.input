@@ -4,7 +4,7 @@ num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/r1600_w800_pinhole_cbdisk_inc45_temp.npz  # file to be (over)written with output data
+output_file   = output/r3000_w1600_pinhole_cbdisk_inc60_inclMid.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -18,7 +18,7 @@ checkpoint_sample_file   = data/sample.dat
 simulation_format       = athena           # format of GRMHD data
 simulation_file         = data/input.cbdisk.out1.01637_float32.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
-simulation_coord        = sks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
+simulation_coord        = spm              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
 simulation_m_msun       = 2.0e7          # black hole mass in solar masses
 simulation_rho_cgs      = 1.543e-3          # unit code density in g/cm^3
@@ -35,8 +35,8 @@ opacity_file = data/out_opacity_table_nfreq64.txt
 
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
-camera_r          = 1600.0  # KS radial coordinate r in gravitational units
-camera_th         = 45.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_r          = 3000.0  # KS radial coordinate r in gravitational units
+camera_th         = 60.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
@@ -45,16 +45,16 @@ camera_k_r        = 1.0    # covariant KS r-momentum of photons
 camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radians)
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
-camera_width      = 800.0   # full width of image in gravitational units
-camera_resolution = 64     # number of pixels per side
+camera_width      = 1600.0   # full width of image in gravitational units
+camera_resolution = 96     # number of pixels per side
 
 # Ray-tracing parameters
 ray_flat        = true           # flag indicating ray tracing should assume flat spacetime
-ray_terminate   = additive  # termination condition (photon, multiplicative, additive)
-ray_factor      = 80.0           # constant for terminate (only used for ray_terminate != photon)
+ray_terminate   = absolute  # termination condition (photon, multiplicative, additive)
+ray_factor      = 0.0           # constant for terminate (only used for ray_terminate != photon)
 ray_integrator  = dp              # time integrator for geodesics (dp, rk4, rk2)
 ray_step        = 0.01            # step size control relative to radial coordinate
-ray_max_steps   = 2000            # maximum number of steps allowed for each geodesic
+ray_max_steps   = 5000            # maximum number of steps allowed for each geodesic
 ray_max_retries = 20              # maximum number of times a step can fail (dp)
 ray_tol_abs     = 1.0e-8          # absolute tolerance for taking full steps (dp)
 ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp)
@@ -64,7 +64,7 @@ image_light           = true      # flag indicating real image of radiation shou
 image_num_frequencies   = 20       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 2e13    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3e20    # last frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 3e18    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = camera  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
@@ -125,4 +125,7 @@ cut_midplane_z       = 0.0    # if nonzero, distance off midplane within which p
 cut_plane            = false  # flag for domain being excluded beyond a certain plane
 
 # Fallback parameters
-fallback_nan = true  # flag indicating any fallback should result in NaN for that ray
+fallback_nan = false  # flag indicating any fallback should result in NaN for that ray
+fallback_rho = 0.0      # the fallback option lets you have values 
+fallback_pgas = 0.0 
+fallback_kappa = 0.0

@@ -152,6 +152,8 @@ RayTerminate InputReader::ReadRayTerminate(const std::string &string)
     return RayTerminate::multiplicative;
   else if (string == "additive")
     return RayTerminate::additive;
+  else if(string == "absolute")
+    return RayTerminate::absolute;
   else
     throw BlacklightException("Unknown string used for RayTerminate value.");
 }
