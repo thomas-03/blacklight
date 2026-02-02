@@ -56,12 +56,14 @@ struct InputReader
   std::optional<std::string> simulation_kappa_name;
   std::optional<bool> simulation_interp;
   std::optional<bool> simulation_block_interp;
+  std::optional<bool> simulation_hd_only;
 
   //Data - opacity table parameters
   std::optional<bool> opacity_table;
   std::optional<std::string> opacity_file;
 
   // Data - formula parameters
+  std::optional<std::string> formula_name;
   std::optional<double> formula_mass;
   std::optional<double> formula_spin;
   std::optional<double> formula_r0;
@@ -73,6 +75,10 @@ struct InputReader
   std::optional<double> formula_alpha;
   std::optional<double> formula_a;
   std::optional<double> formula_beta;
+  std::optional<double> formula_rho;
+  std::optional<double> formula_T;
+  std::optional<double> formula_r_out;
+  std::optional<double> formula_height;
 
   // Data - camera parameters
   std::optional<Camera> camera_type;

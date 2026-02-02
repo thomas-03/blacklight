@@ -17,14 +17,14 @@ import astropy.units as u
 h_ev = 4.135667662e-15
 eV = 1.60218e-12
 h_erg = 6.626e-27
+kB=cons.k_B.cgs.value
+c = 2.99792458e10
+gg_msun = 1.32712440018e26
+
 def get_flux(**kwargs):
 
   # Parameters
-  c = 2.99792458e10
-  gg_msun = 1.32712440018e26
   pc = 9.69394202136e18 / np.pi
-  #jy = 1.0e-23
-  eV = 1.60218e-12
   h = cons.h.cgs.value
   data_format = np.float64
 
@@ -130,7 +130,7 @@ def get_flux(**kwargs):
   if width_rg is None:
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
-  width = 2.0 * np.arctan(0.5*width_rg /(distance))
+  width =  np.arctan(0.5*width_rg /(distance))
 
   # Prepare flag for NaN values
   nan_found = False
@@ -141,10 +141,11 @@ def get_flux(**kwargs):
     for freq in range(len(frequencies)):
       #this is in erg cm^-2 s^-1 Hz^-1
       tempImage = np.copy(image[freq,:,:])
-      flux = np.append(flux, (np.nanmean(tempImage)* width ** 2))
+      #print((width))
+      flux = np.append(flux, (np.nanmean(tempImage)*width**2))
       #print(flux.shape)
     
-  flux/=eV
+  #flux/=eV
   '''
   # Report results
   print('')
@@ -167,6 +168,12 @@ def get_flux(**kwargs):
   '''
   return flux, frequencies
 
+def get_luminosity(**kwargs):
+  flux, freqs = get_flux(**kwargs)
+  rg = gg_msun * kwargs['mass'] / c ** 2
+  dA = 4*np.pi*(kwargs['distance']*rg)**2
+  return flux*dA, freqs
+
 
 def main(**kwargs):
 
@@ -175,30 +182,25 @@ def main(**kwargs):
   rg = gg_msun * kwargs['mass'] / (c ** 2)
 
   if not kwargs['multiInc']:
-    flux, frequencies = get_flux(**kwargs)
     plt.figure(figsize=(8,6))
     if kwargs['luminosity']:
-      #convert flux to luminosity
-      distance_cm = (kwargs['distance']*rg)
-      thetaWidth = (np.cos(np.radians(kwargs['inclination'])-np.arctan(2*kwargs['width']/kwargs['distance']))-np.cos(np.radians(kwargs['inclination'])+np.arctan(2*kwargs['width']/kwargs['distance'])))
-      flux = (flux*4*np.pi*distance_cm**2)/(thetaWidth*np.arctan(2*kwargs['width']/kwargs['distance']))
-      print('Luminosity:')
-      if len(flux)>1:
-        for freq in range(len(frequencies)):
-          print('frequency: {0}'.format(frequencies[freq]))
-          print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[freq])))
-      else:
-        print('L_nu = {0} eV s^-1 Hz^-1'.format(repr(flux[0])))
-      print('')
-      plt.plot(frequencies*h_ev,frequencies*flux*eV)
+      files = kwargs['filename_data']
+      for file in files:
+        kwargs['filename_data'] = file
+        lum,frequencies = get_luminosity(**kwargs)
+        if kwargs['labels'] is not None:
+          plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
+        else:
+          plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
       plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
       plt.xlabel('Frequency (eV)')
-      plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
+      plt.ylabel('$\\nu L_\\nu (eV s^{-1})$ ')
       plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
     else:
+      flux, frequencies = get_flux(**kwargs)
       plt.plot(frequencies,frequencies*flux)
       plt.xscale('log')
       plt.ylim(1e5, 1e25)
@@ -214,7 +216,7 @@ def main(**kwargs):
 # Execute main function
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('filename_data', help='name of file containing raw image data')
+  parser.add_argument('filename_data', nargs='+', help='name of file containing raw image data')
   parser.add_argument('-d', '--distance', type=float, help='distance to black hole in gravitational radii')
   parser.add_argument('-m', '--mass', type=float, help='black hole mass in solar masses')
   parser.add_argument('-w', '--width', type=float,
@@ -227,5 +229,6 @@ if __name__ == '__main__':
   parser.add_argument('--multiInc',type=bool,default=False,help='if true, plot multiple inclinations on one plot')
   parser.add_argument('--files',nargs='+',help='list of files to process',type=str)
   parser.add_argument('--inclination',nargs='+',type=float,default=0.0,help='inclination of image (degrees)')
+  parser.add_argument('--labels',nargs='+',type=str,default=None,help='labels for the plot')
   args = parser.parse_args()
   main(**vars(args))

@@ -61,6 +61,7 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
     simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
     simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
     simulation_r_rg = p_input_reader->simulation_r_rg.value();
+    simulation_hd_only = p_input_reader->simulation_hd_only.value();
   }
 
   // Copy slow-light parameters
@@ -787,9 +788,11 @@ double SimulationReader::Read(int snapshot)
       Array<float> hydro(prim[n]);
       hydro.Slice(5, 0, num_variables(ind_hydro) - 1);
       ReadHDF5FloatArray("prim", hydro);
-      Array<float> bb(prim[n]);
-      bb.Slice(5, num_variables(ind_hydro), num_variables(ind_hydro) + num_variables(ind_bb) - 1);
-      ReadHDF5FloatArray("B", bb);
+      if(!simulation_hd_only){
+        Array<float> bb(prim[n]);
+        bb.Slice(5, num_variables(ind_hydro), num_variables(ind_hydro) + num_variables(ind_bb) - 1);
+        ReadHDF5FloatArray("B", bb);
+      }
     }
     else if (simulation_format == SimulationFormat::iharm3d)
     {
@@ -1036,6 +1039,7 @@ void SimulationReader::ReadAthenaKHeader()
 //   Sets plasma_gamma.
 //   Assumes stream pointer points to beginning of input parameter section.
 //   Changes stream pointer.
+// keep in mind that this doesn't yet have functionality to consider HD alone
 void SimulationReader::ReadAthenaKInputs()
 {
   // Prepare buffers and flag
@@ -1203,6 +1207,7 @@ void SimulationReader::VerifyVariablesAthena()
       break;*/
 
   // Check that array of all magnetic field components is present
+  if(simulation_hd_only) return; //skip B field checks if HD only
   int bb_offset = 0;
   for (ind_bb = 0; ind_bb < num_dataset_names; ind_bb++)
     if (dataset_names[ind_bb] == "B")

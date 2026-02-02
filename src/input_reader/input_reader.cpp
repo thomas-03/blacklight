@@ -155,6 +155,11 @@ int InputReader::Read()
       simulation_interp = ReadBool(val);
     else if (key == "simulation_block_interp")
       simulation_block_interp = ReadBool(val);
+    else if (key == "simulation_hd_only"){
+      simulation_hd_only = ReadBool(val);
+      std::cout<<"Note: simulation_hd_only set to "<<(simulation_hd_only?"true":"false")<<std::endl;
+    }
+      
 
     // Store opacity table parameters
     else if (key == "opacity_table")
@@ -163,6 +168,8 @@ int InputReader::Read()
       opacity_file = val;
 
     // Store formula parameters
+    else if( key == "formula_name")
+      formula_name = val;
     else if (key == "formula_mass")
       formula_mass = std::stod(val);
     else if (key == "formula_spin")
@@ -185,6 +192,14 @@ int InputReader::Read()
       formula_a = std::stod(val);
     else if (key == "formula_beta")
       formula_beta = std::stod(val);
+    else if (key == "formula_rho")
+      formula_rho = std::stod(val);
+    else if (key == "formula_T")
+      formula_T = std::stod(val);
+    else if (key == "formula_r_out")
+      formula_r_out = std::stod(val);
+    else if(key == "formula_height")
+      formula_height = std::stod(val);
 
     // Store camera parameters
     else if (key == "camera_type")

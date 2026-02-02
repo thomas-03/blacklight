@@ -42,6 +42,7 @@ struct SimulationReader
   double simulation_rho_cgs;
   double simulation_v_cgs;
   double simulation_r_rg;
+  bool simulation_hd_only;
   std::string simulation_kappa_name;
 
   // Input data - slow-light parameters

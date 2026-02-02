@@ -67,12 +67,15 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
       simulation_block_interp = p_input_reader->simulation_block_interp.value();
     else if (p_input_reader->simulation_block_interp.has_value())
       BlacklightWarning("Ignoring simulation_block_interp selection.");
+    simulation_hd_only = p_input_reader->simulation_hd_only.value();
   }
 
   // Copy formula parameters
   if (model_type == ModelType::formula)
   {
+    formula_name = p_input_reader->formula_name.value();
     formula_mass = p_input_reader->formula_mass.value();
+    if(formula_name == "Gold+2020"){
     formula_r0 = p_input_reader->formula_r0.value();
     formula_h = p_input_reader->formula_h.value();
     formula_l0 = p_input_reader->formula_l0.value();
@@ -82,6 +85,22 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     formula_alpha = p_input_reader->formula_alpha.value();
     formula_a = p_input_reader->formula_a.value();
     formula_beta = p_input_reader->formula_beta.value();
+    }else if(formula_name == "spherical"){
+    formula_rho = p_input_reader->formula_rho.value();
+    formula_T = p_input_reader->formula_T.value();
+    formula_r_out = p_input_reader->formula_r_out.value();
+    plasma_mu = p_input_reader->plasma_mu.value();
+    plasma_ne_ni = p_input_reader->plasma_ne_ni.value();
+    }else if(formula_name == "disk"){
+    formula_rho = p_input_reader->formula_rho.value();
+    formula_T = p_input_reader->formula_T.value();
+    formula_r_out = p_input_reader->formula_r_out.value();
+    plasma_mu = p_input_reader->plasma_mu.value();
+    plasma_ne_ni = p_input_reader->plasma_ne_ni.value();
+    formula_height = p_input_reader->formula_height.value();
+    }else{
+      throw BlacklightException("Unknown formula_name.");
+    }
   }
 
   // Copy camera parameters
@@ -434,8 +453,13 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   else if (model_type == ModelType::formula)
   {
     bh_m = 1.0;
-    bh_a = p_input_reader->formula_spin.value();
-    mass_msun = formula_mass * Physics::c * Physics::c / Physics::gg_msun;
+    if(formula_name == "Gold+2020"){
+      bh_a = p_input_reader->formula_spin.value();
+      mass_msun = formula_mass * Physics::c * Physics::c / Physics::gg_msun;
+    }else if(formula_name == "spherical" || formula_name == "disk"){
+      bh_a = 0.0;
+      mass_msun = formula_mass;
+    }
   }
 
   // Allocate space for image data
@@ -714,6 +738,7 @@ bool RadiationIntegrator::Integrate(int snapshot, double *p_time_sample, double 
     else if (slow_light_on)
       CalculateSimulationSampling(snapshot);
     SampleSimulation();
+    std::printf("sample_bb1[0](0,0): %e\n", sample_bb1[0](0,0));
     //std::printf("example sample rho: %e\n", sample_rho[0](0,0));
     time_sample_end = omp_get_wtime();
   }
