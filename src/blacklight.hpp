@@ -38,7 +38,7 @@ enum struct OutputFormat {npz, npy, raw};
 enum struct SimulationFormat {athena, athenak, iharm3d, harm3d};
 enum struct Coordinates {cks, sks, fmks, spm};
 enum struct Camera {plane, pinhole};
-enum struct RayTerminate {photon, multiplicative, additive};
+enum struct RayTerminate {photon, multiplicative, additive, absolute};
 enum struct RayIntegrator {dp, rk4, rk2};
 enum struct FrequencySpacing {lin_freq, lin_wave, log};
 enum struct FrequencyNormalization {camera, infinity};
