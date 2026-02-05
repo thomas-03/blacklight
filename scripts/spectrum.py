@@ -176,8 +176,10 @@ def main(**kwargs):
           plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
         else:
           plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
-      shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
-      plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
+      #make it so that I can add in the line whether or not we want to compare against something else!!!
+
+      #shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
+      #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
       plt.xlabel('Frequency (eV)')
