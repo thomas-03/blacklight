@@ -1,4 +1,4 @@
-// Blacklight simulation reader
+// Blacklight opacity table reader
 
 // C++ headers
 #include <algorithm>  // remove

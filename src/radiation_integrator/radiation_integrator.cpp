@@ -14,6 +14,7 @@
 #include "../input_reader/input_reader.hpp"                // InputReader
 #include "../simulation_reader/simulation_reader.hpp"      // SimulationReader
 #include "../opacity_table_reader/opacity_table_reader.hpp"  // OpacityTableReader
+#include "../mc_reader/mc_reader.hpp"                      // MCReader
 #include "../utils/array.hpp"                              // Array
 #include "../utils/exceptions.hpp"                         // BlacklightException, BlacklightWarning
 
@@ -25,8 +26,8 @@
 //   p_geodesic_integrator: pointer to object containing ray data
 //   p_simulation_reader_: pointer to object containing raw simulation data
 RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
-    const GeodesicIntegrator *p_geodesic_integrator, const SimulationReader *p_simulation_reader_, const OpacityTableReader *p_opacity_table_reader_)
-  : p_simulation_reader(p_simulation_reader_), p_opacity_table_reader(p_opacity_table_reader_)
+    const GeodesicIntegrator *p_geodesic_integrator, const SimulationReader *p_simulation_reader_, const OpacityTableReader *p_opacity_table_reader_, const MCReader *p_mc_reader_)
+  : p_simulation_reader(p_simulation_reader_), p_opacity_table_reader(p_opacity_table_reader_), p_mc_reader(p_mc_reader_)
 {
   // Copy general input data
   model_type = p_input_reader->model_type.value();
@@ -58,9 +59,16 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     simulation_format = p_input_reader->simulation_format.value();
     simulation_coord = p_input_reader->simulation_coord.value();
     simulation_m_msun = p_input_reader->simulation_m_msun.value();
-    simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
-    simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
-    simulation_r_rg = p_input_reader->simulation_r_rg.value();
+    simulation_all_cgs = p_input_reader->simulation_all_cgs.value();
+    if(simulation_all_cgs){
+      simulation_rho_cgs = 1.0;
+      simulation_v_c = 1/Physics::c;
+      simulation_r_rg = Physics::c*Physics::c/(simulation_m_msun*Physics::gg_msun);
+    }else{
+      simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
+      simulation_v_c = p_input_reader->simulation_v_c.value();
+      simulation_r_rg = p_input_reader->simulation_r_rg.value();
+    }
     simulation_interp = p_input_reader->simulation_interp.value();
     if ((simulation_format == SimulationFormat::athena
         or simulation_format == SimulationFormat::athenak) and simulation_interp)
@@ -68,6 +76,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     else if (p_input_reader->simulation_block_interp.has_value())
       BlacklightWarning("Ignoring simulation_block_interp selection.");
     simulation_hd_only = p_input_reader->simulation_hd_only.value();
+    mc_input = p_input_reader->mc_input.value();
   }
 
   // Copy formula parameters
@@ -427,6 +436,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   sample_bb1 = new Array<float>[adaptive_max_level+1];
   sample_bb2 = new Array<float>[adaptive_max_level+1];
   sample_bb3 = new Array<float>[adaptive_max_level+1];
+  sample_scattering = new Array<float>[adaptive_max_level+1];
 
   // Allocate space for coefficient data
   j_i = new Array<double>[adaptive_max_level+1];
@@ -627,6 +637,7 @@ RadiationIntegrator::~RadiationIntegrator()
     sample_bb1[level].Deallocate();
     sample_bb2[level].Deallocate();
     sample_bb3[level].Deallocate();
+    sample_scattering[level].Deallocate();
   }
   delete[] sample_inds;
   delete[] sample_fracs;
@@ -642,6 +653,7 @@ RadiationIntegrator::~RadiationIntegrator()
   delete[] sample_bb1;
   delete[] sample_bb2;
   delete[] sample_bb3;
+  delete[] sample_scattering;
 
   // Free memory - coefficient data
   for (int level = 0; level <= adaptive_max_level; level++)

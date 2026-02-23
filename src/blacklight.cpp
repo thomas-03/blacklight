@@ -17,6 +17,7 @@
 #include "radiation_integrator/radiation_integrator.hpp"  // RadiationIntegrator
 #include "simulation_reader/simulation_reader.hpp"        // SimulationReader
 #include "opacity_table_reader/opacity_table_reader.hpp"  // OpacityTableReader
+#include "mc_reader/mc_reader.hpp"
 #include "utils/exceptions.hpp"                           // BlacklightException
 
 //--------------------------------------------------------------------------------------------------
@@ -36,6 +37,7 @@ int main(int argc, char *argv[])
   double time_geodesic = 0.0;
   double time_read = 0.0;
   double time_opacity = 0.0;
+  double time_mc = 0.0;
   double time_sample = 0.0;
   double time_image = 0.0;
   double time_render = 0.0;
@@ -53,6 +55,7 @@ int main(int argc, char *argv[])
   GeodesicIntegrator *p_geodesic_integrator;
   SimulationReader *p_simulation_reader;
   OpacityTableReader *p_opacity_table_reader;
+  MCReader *p_mc_reader;
   RadiationIntegrator *p_radiation_integrator;
   OutputWriter *p_output_writer;
 
@@ -154,12 +157,32 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  
+  // Set up opacity table reader
+  try
+  {
+    p_mc_reader = new MCReader(p_input_reader,p_simulation_reader);
+  }
+  catch (const BlacklightException &exception)
+  {
+    std::cout << exception.what();
+    return 1;
+  }
+  catch (const std::bad_optional_access &exception)
+  {
+    std::cout << "Error: MCReader unable to find all needed values in input file.\n";
+    return 1;
+  }
+  catch (...)
+  {
+    std::cout << "Error: Could not set up MCReader.\n";
+    return 1;
+  }
+
   // Set up radiation integrator
   try
   {
     p_radiation_integrator =
-        new RadiationIntegrator(p_input_reader, p_geodesic_integrator, p_simulation_reader, p_opacity_table_reader);
+        new RadiationIntegrator(p_input_reader, p_geodesic_integrator, p_simulation_reader, p_opacity_table_reader,p_mc_reader);
   }
   catch (const BlacklightException &exception)
   {
@@ -234,6 +257,22 @@ int main(int argc, char *argv[])
       return 1;
     }
 
+    // Read MC file
+    try
+    {
+      time_mc += p_mc_reader->Read(n);
+    }
+    catch (const BlacklightException &exception)
+    {
+      std::cout << exception.what();
+      return 1;
+    }
+    catch (...)
+    {
+      std::cout << "Error: Could not read MC file.\n";
+      return 1;
+    }
+
     // Iterate with adaptive refinement
     bool adaptive_complete = false;
     while (not adaptive_complete)
@@ -295,6 +334,7 @@ int main(int argc, char *argv[])
   delete p_radiation_integrator;
   delete p_simulation_reader;
   delete p_opacity_table_reader;
+  delete p_mc_reader;
   delete p_geodesic_integrator;
   delete p_input_reader;
 
@@ -306,6 +346,7 @@ int main(int argc, char *argv[])
   std::cout << "\n  Integrating geodesics: " << time_geodesic << " s";
   std::cout << "\n  Reading simulation:    " << time_read << " s";
   std::cout << "\n  Reading opacity table: " << time_opacity << " s";
+  std::cout << "\n  Reading MC file:       " << time_mc << " s";
   std::cout << "\n  Sampling simulation:   " << time_sample << " s";
   std::cout << "\n  Integrating image:     " << time_image << " s";
   std::cout << "\n  Rendering:             " << time_render << " s";

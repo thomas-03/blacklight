@@ -50,8 +50,9 @@ struct InputReader
   std::optional<Coordinates> simulation_coord;
   std::optional<double> simulation_a;
   std::optional<double> simulation_m_msun;
+  std::optional<bool> simulation_all_cgs;
   std::optional<double> simulation_rho_cgs;
-  std::optional<double> simulation_v_cgs;
+  std::optional<double> simulation_v_c;
   std::optional<double> simulation_r_rg;
   std::optional<std::string> simulation_kappa_name;
   std::optional<bool> simulation_interp;
@@ -61,6 +62,11 @@ struct InputReader
   //Data - opacity table parameters
   std::optional<bool> opacity_table;
   std::optional<std::string> opacity_file;
+
+  //Data - MC file parameters
+  std::optional<bool> mc_input;
+  std::optional<std::string> mc_file;
+  std::optional<std::string> mc_freq_file;
 
   // Data - formula parameters
   std::optional<std::string> formula_name;

@@ -145,8 +145,10 @@ int InputReader::Read()
       simulation_m_msun = std::stod(val);
     else if (key == "simulation_rho_cgs")
       simulation_rho_cgs = std::stod(val);
-    else if (key == "simulation_v_cgs")
-      simulation_v_cgs = std::stod(val);
+    else if (key == "simulation_all_cgs")
+      simulation_all_cgs = ReadBool(val);
+    else if (key == "simulation_v_c")
+      simulation_v_c = std::stod(val);
     else if (key == "simulation_r_rg")
       simulation_r_rg = std::stod(val);
     else if (key == "simulation_kappa_name")
@@ -165,6 +167,14 @@ int InputReader::Read()
       opacity_table = ReadBool(val);
     else if (key == "opacity_file")
       opacity_file = val;
+    
+    //Store MC file parameters
+    else if(key == "mc_input")
+      mc_input = ReadBool(val);
+    else if(key == "mc_file")
+      mc_file = val;
+    else if(key == "mc_freq_file")
+      mc_freq_file=val;
 
     // Store formula parameters
     else if( key == "formula_name")

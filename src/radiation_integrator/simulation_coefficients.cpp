@@ -237,8 +237,12 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
   // Calculate units
   double d_unit = simulation_rho_cgs;
-  double v_unit = simulation_v_cgs;
+  double v_unit = simulation_v_c;
+  //double t_unit = 5444097725001.523;
+  //double e_unit = t_unit*d_unit;
   double e_unit = d_unit * Physics::c * Physics::c * v_unit*v_unit;
+  //std::printf("d_unit = %.5e, v_unit = %.5e, e_unit = %.5e\n",d_unit,v_unit,e_unit);
+  //double e_unit = 1.0;
 
   double b_unit = std::sqrt(4.0 * Math::pi * e_unit);
   if(plasma_model==PlasmaModel::one_temp)
@@ -298,17 +302,21 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
         // Calculate densities and pressures
         double rho_cgs = rho * d_unit;
+        /*if(pgas>0.0){
+          std::printf("positive pressure of %.5e in code units, which is %.5e in cgs units\n",pgas,pgas*e_unit);
+        }*/
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
+        //std::printf("rho_cgs unit %.5e, pgas_cgs unit %.5e",d_unit,e_unit);
 
         //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
 
         // properly scale velocities
-        uu1_sim *=v_unit;
-        uu2_sim *=v_unit;
-        uu3_sim *=v_unit;
+        //uu1_sim *=v_unit;
+        //uu2_sim *=v_unit;
+        //uu3_sim *=v_unit;
 
         if(uu1_sim>=1 or uu2_sim>=1 or uu3_sim>=1){
           std::cout<<"Warning: you have a fluid velocity >= c in your simulation data. This is unphysical and will likely cause NaNs in the output. uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
@@ -593,37 +601,44 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               opacity_file.open("./debugOutput/opacity_comparison.csv", std::ios_base::app);
               opacity_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<image_frequencies(l)<<","<<coefficient<<","<<table_opacity_value<<"\n";
               opacity_file.close();*/
-              if(table_opacity_value*1e-14>coefficient){
-                //the surrounding table values for my i,j,and k all look around what the table_opacity_value is, but they are super large compared to the free-free values
-
-                //maybe because I set dlt early and not post-uniform grid that's what messed it up? --> if that's the case then I should be seeing temperatures very different from what we actually get, however they all seem reasonable
-                //the rho values also seem reasonable in that it's not far off and the low value is indeed lower and the high value is indeed higher
-                //the frequency values also seem reasonable in the same way as above
-
-                //next to check is that when I go to calculate the distances in log space for the interpolation if I messed something up there
-                //the distances in log space for frequency and temperature seem reasonable
-                
-                //maybe I should check what happens if I do the same exact method as shane (no interpolation and just look around for the correct temp)
-                //free-free is like 1e-25 and I'm getting stuff around 1e-10
-
-                //std::printf("warning: large discrepancy between table opacity and free-free opacity: %e vs %e \n  true log_rho (g/cm3): %f , estimated log_rho: %f \n  example plan_tab value: %e %e at indices (%d, %d, %d) and temp +1 indice\n", table_opacity_value, coefficient,std::log10(rho_cgs), std::log10(p_opacity_table_reader->rho_grid(i)), p_opacity_table_reader->plan_tab(k,j,i),p_opacity_table_reader->plan_tab(k+1,j,i), k, j, i);
-                //std::printf("true log_temp: %f , estimated log_temp: %f , log_temp +1 : %f , xd = %f \n", std::log10(kb_tt_e_cgs/Physics::k_b), std::log10(p_opacity_table_reader->temp_grid(j)), std::log10(p_opacity_table_reader->temp_grid(j+1)),yd);
-                //std::printf("true log_rho (g/cm3): %f , estimated log_rho: %f \n", std::log10(rho_cgs), std::log10(p_opacity_table_reader->rho_grid(i)));
-                //std::printf("true log_freq (Hz): %f , estimated log_freq: %f \n", std::log10(nu_cgs*Physics::h), p_opacity_table_reader->fmin + k*p_opacity_table_reader->dlf);
-                //std::printf("example plan_tab value: %e %e at indices (%d, %d, %d) and temp +1 indice\n", p_opacity_table_reader->plan_tab(k,j,i),p_opacity_table_reader->plan_tab(k,j+1,i), k, j, i);
-                //std::printf("big deviation. free free value %e, table interpolated value %e \n kji %e , kji+1 %e, kj+1i %e, kj+1i+1 %e \n k+1ji %e , k+1ji+1 %e, k+1j+1i %e, k+1j+1i+1 %e \n", coefficient, table_opacity_value, p_opacity_table_reader->plan_tab(k,j,i), p_opacity_table_reader->plan_tab(k,j,i+1), p_opacity_table_reader->plan_tab(k,j+1,i), p_opacity_table_reader->plan_tab(k,j+1,i+1), p_opacity_table_reader->plan_tab(k+1,j,i), p_opacity_table_reader->plan_tab(k+1,j,i+1), p_opacity_table_reader->plan_tab(k+1,j+1,i), p_opacity_table_reader->plan_tab(k+1,j+1,i+1));
-              }
-
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
                   / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
               j_i[adaptive_level](l,m,n) += table_opacity_value* planck_function/(nu_cgs*nu_cgs);
-            }/*else{
-              std::ofstream opacity_file;
-              opacity_file.open("./debugOutput/ignored_opacities.csv", std::ios_base::app);
-              opacity_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<image_frequencies(l)<<"\n";
-              opacity_file.close();
-            }*/
+            }
           }
+          }
+          double scattering = 0.0;
+          //TEGAN: put here a way to pick the scattering value for the closest frequency
+          if(mc_input){
+            //find the nearest frequency from the current and use that scattering value
+            // Binary search to find closest frequency
+            int low = 0;
+            int high = mc_num_freqs - 1;
+            int mid = 0;
+            
+            while (low < high) {
+              mid = (low + high) / 2;
+              if (mc_freqs(mid) < nu_cgs) {
+                low = mid + 1;
+              } else {
+                high = mid;
+              }
+            }
+            
+            // Check boundaries and find closest
+            mid = low;
+            if (low > 0 && (low == mc_num_freqs || 
+                std::abs(mc_freqs(low - 1) - nu_cgs) < std::abs(mc_freqs(low) - nu_cgs))) {
+              mid = low - 1;
+            }
+            //std::printf("scattering frequency choice: %.10e, true frequency: %.10e \n",mc_freqs(mid),nu_cgs);
+            scattering = sample_scattering[adaptive_level](m,n,mid);
+
+            //Calculate emissivity and absorptivity due to scattering
+            double sigma_t = 6.65e-25;
+            alpha_i[adaptive_level](l,m,n) += n_e_cgs*sigma_t*nu_cgs;
+            j_i[adaptive_level](l,m,n) += scattering/(nu_cgs*nu_cgs);
+            //check that within the innermost region J_nu is similar to B_nu (J_nu is scattering /(n_e_cgs*sigma_t) )
           }
 
           // Calculate thermal synchrotron emissivities (M 28,30)

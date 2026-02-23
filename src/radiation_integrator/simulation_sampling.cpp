@@ -53,6 +53,7 @@ void RadiationIntegrator::ObtainGridData()
 
   // Copy cell values
   grid_prim = p_simulation_reader->prim;
+  grid_scatter = p_mc_reader->scattering_source_terms;
   //TEGAN: the prints from this show that the grid_prim values are being copied correctly
   //std::printf("example pgas value: %f\n", grid_prim(0,0,0,ind_pgas));
 
@@ -642,6 +643,10 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
 //       sample_nan[adaptive_level], and sample_fallback[adaptive_level] if adaptive_level > 0.
 void RadiationIntegrator::SampleSimulation()
 {
+    if(mc_input){
+      mc_num_freqs = p_mc_reader->num_freqs;
+      mc_freqs = p_mc_reader->freq_grid;
+    }
   // Allocate arrays
   int num_pix = camera_num_pix;
   if (adaptive_level > 0)
@@ -659,6 +664,8 @@ void RadiationIntegrator::SampleSimulation()
     sample_bb1[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     sample_bb2[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     sample_bb3[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
+    if(mc_input)
+      sample_scattering[adaptive_level].Allocate(num_pix,geodesic_num_steps[adaptive_level],mc_num_freqs);
   }
   sample_rho[adaptive_level].Zero();
   sample_pgas[adaptive_level].Zero();
@@ -669,6 +676,7 @@ void RadiationIntegrator::SampleSimulation()
   sample_bb1[adaptive_level].Zero();
   sample_bb2[adaptive_level].Zero();
   sample_bb3[adaptive_level].Zero();
+  sample_scattering[adaptive_level].Zero();
 
   // Resample cell data onto geodesics in parallel
   #pragma omp parallel for schedule(static)
@@ -693,6 +701,11 @@ void RadiationIntegrator::SampleSimulation()
         sample_bb1[adaptive_level](m,n) = std::numeric_limits<float>::quiet_NaN();
         sample_bb2[adaptive_level](m,n) = std::numeric_limits<float>::quiet_NaN();
         sample_bb3[adaptive_level](m,n) = std::numeric_limits<float>::quiet_NaN();
+        if(mc_input){
+        for(int l=0; l<mc_num_freqs;l++){
+          sample_scattering[adaptive_level](m,n,l) = std::numeric_limits<float>::quiet_NaN();
+        }
+        }
       }
 
       // Skip cut regions
@@ -736,14 +749,25 @@ void RadiationIntegrator::SampleSimulation()
           sample_uu1[adaptive_level](m,n) = grid_prim[t](ind_uu1,b,k,j,i);
           sample_uu2[adaptive_level](m,n) = grid_prim[t](ind_uu2,b,k,j,i);
           sample_uu3[adaptive_level](m,n) = grid_prim[t](ind_uu3,b,k,j,i);
+          //TEGAN: i should probably put some if statements here for whether or not we should use the B field
           sample_bb1[adaptive_level](m,n) = grid_prim[t](ind_bb1,b,k,j,i);
           sample_bb2[adaptive_level](m,n) = grid_prim[t](ind_bb2,b,k,j,i);
           sample_bb3[adaptive_level](m,n) = grid_prim[t](ind_bb3,b,k,j,i);
+          //TEGAN: put if statement here as to whether or not I should read in the MC data
+          if(mc_input){
+            for(int l=0; l<mc_num_freqs;l++){
+              sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);
+              //std::printf("l: %d b: %d k: %d j: %d i: %d sample scattering: %.5e grid scattering %.5e \n",l,b,k,j,i,sample_scattering[adaptive_level](m,n,l),grid_scatter[t](l,b,k,j,i));
+            }
+          }
         }
 
         // Calculate values with temporal interpolation
         else
         {
+          if(mc_input){
+            throw BlacklightException("Monte Carlo Input is not implemented for slow-light.");
+          }
           // Perform spatial interpolation on first slice
           double rho_1 = static_cast<double>(grid_prim[t](ind_rho,b,k,j,i));
           double pgas_1 = static_cast<double>(grid_prim[t](ind_pgas,b,k,j,i));
@@ -849,11 +873,25 @@ void RadiationIntegrator::SampleSimulation()
           sample_bb1[adaptive_level](m,n) = static_cast<float>(bb1);
           sample_bb2[adaptive_level](m,n) = static_cast<float>(bb2);
           sample_bb3[adaptive_level](m,n) = static_cast<float>(bb3);
+          double scattering = 0.0;
+          if(mc_input){
+            for(int l=0; l<mc_num_freqs;l++){
+              scattering = InterpolateSimple(grid_scatter[0],l, b, k, j, i, f_k, f_j, f_i);
+              if(scattering<=0.0)
+                scattering = static_cast<double>(grid_scatter[0](l,b,k,j,i));
+
+              sample_scattering[adaptive_level](m,n,l) = static_cast<float>(scattering);
+            }
+          }
         }
 
         // Calculate values with temporal interpolation
         else
         {
+
+          if(mc_input){
+            throw BlacklightException("Monte Carlo Input is not implemented for slow-light.");
+          }
           // Perform spatial interpolation on first slice
           double rho_1 = InterpolateSimple(grid_prim[t], ind_rho, b, k, j, i, f_k, f_j, f_i);
           double pgas_1 = InterpolateSimple(grid_prim[t], ind_pgas, b, k, j, i, f_k, f_j, f_i);
@@ -955,6 +993,17 @@ void RadiationIntegrator::SampleSimulation()
             pgas = static_cast<double>(grid_prim[t](ind_pgas,b,k,j,i));
           if (plasma_model == PlasmaModel::code_kappa and kappa <= 0.0)
             kappa = static_cast<double>(grid_prim[t](ind_kappa,b,k,j,i));
+          
+          double scattering = 0.0;
+          if(mc_input){
+            for(int l=0; l<mc_num_freqs;l++){
+              scattering = InterpolateAdvanced(grid_scatter[0],l,m,n);
+              if(scattering<=0.0)
+                scattering = static_cast<double>(grid_scatter[0](l,b,k,j,i));
+
+              sample_scattering[adaptive_level](m,n,l) = static_cast<float>(scattering);
+            }
+          }
 
           // Assign values
           sample_rho[adaptive_level](m,n) = static_cast<float>(rho);
@@ -972,6 +1021,10 @@ void RadiationIntegrator::SampleSimulation()
         // Calculate values with temporal interpolation
         else
         {
+
+          if(mc_input){
+            throw BlacklightException("Monte Carlo Input is not implemented for slow-light.");
+          }
           // Perform spatial interpolation on first slice
           double rho_1 = InterpolateAdvanced(grid_prim[t], ind_rho, m, n);
           double pgas_1 = InterpolateAdvanced(grid_prim[t], ind_pgas, m, n);

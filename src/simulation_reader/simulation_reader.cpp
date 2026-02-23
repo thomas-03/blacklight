@@ -24,7 +24,6 @@
 #include "../utils/array.hpp"                // Array
 #include "../utils/exceptions.hpp"           // BlacklightException, BlacklightWarning
 #include "../utils/file_io.hpp"              // ReadBinary
-//TEGAN: I think that I've edited all that I need for the implementation of spm coordinates
 //--------------------------------------------------------------------------------------------------
 
 // Simulation reader constructor
@@ -58,9 +57,16 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
     simulation_coord = p_input_reader->simulation_coord.value();
     simulation_a = p_input_reader->simulation_a.value();
     simulation_m_msun = p_input_reader->simulation_m_msun.value();
-    simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
-    simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
-    simulation_r_rg = p_input_reader->simulation_r_rg.value();
+    simulation_all_cgs = p_input_reader->simulation_all_cgs.value();
+    if(simulation_all_cgs){
+      simulation_rho_cgs = 1.0;
+      simulation_v_c = 1/Physics::c;
+      simulation_r_rg = Physics::c*Physics::c/(simulation_m_msun*Physics::gg_msun);
+    }else{
+      simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
+      simulation_v_c = p_input_reader->simulation_v_c.value();
+      simulation_r_rg = p_input_reader->simulation_r_rg.value();
+    }
     simulation_hd_only = p_input_reader->simulation_hd_only.value();
   }
 
@@ -162,6 +168,8 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
   // Allocate arrays of Arrays of cell variables
   if (num_arrays > 0)
     prim = new Array<float>[num_arrays];
+  
+  std::printf("built simulation reader fine ");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -202,6 +210,7 @@ SimulationReader::~SimulationReader()
 //       portal.hdfgroup.org/display/HDF5/File+Format+Specification
 double SimulationReader::Read(int snapshot)
 {
+  std::printf("in read ");
   // Only proceed if needed
   if (model_type != ModelType::simulation)
     return 0.0;
@@ -349,6 +358,7 @@ double SimulationReader::Read(int snapshot)
     // Read time
     if (simulation_format == SimulationFormat::athena)
     {
+      std::printf("defining time ");
       float time_temp;
       //TEGAN: fix this so it's not hardcoded
       time_temp=1367;
@@ -596,6 +606,7 @@ double SimulationReader::Read(int snapshot)
     // Read block layout
     if (first_time)
     {
+      std::printf("reading block layout");
       if (simulation_format == SimulationFormat::athena)
       {
         ReadHDF5IntArray("Levels", levels);
@@ -618,6 +629,7 @@ double SimulationReader::Read(int snapshot)
     {
       if (simulation_format == SimulationFormat::athena)
       {
+        std::printf("reading coords ");
         ReadHDF5FloatArray("x1f", x1f);
         ReadHDF5FloatArray("x2f", x2f);
         ReadHDF5FloatArray("x3f", x3f);
@@ -774,6 +786,7 @@ double SimulationReader::Read(int snapshot)
     // Read cell data
     if (simulation_format == SimulationFormat::athena)
     {
+      std::printf("read vars");
       if (first_time)
       {
         VerifyVariablesAthena();

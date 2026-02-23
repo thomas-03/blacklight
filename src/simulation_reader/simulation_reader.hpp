@@ -39,8 +39,9 @@ struct SimulationReader
   Coordinates simulation_coord;
   double simulation_a;
   double simulation_m_msun;
+  bool simulation_all_cgs;
   double simulation_rho_cgs;
-  double simulation_v_cgs;
+  double simulation_v_c;
   double simulation_r_rg;
   bool simulation_hd_only;
   std::string simulation_kappa_name;
