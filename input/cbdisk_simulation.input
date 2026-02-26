@@ -4,7 +4,7 @@ num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/r1600_w200_pinhole_cbdisk_inc60_opacTable.npz  # file to be (over)written with output data
+output_file   = output/test_readIn.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -32,11 +32,15 @@ simulation_hd_only = false
 opacity_table = true
 opacity_file = data/out_opacity_table_nfreq64.txt
 
+mc_input = true
+mc_file = data/isoth.out2.00000.athdf
+mc_freq_file = data/thomsonFrequencies.txt
+
 
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
 camera_r          = 1600.0  # KS radial coordinate r in gravitational units
-camera_th         = 60.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_th         = 90.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
@@ -45,13 +49,13 @@ camera_k_r        = 1.0    # covariant KS r-momentum of photons
 camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radians)
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
-camera_width      = 200.0   # full width of image in gravitational units
+camera_width      = 800.0   # full width of image in gravitational units
 camera_resolution = 96     # number of pixels per side
 
 # Ray-tracing parameters
 ray_flat        = true           # flag indicating ray tracing should assume flat spacetime
 ray_terminate   = absolute  # termination condition (photon, multiplicative, additive)
-ray_factor      = 80.0           # constant for terminate (only used for ray_terminate != photon)
+ray_factor      = 0.0           # constant for terminate (only used for ray_terminate != photon)
 ray_integrator  = dp              # time integrator for geodesics (dp, rk4, rk2)
 ray_step        = 0.01            # step size control relative to radial coordinate
 ray_max_steps   = 5000            # maximum number of steps allowed for each geodesic
@@ -60,7 +64,7 @@ ray_tol_abs     = 1.0e-8          # absolute tolerance for taking full steps (dp
 ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp)
 
 # Image parameters
-image_light           = true      # flag indicating real image of radiation should be produced
+image_light           = false      # flag indicating real image of radiation should be produced
 image_num_frequencies   = 20       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 2e13    # first frequency in Hz if image_frequency_num > 1
@@ -81,6 +85,27 @@ image_crossings       = false     # flag for counting plane crossings of geodesi
 image_free_free       = true  # flag for specifying whether to include free-free emission terms
 image_scattering      = false     # flag for specifying whether to include compton scattering
 image_synchrotron     = false
+
+# Rendering parameters
+render_num_images     = 1                 # number of false-color renderings
+render_1_num_features = 3                 # image 1: number of features
+render_1_1_quantity   = rho               # image 1, feature 1: quantity to use
+render_1_1_type       = fill              # image 1, feature 1: type (fill, thresh, rise, fall)
+render_1_1_min        = 1.5e-17           # image 1, feature 1: lower cutoff
+render_1_1_max        = inf               # image 1, feature 1: upper cutoff
+render_1_1_tau_scale  = 1.5e13            # image 1, feature 1: optical depth length scale
+render_1_1_rgb        = 106,121,247       # image 1, feature 1: RGB colors in [0,255]
+render_1_2_quantity   = sigma             # image 1, feature 2: quantity to use
+render_1_2_type       = fill              # image 1, feature 2: type (fill, thresh, rise, fall)
+render_1_2_min        = 1.0               # image 1, feature 2: lower cutoff
+render_1_2_max        = inf               # image 1, feature 2: upper cutoff
+render_1_2_tau_scale  = 1.0e13            # image 1, feature 2: optical depth length scale
+render_1_2_rgb        = 214,76.5,66.7     # image 1, feature 2: RGB colors in [0,255]
+render_1_3_quantity   = beta_inverse      # image 1, feature 3: quantity to use
+render_1_3_type       = thresh            # image 1, feature 3: type (fill, thresh, rise, fall)
+render_1_3_thresh     = 0.15              # image 1, feature 3: threshold
+render_1_3_opacity    = 0.2               # image 1, feature 3: opacity in [0,1]
+render_1_3_xyz        = 0.12,0.246,0.089  # image 1, feature 3: XYZ colors in [0,1]
 
 # Rendering parameters
 render_num_images = 0  # number of false-color renderings

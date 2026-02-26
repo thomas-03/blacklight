@@ -313,11 +313,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
 
-        // properly scale velocities
-        //uu1_sim *=v_unit;
-        //uu2_sim *=v_unit;
-        //uu3_sim *=v_unit;
-
         if(uu1_sim>=1 or uu2_sim>=1 or uu3_sim>=1){
           std::cout<<"Warning: you have a fluid velocity >= c in your simulation data. This is unphysical and will likely cause NaNs in the output. uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
         }
@@ -403,6 +398,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //(plasma_mu * Physics::m_p* e_unit/d_unit)/Physics::k_b is =5.444098e+06
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
+          if(kb_tt_e_cgs<Physics::k_b*1e4){
+            //std::printf("temperature lower than floor");
+            kb_tt_e_cgs=Physics::k_b*1e4;
+          }
           
 
           //when I have it just the typical blacklight way, the temperatures are way too low

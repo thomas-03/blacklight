@@ -173,12 +173,20 @@ def main(**kwargs):
         lum,frequencies = get_luminosity(**kwargs)
         print(f"file:{file} luminosity:{lum} ")
         if kwargs['labels'] is not None:
-          plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
+          plt.plot(frequencies*h_ev,frequencies*lum/eV,label=kwargs['labels'][files.index(file)])
         else:
-          plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+          plt.plot(frequencies*h_ev,frequencies*lum/eV,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
+      if kwargs['compare']:
+        shaneResults = np.loadtxt(kwargs['compare_file'])
+        plt.scatter(shaneResults[:,0]*1e3,shaneResults[:,1]/eV,label='MC Results')
+      if kwargs['filename_data'][-4:] == '.npz':
+        with np.load(kwargs['filename_data']) as f:
+          mass_msun = f['mass_msun']
+      rg = gg_msun * mass_msun / c ** 2
 
-      #shaneResults = np.loadtxt('./cbdisk_spectrum.txt')
+      #B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+      #plt.plot(frequencies*h_ev,frequencies*B_nu*4*np.pi*(kwargs['distance']*rg)**2/eV,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
@@ -214,5 +222,7 @@ if __name__ == '__main__':
   parser.add_argument('--files',nargs='+',help='list of files to process',type=str)
   parser.add_argument('--inclination',nargs='+',type=float,default=0.0,help='inclination of image (degrees)')
   parser.add_argument('--labels',nargs='+',type=str,default=None,help='labels for the plot')
+  parser.add_argument('--compare',type=bool,default=False,help='if true, compare against MC results')
+  parser.add_argument('--compare_file',type=str,default='./spectrum_musum.txt',help='file containing comparison data')
   args = parser.parse_args()
   main(**vars(args))
