@@ -114,7 +114,8 @@ def main(**kwargs):
     if distance_pc is None:
       raise RuntimeError('Must supply distance.')
     rg = gg_msun * mass_msun / c ** 2
-    half_width = np.arctan(0.5 * width_rg * rg / (distance_pc * pc)) / muas
+    #switch the distance from pc to rg
+    half_width = np.arctan(0.5 * width_rg / (distance_pc)) / muas
     scale_exponent = int('{0:24.16e}'.format(half_width).split('e')[1])
     if scale_exponent in (0, 1):
       scale = 1.0
@@ -197,7 +198,7 @@ if __name__ == '__main__':
   parser.add_argument('filename_data', help='name of file containing raw image data')
   parser.add_argument('filename_plot', help='name of image file to write')
   parser.add_argument('rendering', type=int, help='number of rendering to be plotted')
-  parser.add_argument('-d', '--distance', type=float, help='distance to black hole in parsecs')
+  parser.add_argument('-d', '--distance', type=float, help='distance to black hole in rg')
   parser.add_argument('-a', '--axes', choices=('pixel','rg','cm','muas'), help='axes labels')
   parser.add_argument('-l', '--max_level', type=int, help='maximum adaptive level to plot')
   parser.add_argument('--notex', action='store_true',

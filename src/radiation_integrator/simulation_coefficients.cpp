@@ -241,7 +241,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
   //double t_unit = 5444097725001.523;
   //double e_unit = t_unit*d_unit;
   double e_unit = d_unit * Physics::c * Physics::c * v_unit*v_unit;
-  //std::printf("d_unit = %.5e, v_unit = %.5e, e_unit = %.5e\n",d_unit,v_unit,e_unit);
+  std::printf("d_unit = %.5e, v_unit = %.5e, e_unit = %.5e\n",d_unit,v_unit,e_unit);
   //double e_unit = 1.0;
 
   double b_unit = std::sqrt(4.0 * Math::pi * e_unit);
@@ -398,10 +398,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //(plasma_mu * Physics::m_p* e_unit/d_unit)/Physics::k_b is =5.444098e+06
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
-          if(kb_tt_e_cgs<Physics::k_b*1e4){
+          /*if(kb_tt_e_cgs<Physics::k_b*1e4){
             //std::printf("temperature lower than floor");
             kb_tt_e_cgs=Physics::k_b*1e4;
-          }
+          }*/
           
 
           //when I have it just the typical blacklight way, the temperatures are way too low
