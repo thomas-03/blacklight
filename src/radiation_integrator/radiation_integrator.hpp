@@ -9,6 +9,7 @@
 #include "../input_reader/input_reader.hpp"                // InputReader
 #include "../simulation_reader/simulation_reader.hpp"      // SimulationReader
 #include "../opacity_table_reader/opacity_table_reader.hpp"  // OpacityTableReader
+#include "../mc_reader/mc_reader.hpp"
 #include "../utils/array.hpp"                              // Array
 
 //--------------------------------------------------------------------------------------------------
@@ -20,7 +21,8 @@ struct RadiationIntegrator
   RadiationIntegrator(const InputReader *p_input_reader,
       const GeodesicIntegrator *p_geodesic_integrator,
       const SimulationReader *p_simulation_reader_,
-      const OpacityTableReader *p_opacity_table_reader_);
+      const OpacityTableReader *p_opacity_table_reader_,
+      const MCReader *p_mc_reader_);
   RadiationIntegrator(const RadiationIntegrator &source) = delete;
   RadiationIntegrator &operator=(const RadiationIntegrator &source) = delete;
   ~RadiationIntegrator();
@@ -28,6 +30,7 @@ struct RadiationIntegrator
   // Pointers to other objects
   const SimulationReader *p_simulation_reader;
   const OpacityTableReader *p_opacity_table_reader;
+  const MCReader * p_mc_reader;
 
   // Input data - general
   ModelType model_type;
@@ -42,12 +45,18 @@ struct RadiationIntegrator
   SimulationFormat simulation_format;
   Coordinates simulation_coord;
   double simulation_m_msun;
+  bool simulation_all_cgs;
   double simulation_rho_cgs;
-  double simulation_v_cgs;
+  double simulation_v_c;
   double simulation_r_rg;
   bool simulation_interp;
   bool simulation_block_interp;
   bool simulation_hd_only;
+
+  bool mc_input;
+  int mc_num_freqs;
+  Array<double> mc_freqs;
+
 
   // Input data - formula parameters
   std::string formula_name;
@@ -233,6 +242,7 @@ struct RadiationIntegrator
   Array<double> x1v, x2v, x3v;
   double *time;
   Array<float> *grid_prim;
+  Array<float> *grid_scatter;
   int ind_rho, ind_pgas, ind_kappa;
   int ind_uu1, ind_uu2, ind_uu3;
   int ind_bb1, ind_bb2, ind_bb3;
@@ -257,6 +267,7 @@ struct RadiationIntegrator
   Array<float> *sample_bb1 = nullptr;
   Array<float> *sample_bb2 = nullptr;
   Array<float> *sample_bb3 = nullptr;
+  Array<float> *sample_scattering = nullptr;
   double extrapolation_tolerance;
 
   // Coefficient data

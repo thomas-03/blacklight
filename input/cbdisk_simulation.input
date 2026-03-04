@@ -21,8 +21,9 @@ simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = spm              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
 simulation_m_msun       = 2.0e7          # black hole mass in solar masses
+simulation_all_cgs      = false
 simulation_rho_cgs      = 1.543e-3          # unit code density in g/cm^3
-simulation_v_cgs        = 0.001             # unit code v0
+simulation_v_c          = 0.001             # unit code v0
 simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
@@ -31,6 +32,10 @@ simulation_hd_only = false
 #opacity table parameters
 opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
+
+mc_input = false
+mc_file = data/isoth.out2.00000.athdf
+mc_freq_file = data/thomsonFrequencies.txt
 
 
 # Camera parameters
@@ -60,8 +65,8 @@ ray_tol_abs     = 1.0e-8          # absolute tolerance for taking full steps (dp
 ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp)
 
 # Image parameters
-image_light           = true      # flag indicating real image of radiation should be produced
-image_num_frequencies   = 20       # number of observation frequencies
+image_light           = true     # flag indicating real image of radiation should be produced
+image_num_frequencies   = 15       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 1e14    # first frequency in Hz if image_frequency_num > 1
 image_frequency_end     = 1e18    # last frequency in Hz if image_frequency_num > 1
@@ -72,8 +77,8 @@ image_rotation_split  = false     # flag for Strang splitting rotation from emis
 image_time            = false     # flag for producing image of geodesic times
 image_length          = false     # flag for producing image of geodesic lengths
 image_lambda          = false     # flag for producing image of affine path lengths
-image_emission        = true     # flag for producing image of emission coefficients
-image_tau             = true     # flag for producing image of optical depths
+image_emission        = false     # flag for producing image of emission coefficients
+image_tau             = false     # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
 image_tau_int         = false     # flag for producing tau-integrated images
@@ -81,6 +86,7 @@ image_crossings       = false     # flag for counting plane crossings of geodesi
 image_free_free       = true  # flag for specifying whether to include free-free emission terms
 image_scattering      = false     # flag for specifying whether to include compton scattering
 image_synchrotron     = false
+
 
 # Rendering parameters
 render_num_images = 0  # number of false-color renderings
