@@ -313,6 +313,12 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
 
+
+        // properly scale velocities
+        uu1_sim *=v_unit;
+        uu2_sim *=v_unit;
+        uu3_sim *=v_unit;
+
         if(uu1_sim>=1 or uu2_sim>=1 or uu3_sim>=1){
           std::cout<<"Warning: you have a fluid velocity >= c in your simulation data. This is unphysical and will likely cause NaNs in the output. uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
         }
