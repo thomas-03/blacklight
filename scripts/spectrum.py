@@ -168,6 +168,8 @@ def main(**kwargs):
     plt.figure(figsize=(8,6))
     if kwargs['luminosity']:
       files = kwargs['filename_data']
+      if kwargs['files'] is not None:
+        files.extend(kwargs['files'])
       for file in files:
         kwargs['filename_data'] = file
         lum,frequencies = get_luminosity(**kwargs)
@@ -192,7 +194,9 @@ def main(**kwargs):
       plt.yscale('log')
       plt.xlabel('Frequency (eV)')
       plt.ylabel('$\\nu L_\\nu (eV s^{-1})$ ')
-      plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
+      #plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
+      plt.title("MC vs Blacklight")
+      #plt.savefig('../plots/cbdisk/ff_only/i45spectrum_comparison.png',dpi=300)
     else:
       flux, frequencies = get_flux(**kwargs)
       plt.plot(frequencies,frequencies*flux)

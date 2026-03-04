@@ -4,7 +4,7 @@ num_threads = 8           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/r1600_w200_pinhole_cbdisk_inc60_opacTable.npz  # file to be (over)written with output data
+output_file   = output/cbdisk/ff_only/r3200_w1600_inc45_inclMid.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -29,14 +29,14 @@ simulation_block_interp = false            # flag indicating interpolation shoul
 simulation_hd_only = false
 
 #opacity table parameters
-opacity_table = true
+opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
 
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
-camera_r          = 1600.0  # KS radial coordinate r in gravitational units
-camera_th         = 60.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_r          = 3200.0  # KS radial coordinate r in gravitational units
+camera_th         = 45.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
@@ -45,13 +45,13 @@ camera_k_r        = 1.0    # covariant KS r-momentum of photons
 camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radians)
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
-camera_width      = 200.0   # full width of image in gravitational units
+camera_width      = 1600.0   # full width of image in gravitational units
 camera_resolution = 96     # number of pixels per side
 
 # Ray-tracing parameters
 ray_flat        = true           # flag indicating ray tracing should assume flat spacetime
 ray_terminate   = absolute  # termination condition (photon, multiplicative, additive)
-ray_factor      = 80.0           # constant for terminate (only used for ray_terminate != photon)
+ray_factor      = 0.0           # constant for terminate (only used for ray_terminate != photon)
 ray_integrator  = dp              # time integrator for geodesics (dp, rk4, rk2)
 ray_step        = 0.01            # step size control relative to radial coordinate
 ray_max_steps   = 5000            # maximum number of steps allowed for each geodesic
@@ -63,8 +63,8 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 image_light           = true      # flag indicating real image of radiation should be produced
 image_num_frequencies   = 20       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 2e13    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3e18    # last frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 1e14    # first frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 1e18    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = camera  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized

@@ -60,7 +60,7 @@ def plot_one(spectrum, ax, xunit, yunit, imu, iphi, plterr, **kwargs):
         with open('spectrum_mu'+str(imuv)+'.txt', 'w') as f:
             #f.write('# '+xlabel+' '+ylabel+' '+ylabel+'_err\n')
             for i in range(len(x)):
-                f.write(f'{myDict["freq_kev"][i]} {myDict["spectrum"][i]} {myDict["spectrum_err"][i]}\n')
+                f.write(f'{myDict["freq_kev"][i]} {myDict["spectrum"][i]}\n')
         athenamc.make_plot(x, y, yerr=yerr, xlabel=xlabel, ylabel=ylabel, ax=ax, **kwargs)
 
 
