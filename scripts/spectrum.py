@@ -181,11 +181,11 @@ def main(**kwargs):
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
       shaneResults = np.loadtxt(kwargs['compare_file'])
-      plt.scatter(shaneResults[:,0]*1e3,shaneResults[:,1],label='MC')
+      plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC')
       
       if kwargs['compare_file2'] is not None:
         shaneResults2 = np.loadtxt(kwargs['compare_file2'])
-        plt.scatter(shaneResults2[:,0]*1e3,shaneResults2[:,1],label='MC w/o screen')
+        plt.errorbar(shaneResults2[:,0]*1e3,shaneResults2[:,1],yerr=shaneResults2[:,2],label='MC w/o screen')
       
       if kwargs['filename_data'][-4:] == '.npz':
         with np.load(kwargs['filename_data']) as f:
@@ -193,7 +193,7 @@ def main(**kwargs):
       rg = gg_msun * mass_msun / c ** 2
       #1e11 cm . 2rg = 5908253110111
       B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
-      plt.plot(frequencies*h_ev,2*np.pi*frequencies*B_nu*4*np.pi*(0.017*rg)**2,label='Blackbody at 10^5 K')
+      plt.plot(frequencies*h_ev,2*np.pi*frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
