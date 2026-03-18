@@ -22,6 +22,8 @@ def imu_handler(imu):
         return [0]
     if imu == 'sum':
         return [imu]
+    if imu == 'ave':
+        return [imu]
     if len(imu) > 1:
         # loop over all imu in the array
         slist = imu.strip(('[]')).split(",")
@@ -51,14 +53,20 @@ def plot_one(spectrum, ax, xunit, yunit, imu, iphi, plterr, **kwargs):
     if xunit != spectrum['units']:
         athenamc.convert_xaxis(xunit,spectrum)
 
-    # plot spectrum as function mu
-    ilist = imu_handler(imu)
-    for imuv in ilist:
-        x, y, yerr, xlabel, ylabel = athenamc.plot_frequency(spectrum, imuv, iphi=iphi,
-                                     plterr=plterr, xunit=xunit, yunit=yunit)
-        athenamc.make_plot(x, y, yerr=yerr, xlabel=xlabel, ylabel=ylabel, ax=ax, **kwargs)
+    # check for rebinning
+    rebinx = kwargs.pop('rebinx')
 
-def plot_blackbody(spectrum, ax, xunit, yunit, bbtemp, bbnorm):
+    # plot spectrum as function mu and phi
+    mulist = imu_handler(imu)
+    philist = imu_handler(iphi)
+    for iphv in philist:
+        for imuv in mulist:
+            x, y, yerr, xlabel, ylabel = athenamc.plot_frequency(spectrum, imuv, iphv,
+                                         plterr=plterr, xunit=xunit, yunit=yunit, rebinx=rebinx)
+            athenamc.make_plot(x, y, yerr=yerr, xlabel=xlabel, ylabel=ylabel, ax=ax, **kwargs)
+
+
+def plot_blackbody(spectrum, ax, xunit, yunit, bbtemp, bbnorm, imu = None, iphi = None):
     """
     Plot blackbody for comparison
     """
@@ -77,6 +85,10 @@ def plot_blackbody(spectrum, ax, xunit, yunit, bbtemp, bbnorm):
     kb = 1.380649e-16
     h = 6.62607015e-27
     ybb = bbnorm*2*h/c**2*nu**3/(np.exp(h*nu/(kb*bbtemp)) - 1.0)
+    if iphi == 'sum':
+        ybb *= 2 * np.pi
+    if imu == 'sum':
+        ybb *= 0.5 # imu = sum return flux
     if yunit == 'nulnu':
         ax.plot(x, ybb*nu, linestyle='-')
     elif yunit == 'lnu':
@@ -128,7 +140,7 @@ def main(**kwargs):
         plot_one(spectrum, ax, xunit, yunit, imu, iphi, plterr, **kwargs)
 
         if bbtemp is not None:
-            plot_blackbody(spectrum, ax, xunit, yunit, bbtemp, bbnorm)
+            plot_blackbody(spectrum, ax, xunit, yunit, bbtemp, bbnorm, imu, iphi)
 
     # save plot to outfile
     plt.savefig(outfile)
@@ -167,6 +179,10 @@ if __name__ == '__main__':
         default = None,
         type = float,
         help = 'y-axis maximum')
+    parser.add_argument('--rebinx',
+        default = None,
+        type = int,
+        help = 'amount to rebin x axis by')
     parser.add_argument('--xunit',
         default = 'kev',
         help = 'variable to be used for x axis: ev, kev, nu, lambda')

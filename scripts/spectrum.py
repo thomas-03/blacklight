@@ -111,7 +111,8 @@ def get_flux(**kwargs):
   if width_rg is None:
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
-  width =  np.arctan(0.5*width_rg /(distance))
+  #width =  np.arctan(0.5*width_rg /(distance))
+  width = width_rg/distance
 
   # Prepare flag for NaN values
   nan_found = False
@@ -177,7 +178,7 @@ def main(**kwargs):
         if kwargs['labels'] is not None:
           plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
         else:
-          plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+          plt.plot(frequencies*h_ev,frequencies*lum/(4*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
       shaneResults = np.loadtxt(kwargs['compare_file'])
@@ -192,8 +193,10 @@ def main(**kwargs):
           mass_msun = f['mass_msun']
       rg = gg_msun * mass_msun / c ** 2
       #1e11 cm . 2rg = 5908253110111
-      B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
-      plt.plot(frequencies*h_ev,2*np.pi*frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
+      #B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+      #get rid of the 2 because imu=sum so this basically returns flux
+      B_nu = h_erg/c**2*frequencies**3/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+      plt.plot(frequencies*h_ev,frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
@@ -213,7 +216,7 @@ def main(**kwargs):
       plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
-  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/spherical_ff_ring.png')
+  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/spherical_ff_thomMC_Full.png')
   #plt.show()
 
 
