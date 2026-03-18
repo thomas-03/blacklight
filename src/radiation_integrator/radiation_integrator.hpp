@@ -96,6 +96,7 @@ struct RadiationIntegrator
   bool image_lambda_ave;
   bool image_emission_ave;
   bool image_tau_int;
+  bool image_photosphere_int;
   bool image_crossings;
   bool image_free_free;
   bool image_scattering;
@@ -294,6 +295,7 @@ struct RadiationIntegrator
   int image_offset_lambda_ave = 0;
   int image_offset_emission_ave = 0;
   int image_offset_tau_int = 0;
+  int image_offset_photosphere_int = 0;
   int image_offset_crossings = 0;
 
   // Rendering data

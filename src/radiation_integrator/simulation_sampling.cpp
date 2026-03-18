@@ -725,6 +725,9 @@ void RadiationIntegrator::SampleSimulation()
         sample_bb1[adaptive_level](m,n) = fallback_bb1;
         sample_bb2[adaptive_level](m,n) = fallback_bb2;
         sample_bb3[adaptive_level](m,n) = fallback_bb3;
+        if(mc_input){
+          sample_scattering[adaptive_level](m,n) = 0.0;
+        }
       }
 
       // Set nearest values

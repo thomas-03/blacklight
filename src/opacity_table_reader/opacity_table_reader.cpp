@@ -41,101 +41,6 @@ OpacityTableReader::OpacityTableReader(const InputReader *p_input_reader_)
   opacity_table = p_input_reader->opacity_table.value();
   opacity_file = p_input_reader->opacity_file.value();
 
-  // Copy simulation parameters
-  /*if (model_type == ModelType::simulation)
-  {
-    simulation_file = p_input_reader->simulation_file.value();
-    simulation_multiple = p_input_reader->simulation_multiple.value();
-    if (simulation_multiple)
-    {
-      simulation_start = p_input_reader->simulation_start.value();
-      if (simulation_start < 0)
-        throw BlacklightException("Must have nonnegative index simulation_start.");
-      simulation_end = p_input_reader->simulation_end.value();
-      if (simulation_end < simulation_start)
-        throw
-            BlacklightException("Must have simulation_end at least as large as simulation_start.");
-    }
-    simulation_coord = p_input_reader->simulation_coord.value();
-    simulation_a = p_input_reader->simulation_a.value();
-    simulation_m_msun = p_input_reader->simulation_m_msun.value();
-    simulation_rho_cgs = p_input_reader->simulation_rho_cgs.value();
-    simulation_v_cgs = p_input_reader->simulation_v_cgs.value();
-    simulation_r_rg = p_input_reader->simulation_r_rg.value();
-  }*/
-
-  // Copy slow-light parameters
-  /*if (model_type == ModelType::simulation)
-  {
-    slow_light_on = p_input_reader->slow_light_on.value();
-    if (slow_light_on)
-    {
-      if (not simulation_multiple)
-        throw BlacklightException("Must enable simulation_multiple to use slow light.");
-      slow_chunk_size = p_input_reader->slow_chunk_size.value();
-      if (slow_chunk_size < 2)
-        throw BlacklightException("Must have slow_chunk_size be at least 2.");
-      if (slow_chunk_size > simulation_end - simulation_start + 1)
-        throw BlacklightException("Not enough simulation files for given slow_chunk_size.");
-      slow_t_start = p_input_reader->slow_t_start.value();
-      slow_dt = p_input_reader->slow_dt.value();
-      if (slow_dt <= 0.0)
-        throw BlacklightException("Must have positive time interval slow_dt.");
-    }
-  }*/
-
-  // Copy plasma parameters
-  /*if (model_type == ModelType::simulation)
-  {
-    plasma_mu = p_input_reader->plasma_mu.value();
-    plasma_model = p_input_reader->plasma_model.value();
-    if (plasma_model == PlasmaModel::ti_te_beta || plasma_model == PlasmaModel::one_temp)
-    {
-      plasma_use_p = p_input_reader->plasma_use_p.value();
-      if (plasma_use_p)
-      {
-        if (p_input_reader->plasma_gamma.has_value())
-        {
-          plasma_gamma = p_input_reader->plasma_gamma.value();
-          gamma_set = true;
-        }
-        if (p_input_reader->plasma_gamma_i.has_value())
-          BlacklightWarning("Ignoring plasma_gamma_i selection.");
-        if (p_input_reader->plasma_gamma_e.has_value())
-          BlacklightWarning("Ignoring plasma_gamma_e selection.");
-      }
-      else
-      {
-        if (simulation_format == SimulationFormat::athena
-            or p_input_reader->plasma_gamma.has_value())
-        {
-          plasma_gamma = p_input_reader->plasma_gamma.value();
-          gamma_set = true;
-        }
-        if (simulation_format == SimulationFormat::iharm3d)
-        {
-          if (p_input_reader->plasma_gamma_i.has_value())
-          {
-            plasma_gamma_i = p_input_reader->plasma_gamma_i.value();
-            gamma_i_set = true;
-          }
-          if (p_input_reader->plasma_gamma_e.has_value())
-          {
-            plasma_gamma_e = p_input_reader->plasma_gamma_e.value();
-            gamma_e_set = true;
-          }
-        }
-        else
-        {
-          plasma_gamma_i = p_input_reader->plasma_gamma_i.value();
-          plasma_gamma_e = p_input_reader->plasma_gamma_e.value();
-        }
-      }
-    }
-  }*/
-
-  // Determine how many files will be held in memory simultaneously
-  
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -299,8 +204,8 @@ double OpacityTableReader::Read(int snapshot)
           double partB = std::sqrt(2.0*Math::pi/(3.0*Physics::k_b*temp_grid(j)*Physics::m_e));
           double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
           double nu = freq_grid(k) / Physics::h;
-          //note that I hardcoded in the 0.6 mean molecular weight here
-          double coefficient = partA*partB*(rho_grid(i)/(0.6*Physics::m_p))*(rho_grid(i)/(0.6*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
+          //note that I hardcoded in the 0.5 mean molecular weight here
+          double coefficient = partA*partB*(rho_grid(i)/(0.5*Physics::m_p))*(rho_grid(i)/(0.5*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
           //kTFile<<plan_tab(k,j,i)<<","<<coefficient<<","<<plan_tab(k,j,i)/coefficient<< ","<<nu<<","<<temp_grid(j)<<","<<rho_grid(i)<<std::endl;
           plan_tab(k,j,i) = coefficient;
         }

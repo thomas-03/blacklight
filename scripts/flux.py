@@ -111,7 +111,8 @@ def get_flux(**kwargs):
   if width_rg is None:
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
-  width =  np.arctan(0.5*width_rg /(distance))
+  #width =  2*np.arctan(0.5*width_rg /(distance))
+  width = width_rg/distance
 
   # Prepare flag for NaN values
   nan_found = False
@@ -174,26 +175,23 @@ def main(**kwargs):
         kwargs['filename_data'] = file
         lum,frequencies = get_luminosity(**kwargs)
         print(f"file:{file} luminosity:{lum}")
+        flux,frequencies = get_flux(**kwargs)
         if kwargs['labels'] is not None:
           plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
         else:
-          plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+          plt.plot(frequencies*h_ev,frequencies*flux,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
-      shaneResults = np.loadtxt(kwargs['compare_file'])
-      plt.scatter(shaneResults[:,0]*1e3,shaneResults[:,1],label='MC')
-      
-      if kwargs['compare_file2'] is not None:
-        shaneResults2 = np.loadtxt(kwargs['compare_file2'])
-        plt.scatter(shaneResults2[:,0]*1e3,shaneResults2[:,1],label='MC w/o screen')
-      
       if kwargs['filename_data'][-4:] == '.npz':
         with np.load(kwargs['filename_data']) as f:
           mass_msun = f['mass_msun']
       rg = gg_msun * mass_msun / c ** 2
       #1e11 cm . 2rg = 5908253110111
       B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
-      plt.plot(frequencies*h_ev,2*np.pi*frequencies*B_nu*4*np.pi*(0.017*rg)**2,label='Blackbody at 10^5 K')
+      #print(0.017*rg)
+      #print(0.017*rg/1e11)
+      #np.pi*frequencies*B_nu*4*np.pi*(1e11)**2
+      plt.plot(frequencies*h_ev,frequencies*B_nu*np.pi*(1e11/(5*rg))**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')

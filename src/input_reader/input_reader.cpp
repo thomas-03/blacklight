@@ -293,6 +293,8 @@ int InputReader::Read()
       image_emission_ave = ReadBool(val);
     else if (key == "image_tau_int")
       image_tau_int = ReadBool(val);
+    else if (key == "image_photosphere_int")
+      image_photosphere_int = ReadBool(val);
     else if (key == "image_crossings")
       image_crossings = ReadBool(val);
     else if (key == "image_free_free")

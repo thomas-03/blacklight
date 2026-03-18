@@ -30,12 +30,12 @@
 //   Allocates and initializes j_i[adaptive_level] if image_light == true or image_emission == true
 //       or image_emission_ave == true.
 //   Allocates and initializes alpha_i[adaptive_level] if image_light == true or image_tau == true
-//       or image_tau_int == true.
+//       or image_tau_int == true or image_photosphere_int == true.
 //   Allocates and initializes j_q[adaptive_level], j_v[adaptive_level], alpha_q[adaptive_level],
 //       alpha_v[adaptive_level], rho_q[adaptive_level], and rho_v[adaptive_level] if
 //       image_light == true and image_polarization == true.
 //   Allocates and initializes cell_values[adaptive_level] if image_lambda_ave == true
-//       or image_emission_ave == true or image_tau_int == true or render_num_images > 0.
+//       or image_emission_ave == true or image_tau_int == true or image_photosphere_int == true or render_num_images > 0.
 //   References beta-dependent temperature ratio electron model from 2016 AA 586 A38 (E1).
 //   References entropy-based electron model from 2017 MNRAS 466 705 (E2).
 //   References 2021 ApJ 921 17 (M) for transfer coefficients.
@@ -203,7 +203,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
     if (image_light or image_emission or image_emission_ave)
       j_i[adaptive_level].Allocate(image_num_frequencies, num_pix,
           geodesic_num_steps[adaptive_level]);
-    if (image_light or image_tau or image_tau_int)
+    if (image_light or image_tau or image_tau_int or image_photosphere_int)
       alpha_i[adaptive_level].Allocate(image_num_frequencies, num_pix,
           geodesic_num_steps[adaptive_level]);
     if (image_light and image_polarization)
@@ -221,7 +221,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
       rho_v[adaptive_level].Allocate(image_num_frequencies, num_pix,
           geodesic_num_steps[adaptive_level]);
     }
-    if (image_lambda_ave or image_emission_ave or image_tau_int or render_num_images > 0)
+    if (image_lambda_ave or image_emission_ave or image_tau_int or image_photosphere_int or render_num_images > 0)
       cell_values[adaptive_level].Allocate(CellValues::num_cell_values, num_pix,
           geodesic_num_steps[adaptive_level]);
   }
@@ -401,9 +401,14 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //tgas_cgs = 6.553e+06 
           //gamma-1 is 0.666667
           double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+          
           //(plasma_mu * Physics::m_p* e_unit/d_unit)/Physics::k_b is =5.444098e+06
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
+          if(rho_cgs!=0.0){
+            kb_tt_e_cgs = 1e5*Physics::k_b;
+            //std::printf("temp: %.3e",kb_tt_e_cgs/Physics::k_b);
+          }
           /*if(kb_tt_e_cgs<Physics::k_b*1e4){
             //std::printf("temperature lower than floor");
             kb_tt_e_cgs=Physics::k_b*1e4;
@@ -420,7 +425,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
 
         }
-
         // Calculate electron temperature for given electron entropy (E2 13)
         if (plasma_thermal_frac != 0.0 and plasma_model == PlasmaModel::code_kappa)
         {
@@ -449,7 +453,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           continue;
 
         // Record cell values
-        if (image_lambda_ave or image_emission_ave or image_tau_int or render_num_images > 0)
+        if (image_lambda_ave or image_emission_ave or image_tau_int or image_photosphere_int or render_num_images > 0)
         {
           cell_values[adaptive_level](static_cast<int>(CellValues::rho),m,n) = rho_cgs;
           cell_values[adaptive_level](static_cast<int>(CellValues::n_e),m,n) = n_e_cgs;
@@ -461,7 +465,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         }
 
         // Skip remaining calculations if possible
-        if (not (image_light or image_emission or image_tau or image_emission_ave or image_tau_int))
+        if (not (image_light or image_emission or image_tau or image_emission_ave or image_tau_int or image_photosphere_int))
           continue;
 
         // Skip coupling if magnetic field vanishes
@@ -640,8 +644,17 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             scattering = sample_scattering[adaptive_level](m,n,mid);
 
             //Calculate emissivity and absorptivity due to scattering
-            double sigma_t = 6.65e-25;
-            alpha_i[adaptive_level](l,m,n) += n_e_cgs*sigma_t*nu_cgs;
+            double sigma_t = 6.65248e-25;
+            double heabund = 0.09; //hardcode for now
+            double kappaes = sigma_t * (1. + 2.*heabund) / (Physics::m_p * (1.+4.*heabund) );
+            alpha_i[adaptive_level](l,m,n) += kappaes*rho_cgs*nu_cgs;
+            //std::printf("m: %d ", m);
+            /*if(m==4725){
+              std::ofstream scattering_file;
+              scattering_file.open("./debugOutput/scattering_comparison.csv", std::ios_base::app);
+              scattering_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<scattering/(n_e_cgs*sigma_t)<<","<<scattering<<"\n";
+              scattering_file.close();
+            }*/
             j_i[adaptive_level](l,m,n) += scattering/(nu_cgs*nu_cgs);
             //check that within the innermost region J_nu is similar to B_nu (J_nu is scattering /(n_e_cgs*sigma_t) )
           }
@@ -682,7 +695,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             // Calculate absorptivities
             double b_nu_nu_3_cgs = 2.0 * Physics::h / (Physics::c * Physics::c)
                 / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
-            if (image_light or image_tau or image_tau_int)
+            if (image_light or image_tau or image_tau_int or image_photosphere_int)
               alpha_i[adaptive_level](l,m,n) = j_i_val / b_nu_nu_3_cgs;
             if (image_light and image_polarization)
             {
@@ -691,7 +704,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             }
 
             // Account for numerical issues later arising from absorptivities being too small
-            if ((image_light or image_tau or image_tau_int)
+            if ((image_light or image_tau or image_tau_int or image_photosphere_int)
                 and 1.0 / (alpha_i[adaptive_level](l,m,n) * alpha_i[adaptive_level](l,m,n))
                 == std::numeric_limits<double>::infinity())
             {
@@ -768,7 +781,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
           //Calculate thermal free-free absorptivities (Rybicki & Lightman, eqn 5.18a)
           //note: this results in very large absorption for radio wavelengths so the image is even dimmer than without free_free emission
-          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_free_free and (!opacity_table || default_to_free_free))
+          if (plasma_thermal_frac != 0.0 and (image_light or image_tau or image_tau_int or image_photosphere_int) and image_free_free and (!opacity_table || default_to_free_free))
           {
            double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
@@ -787,7 +800,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
             // Account for numerical issues later arising from absorptivities being too small
             //(taken from the synchrotron treatment above mostly)
-            if ((image_light or image_tau or image_tau_int)
+            if ((image_light or image_tau or image_tau_int or image_photosphere_int)
                 and 1.0 / (alpha_i[adaptive_level](l,m,n) * alpha_i[adaptive_level](l,m,n))
                 == std::numeric_limits<double>::infinity())
             {
@@ -818,7 +831,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate power-law synchrotron absorptivities (M 29,39)
-          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int) and image_synchrotron and !opacity_table)
+          if (plasma_power_frac != 0.0 and (image_light or image_tau or image_tau_int or image_photosphere_int) and image_synchrotron and !opacity_table)
           {
             double var_a = std::pow(nu_cgs / (nu_c_cgs * sin_theta_b), -(plasma_p + 2.0) / 2.0);
             double coefficient = plasma_power_frac * n_e_cgs * Physics::e * Physics::e
@@ -884,7 +897,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
 
           // Calculate kappa-distribution synchrotron absoptivities (M 29,47-50)
-          if (plasma_kappa_frac != 0.0 and (image_light or image_tau or image_tau_int) and !opacity_table)
+          if (plasma_kappa_frac != 0.0 and (image_light or image_tau or image_tau_int or image_photosphere_int) and !opacity_table)
           {
             double nu_kappa_cgs =
                 nu_c_cgs * plasma_w * plasma_w * plasma_kappa * plasma_kappa * sin_theta_b;
@@ -944,6 +957,17 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
                 (1.0 - kappa_rho_frac) * rho_v_low + kappa_rho_frac * rho_v_high;
           }
         }
+
+        /*if(m==6568){
+          std::ofstream out;
+          out.open("./debugOutput/geo6568noInner80.csv", std::ios_base::app);
+          out<<n<<","<<x1<<","<<x2<<","<<x3<<","<<rho_cgs<<","<<pgas_cgs<<","<<kb_tt_e_cgs<<","<<j_i[adaptive_level](5,m,n)<<","<<alpha_i[adaptive_level](5,m,n)<<"\n";
+        }else if(m==6583){
+          std::ofstream out;
+          out.open("./debugOutput/geo6583noInner80.csv", std::ios_base::app);
+          out<<n<<","<<x1<<","<<x2<<","<<x3<<","<<rho_cgs<<","<<pgas_cgs<<","<<kb_tt_e_cgs<<","<<j_i[adaptive_level](5,m,n)<<","<<alpha_i[adaptive_level](5,m,n)<<"\n";
+        }*/
+
       }
     }
   }

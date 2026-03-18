@@ -52,7 +52,9 @@ void OutputWriter::WriteNpz()
       + (image_emission ? 1 : 0) + (image_tau ? 1 : 0)
       + (image_lambda_ave ? CellValues::num_cell_values : 0)
       + (image_emission_ave ? CellValues::num_cell_values : 0)
-      + (image_tau_int ? CellValues::num_cell_values : 0) + (image_crossings ? 1 : 0);
+      + (image_tau_int ? CellValues::num_cell_values : 0) 
+      + (image_photosphere_int ? CellValues::num_cell_values : 0)
+      + (image_crossings ? 1 : 0);
   int num_full_arrays =
       (output_camera ? 1 : 0) + num_image_arrays + (render_num_images > 0 ? 1 : 0);
   int num_arrays = 3 + 1 + (adaptive_max_level > 0 ? 1 : 0) + num_full_arrays
@@ -123,7 +125,7 @@ void OutputWriter::WriteNpz()
 
   // Write root intensity image data and metadata to buffers
   Array<double> image_deep_copy;
-  if (image_light or image_lambda_ave or image_emission_ave or image_tau_int)
+  if (image_light or image_lambda_ave or image_emission_ave or image_tau_int or image_photosphere_int)
     image_deep_copy.Allocate(image_num_frequencies, camera_resolution, camera_resolution);
   int num_pix = camera_resolution * camera_resolution;
   int num_dims = image_num_frequencies == 1 ? 2 : 3;
@@ -257,10 +259,28 @@ void OutputWriter::WriteNpz()
       int num_written = std::snprintf(name_buffer, max_name_length, "tau_int_%s", cell_names[n]);
       if (num_written < 0 or num_written >= max_name_length)
         throw BlacklightException("Error naming output array.");
-      for (int l = 0; l < image_num_frequencies; l++)
+      for (int l = 0; l < image_num_frequencies; l++){
         image_deep_copy.CopyFrom(image[0],
             (image_offset_tau_int + l * CellValues::num_cell_values + n) * num_pix, l * num_pix,
             num_pix);
+      }
+      data_lengths[array_offset] =
+          GenerateNpyFromArray(image_deep_copy, num_dims, &data_buffers[array_offset]);
+      local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
+          data_lengths[array_offset], name_buffer, &local_header_buffers[array_offset]);
+      array_offset++;
+    }
+  if (image_photosphere_int)
+    for (int n=0; n<CellValues::num_cell_values;n++){
+      int num_written = std::snprintf(name_buffer, max_name_length, "photosphere_int_%s", cell_names[n]);
+      if (num_written < 0 or num_written >= max_name_length)
+        throw BlacklightException("Error naming output array.");
+      for (int l = 0; l < image_num_frequencies; l++){
+        std::printf("offset_src: %d offset_dest: %d other.n_tot: %d \n",(image_offset_photosphere_int + l * CellValues::num_cell_values + n) * num_pix,l*num_pix,image[0].n_tot);
+        image_deep_copy.CopyFrom(image[0],
+            (image_offset_photosphere_int + l * CellValues::num_cell_values + n) * num_pix, l * num_pix,
+            num_pix);
+      }
       data_lengths[array_offset] =
           GenerateNpyFromArray(image_deep_copy, num_dims, &data_buffers[array_offset]);
       local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
@@ -329,7 +349,7 @@ void OutputWriter::WriteNpz()
     }
 
     // Write adaptive intensity image data and metadata to buffers
-    if (image_light or image_lambda_ave or image_emission_ave or image_tau_int)
+    if (image_light or image_lambda_ave or image_emission_ave or image_tau_int or image_photosphere_int)
       image_deep_copy.Allocate(image_num_frequencies, block_counts_array(level),
           adaptive_block_size, adaptive_block_size);
     num_pix = block_counts_array(level) * adaptive_block_size * adaptive_block_size;
@@ -495,6 +515,23 @@ void OutputWriter::WriteNpz()
         for (int l = 0; l < image_num_frequencies; l++)
           image_deep_copy.CopyFrom(image[level],
               (image_offset_tau_int + l * CellValues::num_cell_values + n) * num_pix, l * num_pix,
+              num_pix);
+        data_lengths[array_offset] =
+            GenerateNpyFromArray(image_deep_copy, num_dims, &data_buffers[array_offset]);
+        local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
+            data_lengths[array_offset], name_buffer, &local_header_buffers[array_offset]);
+        array_offset++;
+      }
+    if (image_photosphere_int)
+      for (int n = 0; n < CellValues::num_cell_values; n++)
+      {
+        num_written = std::snprintf(name_buffer, max_name_length, "adaptive_photosphere_int_%s_%d",
+            cell_names[n], level);
+        if (num_written < 0 or num_written >= max_name_length)
+          throw BlacklightException("Error naming output array.");
+        for (int l = 0; l < image_num_frequencies; l++)
+          image_deep_copy.CopyFrom(image[level],
+              (image_offset_photosphere_int + l * CellValues::num_cell_values + n) * num_pix, l * num_pix,
               num_pix);
         data_lengths[array_offset] =
             GenerateNpyFromArray(image_deep_copy, num_dims, &data_buffers[array_offset]);

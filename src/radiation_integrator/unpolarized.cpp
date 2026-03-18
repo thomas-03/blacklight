@@ -73,7 +73,7 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
           debugFile<<"step,nu,x1,x2,x3,kcov0,kcov1,kcov2,kcov3,j_i,alpha_i,delta_lambda_cgs,optically_thin"<<std::endl;
           debugFile.close();
         }*/
-
+        double previous_delta_tau = 0.;
         // Go through samples
         for (int n = 0; n < num_steps; n++)
         {
@@ -103,6 +103,18 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
           bool optically_thin = delta_tau <= delta_tau_max;
 
           int trace_pixel = m;
+
+
+
+          /*if(l==5 && m==6568){
+            std::ofstream out;
+            out.open("./debugOutput/geoEmission6568.csv", std::ios_base::app);
+            out<<n<<","<<x1<<","<<x2<<","<<x3<<","<<j<<","<<alpha<<","<<delta_tau<<","<<optically_thin<<"\n";
+          }else if(l==5 && m==6583){
+            std::ofstream out;
+            out.open("./debugOutput/geoEmission6583.csv", std::ios_base::app);
+            out<<n<<","<<x1<<","<<x2<<","<<x3<<","<<j<<","<<alpha<<","<<delta_tau<<","<<optically_thin<<"\n";
+          }*/
 
           // Integrate light
           if (image_light)
@@ -144,6 +156,20 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             integrated_emission += j * delta_lambda_cgs;
           if (image_tau)
             image[adaptive_level](image_offset_tau+l,m) += delta_tau;
+
+          
+          /*if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and image[adaptive_level](image_offset_tau+l,m) <= tau_1){
+            double rho = sample_rho[adaptive_level](m,n);
+            double pgas = sample_pgas[adaptive_level](m,n);
+            double rho_cgs = rho * d_unit;
+            double pgas_cgs = pgas * e_unit;
+            if(not std::isnan(pgas_cgs) && not std::isnan(rho_cgs) && rho_cgs>0.0){
+              temperature_integral += (plasma_mu * Physics::m_p *pgas_cgs / rho_cgs)*delta_tau/Physics::k_b;
+              density_integral += rho_cgs*delta_tau;
+              tau_integral += delta_tau;
+            }
+          }*/
+
           if (image_lambda_ave and not std::isnan(cell_values[adaptive_level](0,m,n)))
             for (int a = 0; a < CellValues::num_cell_values; a++)
             {
@@ -174,6 +200,34 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
                 image[adaptive_level](index,m) = cell_values[adaptive_level](a,m,n);
               }
           }
+          if (image_photosphere_int and not std::isnan(cell_values[adaptive_level](0,m,n)))
+          {
+            double tau_0 = 0.3;
+            double tau_1 = 1.3;
+            for (int a = 0; a < CellValues::num_cell_values; a++){
+              /*if(a==3){
+                std::printf("theta_e: %.3e ",cell_values[adaptive_level](a,m,n));
+              }*/
+              int index = image_offset_photosphere_int + l * CellValues::num_cell_values + a;
+              //if (previous_delta_tau < tau_0 &&  image[adaptive_level](image_offset_tau+l,m) >= tau_0 )
+              if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and (image[adaptive_level](image_offset_tau+l,m) <= tau_1 || previous_delta_tau < tau_0) and (not std::isnan(cell_values[adaptive_level](a,m,n)))){
+                //image[adaptive_level](index,m) += exp_neg* (image[adaptive_level](index,m) + cell_values[adaptive_level](a,m,n) * expm1);
+                image[adaptive_level](index,m)+= cell_values[adaptive_level](a,m,n)/delta_tau;
+              }else{
+                image[adaptive_level](index,m) += 0.0;
+              }
+             /* double rho = sample_rho[adaptive_level](m,n);
+            double pgas = sample_pgas[adaptive_level](m,n);
+            double rho_cgs = rho * d_unit;
+            double pgas_cgs = pgas * e_unit;
+            if(not std::isnan(pgas_cgs) && not std::isnan(rho_cgs) && rho_cgs>0.0){
+              temperature_integral += (plasma_mu * Physics::m_p *pgas_cgs / rho_cgs)*delta_tau/Physics::k_b;
+              density_integral += rho_cgs*delta_tau;
+              tau_integral += delta_tau;
+            }*/
+            }
+            
+          }
           if (image_crossings and l == 0)
           {
             bool plane_sign_new = camera_x[1] * x1 + camera_x[2] * x2 + camera_x[3] * x3 > 0.0;
@@ -182,6 +236,11 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             plane_sign = plane_sign_new;
           }
         }
+        /*if(m==6568 && l==5){
+          std::printf("pixel 6568 emission: %.5e\n",image[adaptive_level](l,m));
+        }else if(m==6583 && l==5){
+          std::printf("pixel 6583 emission: %.5e\n",image[adaptive_level](l,m));
+        }*/
 
         // Store integrated quantities
         if (image_lambda)
@@ -204,8 +263,16 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             int index = image_offset_emission_ave + l * CellValues::num_cell_values + a;
             image[adaptive_level](index,m) /= integrated_emission;
           }
-      }
+      
+    /*temperature_integral /= tau_integral;
+    density_integral /= tau_integral;
 
+    std::ofstream photosphere_out;
+    photosphere_out.open("./debugOutput/photosphere_integral.csv",std::ios_base::app);
+    photosphere_out<<l<<","<<temperature_integral<<","<<density_integral<<","<<tau_integral<<"\n";
+    photosphere_out.close();*/
+    previous_delta_tau = image[adaptive_level](image_offset_tau+l,m);
+    }
     // Transform I_nu/nu^3 to I_nu
     if (image_light)
     {
@@ -217,6 +284,7 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
           image[adaptive_level](l,m) *= nu_cu;
         }
     }
+  
   }
 
   // Free memory

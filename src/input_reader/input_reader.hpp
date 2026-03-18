@@ -131,6 +131,7 @@ struct InputReader
   std::optional<bool> image_lambda_ave;
   std::optional<bool> image_emission_ave;
   std::optional<bool> image_tau_int;
+  std::optional<bool> image_photosphere_int;
   std::optional<bool> image_crossings;
   std::optional<bool> image_free_free;
   std::optional<bool> image_scattering;
