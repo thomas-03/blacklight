@@ -191,7 +191,7 @@ def main(**kwargs):
       #print(0.017*rg)
       #print(0.017*rg/1e11)
       #np.pi*frequencies*B_nu*4*np.pi*(1e11)**2
-      plt.plot(frequencies*h_ev,frequencies*B_nu*np.pi*(1e11/(5*rg))**2,label='Blackbody at 10^5 K')
+      plt.plot(frequencies*h_ev,frequencies*4*B_nu*np.pi*(1e11/(5*rg))**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
