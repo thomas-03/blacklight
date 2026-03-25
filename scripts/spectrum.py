@@ -181,8 +181,9 @@ def main(**kwargs):
           plt.plot(frequencies*h_ev,frequencies*lum/(4*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
-      shaneResults = np.loadtxt(kwargs['compare_file'])
-      plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC')
+      if kwargs['compare_file'] is not None:
+        shaneResults = np.loadtxt(kwargs['compare_file'])
+        plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC')
       
       if kwargs['compare_file2'] is not None:
         shaneResults2 = np.loadtxt(kwargs['compare_file2'])
@@ -195,8 +196,8 @@ def main(**kwargs):
       #1e11 cm . 2rg = 5908253110111
       #B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
       #get rid of the 2 because imu=sum so this basically returns flux
-      B_nu = h_erg/c**2*frequencies**3/(np.exp(h_erg*frequencies/(kB*1e5))-1)
-      plt.plot(frequencies*h_ev,frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
+      #B_nu = h_erg/c**2*frequencies**3/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+      #plt.plot(frequencies*h_ev,frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
@@ -216,7 +217,7 @@ def main(**kwargs):
       plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
-  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/spherical_ff_thomMC_Full.png')
+  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/temp_ff_only.png')
   #plt.show()
 
 
@@ -236,7 +237,7 @@ if __name__ == '__main__':
   parser.add_argument('--inclination',nargs='+',type=float,default=0.0,help='inclination of image (degrees)')
   parser.add_argument('--labels',nargs='+',type=str,default=None,help='labels for the plot')
   parser.add_argument('--compare',type=bool,default=False,help='if true, compare against MC results')
-  parser.add_argument('--compare_file',type=str,default='./spectrum_musum.txt',help='file containing comparison data')
+  parser.add_argument('--compare_file',type=str,default=None,help='file containing comparison data')
   parser.add_argument('--compare_file2',type=str,default=None,help='file containing comparison data')
   args = parser.parse_args()
   main(**vars(args))

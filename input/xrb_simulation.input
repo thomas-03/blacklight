@@ -1,14 +1,10 @@
 # General parameters
 model_type  = simulation  # type of model (simulation, formula)
-num_threads = 8           # number of threads to use in parallel
+num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-<<<<<<< HEAD
-output_file   = output/xrb_i0.npz  # file to be (over)written with output data
-=======
-output_file   = output/xrb_Tfloor.npz  # file to be (over)written with output data
->>>>>>> mc_athena_dev
+output_file   = output/xrb_gr/xrb_i0_plane.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -20,22 +16,14 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athenak           # format of GRMHD data
-simulation_file         = data/edd_survey.full.00600.bin  # file containing data dump
+simulation_file         = /PellaShared/jez2sk/share/freefree/edd_survey.full.00600.bin  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
-<<<<<<< HEAD
 simulation_coord        = cks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.3              # dimensionless black hole spin
 simulation_m_msun       = 10          # black hole mass in solar masses
 simulation_all_cgs      = false
 simulation_rho_cgs      = 1e-4          # unit code density in g/cm^3
-simulation_v_c          = 1             # unit code v0
-=======
-simulation_coord        = sks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
-simulation_a            = 0.3              # dimensionless black hole spin
-simulation_m_msun       = 10          # black hole mass in solar masses
-simulation_rho_cgs      = 1e-4          # unit code density in g/cm^3
-simulation_v_cgs          = 1             # unit code v0
->>>>>>> mc_athena_dev
+simulation_v_c          = 1.0             # unit code v0
 simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
@@ -45,22 +33,15 @@ simulation_hd_only = false
 opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
-<<<<<<< HEAD
 mc_input = false
 mc_file = data/isoth.out2.00000.athdf
 mc_freq_file = data/thomsonFrequencies.txt
 
 
 # Camera parameters
-camera_type       = pinhole  # type of camera (plane, pinhole)
+camera_type       = plane  # type of camera (plane, pinhole)
 camera_r          = 1600.0  # KS radial coordinate r in gravitational units
-camera_th         = 0.0   # KS polar coordinate theta in degrees (0/180 for N/S)
-=======
-# Camera parameters
-camera_type       = pinhole  # type of camera (plane, pinhole)
-camera_r          = 1600.0  # KS radial coordinate r in gravitational units
-camera_th         = 15.0   # KS polar coordinate theta in degrees (0/180 for N/S)
->>>>>>> mc_athena_dev
+camera_th         = 0.0   # KS polar coordinate theta in degrees (0/180 for 
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
@@ -70,11 +51,7 @@ camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radia
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
 camera_width      = 800.0   # full width of image in gravitational units
-<<<<<<< HEAD
 camera_resolution = 96     # number of pixels per side
-=======
-camera_resolution = 64     # number of pixels per side
->>>>>>> mc_athena_dev
 
 # Ray-tracing parameters
 ray_flat        = false           # flag indicating ray tracing should assume flat spacetime
@@ -94,7 +71,7 @@ image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 2e13    # first frequency in Hz if image_frequency_num > 1
 image_frequency_end     = 3e18    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
-image_normalization   = camera  # frequency location (camera [w/ velocity], infinity [rest])
+image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
 image_rotation_split  = false     # flag for Strang splitting rotation from emission/absorption
 image_time            = false     # flag for producing image of geodesic times
@@ -105,6 +82,7 @@ image_tau             = true     # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
 image_tau_int         = false     # flag for producing tau-integrated images
+image_photosphere_int = false
 image_crossings       = false     # flag for counting plane crossings of geodesics
 image_free_free       = true  # flag for specifying whether to include free-free emission terms
 image_scattering      = false     # flag for specifying whether to include compton scattering
@@ -154,12 +132,7 @@ cut_plane            = false  # flag for domain being excluded beyond a certain 
 
 # Fallback parameters
 fallback_nan = false  # flag indicating any fallback should result in NaN for that ray
-<<<<<<< HEAD
 fallback_rho = 0      # the fallback option lets you have values 
 #1e-6(1/1.6e-24)1e-16(1e4)
 fallback_pgas = 0 
-=======
-fallback_rho = 0.0      # the fallback option lets you have values 
-fallback_pgas = 0.0 
->>>>>>> mc_athena_dev
 fallback_kappa = 0.0
