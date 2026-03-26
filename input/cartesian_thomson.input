@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/spherical_thomson/mantemp_ff_thom_spherical_i0_r10_nadara_1e3.npz  # file to be (over)written with output data
+output_file   = output/cartesian_thomson/mantemp_ff_thom_cart_i0_r10_nadara_1e3.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -18,7 +18,7 @@ checkpoint_sample_file   = data/sample.dat
 simulation_format       = athena           # format of GRMHD data
 simulation_file         = data/spherical_thomson/nadaraFluid.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
-simulation_coord        = spm              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
+simulation_coord        = cks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
 simulation_m_msun       = 677019          # black hole mass in solar masses
 simulation_all_cgs      = true

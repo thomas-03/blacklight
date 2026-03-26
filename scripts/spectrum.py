@@ -217,7 +217,7 @@ def main(**kwargs):
       plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
-  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/temp_ff_only.png')
+  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/temp_ff_thom.png')
   #plt.show()
 
 
