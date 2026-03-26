@@ -210,7 +210,6 @@ SimulationReader::~SimulationReader()
 //       portal.hdfgroup.org/display/HDF5/File+Format+Specification
 double SimulationReader::Read(int snapshot)
 {
-  std::printf("in read ");
   // Only proceed if needed
   if (model_type != ModelType::simulation)
     return 0.0;
@@ -606,7 +605,6 @@ double SimulationReader::Read(int snapshot)
     // Read block layout
     if (first_time)
     {
-      std::printf("reading block layout");
       if (simulation_format == SimulationFormat::athena)
       {
         ReadHDF5IntArray("Levels", levels);
@@ -629,20 +627,26 @@ double SimulationReader::Read(int snapshot)
     {
       if (simulation_format == SimulationFormat::athena)
       {
-        std::printf("reading coords ");
         ReadHDF5FloatArray("x1f", x1f);
         ReadHDF5FloatArray("x2f", x2f);
         ReadHDF5FloatArray("x3f", x3f);
         ReadHDF5FloatArray("x1v", x1v);
         ReadHDF5FloatArray("x2v", x2v);
         ReadHDF5FloatArray("x3v", x3v);
+        double maxr=0.0;
+        double minr = 100000.0;
         for(int j=0;j<x1f.n1;j++){
           for(int i=0;i<x1f.n2;i++){
             x1f(i,j) = simulation_r_rg*x1f(i,j);
             x1v(i,j) = simulation_r_rg*x1v(i,j);
+            if(maxr<x1f(i,j)){
+              maxr=x1f(i,j);
+            }else if(minr>x1f(i,j)){
+              minr=x1f(i,j);
+            }
           }
         }
-  
+        //std::cout<<"max r: "<<maxr<<" min r: "<<minr<<std::endl;
       }
       else if (simulation_format == SimulationFormat::iharm3d)
       {

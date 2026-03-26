@@ -112,7 +112,7 @@ def get_flux(**kwargs):
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
   #width =  2*np.arctan(0.5*width_rg /(distance))
-  width = width_rg/distance
+  width = width_rg*rg
 
   # Prepare flag for NaN values
   nan_found = False
@@ -124,7 +124,7 @@ def get_flux(**kwargs):
       #this is in erg cm^-2 s^-1 Hz^-1
       tempImage = np.copy(image[freq,:,:])
       #print((width))
-      flux = np.append(flux, (np.nanmean(tempImage[np.isfinite(tempImage)])*width**2))
+      flux = np.append(flux, (4*np.nanmean(tempImage[np.isfinite(tempImage)])*width**2))
       #print(flux.shape)
     
   #flux/=eV
@@ -156,8 +156,8 @@ def get_luminosity(**kwargs):
     with np.load(kwargs['filename_data']) as f:
       mass_msun = f['mass_msun']
   rg = gg_msun * mass_msun / c ** 2
-  dA = 4*np.pi*(kwargs['distance']*rg)**2
-  return flux*dA, freqs
+  #dA = 4*np.pi*(kwargs['distance']*rg)**2
+  return flux, freqs
 
 
 def main(**kwargs):
@@ -179,7 +179,7 @@ def main(**kwargs):
         if kwargs['labels'] is not None:
           plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
         else:
-          plt.plot(frequencies*h_ev,frequencies*flux,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+          plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
       if kwargs['filename_data'][-4:] == '.npz':
@@ -187,11 +187,11 @@ def main(**kwargs):
           mass_msun = f['mass_msun']
       rg = gg_msun * mass_msun / c ** 2
       #1e11 cm . 2rg = 5908253110111
-      B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+      B_nu = h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
       #print(0.017*rg)
       #print(0.017*rg/1e11)
       #np.pi*frequencies*B_nu*4*np.pi*(1e11)**2
-      plt.plot(frequencies*h_ev,frequencies*4*B_nu*np.pi*(1e11/(5*rg))**2,label='Blackbody at 10^5 K')
+      plt.plot(frequencies*h_ev,frequencies*4*B_nu*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')

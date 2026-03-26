@@ -111,8 +111,8 @@ def get_flux(**kwargs):
   if width_rg is None:
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
-  #width =  np.arctan(0.5*width_rg /(distance))
-  width = width_rg/distance
+  width =  2*np.arctan(0.5*width_rg /(distance))
+  #width = width_rg/distance
 
   # Prepare flag for NaN values
   nan_found = False
@@ -178,7 +178,7 @@ def main(**kwargs):
         if kwargs['labels'] is not None:
           plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
         else:
-          plt.plot(frequencies*h_ev,frequencies*lum/(4*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+          plt.plot(frequencies*h_ev,frequencies*lum/(2*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
       if kwargs['compare_file'] is not None:
@@ -218,7 +218,7 @@ def main(**kwargs):
   plt.legend()
   plt.grid()
   plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/temp_ff_thom.png')
-  #plt.show()
+
 
 
 # Execute main function

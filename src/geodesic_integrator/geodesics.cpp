@@ -3,6 +3,7 @@
 // C++ headers
 #include <algorithm>  // max, min
 #include <cmath>      // abs, ceil, isfinite, pow, sqrt
+#include <fstream>    // ofstream
 #include <sstream>    // ostringstream
 
 // Library headers
@@ -827,7 +828,18 @@ void GeodesicIntegrator::ReverseGeodesics()
       double len = geodesic_len(m,n);
       if (len == 0.0)
         break;
-
+        
+      /*if(m==4610 ){
+          std::ofstream debugOut;
+          debugOut.open("./debugOutput/4610_geodesic_r1_plane.csv",std::ios_base::app);
+          debugOut<<n<<","<<geodesic_pos(m,n,0)<<","<<geodesic_pos(m,n,1)<<","<<geodesic_pos(m,n,2)<<","<<geodesic_pos(m,n,3)<<"\n";
+          debugOut.close();
+      }else if(m==240){
+          std::ofstream debugOut;
+          debugOut.open("./debugOutput/240_geodesic_r1_plane.csv",std::ios_base::app);
+          debugOut<<n<<","<<geodesic_pos(m,n,0)<<","<<geodesic_pos(m,n,1)<<","<<geodesic_pos(m,n,2)<<","<<geodesic_pos(m,n,3)<<"\n";
+          debugOut.close();
+      }*/
       // Set new arrays in reverse order
       sample_pos[adaptive_level](m,num_steps-1-n,0) = geodesic_pos(m,n,0);
       sample_pos[adaptive_level](m,num_steps-1-n,1) = geodesic_pos(m,n,1);

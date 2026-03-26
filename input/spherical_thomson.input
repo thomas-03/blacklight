@@ -56,7 +56,7 @@ camera_resolution = 64     # number of pixels per side
 # Ray-tracing parameters
 ray_flat        = true           # flag indicating ray tracing should assume flat spacetime
 ray_terminate   = absolute  # termination condition (photon, multiplicative, additive)
-ray_factor      = 0.0           # constant for terminate (only used for ray_terminate != photon)
+ray_factor      = 1e-13           # constant for terminate (only used for ray_terminate != photon)
 ray_integrator  = dp              # time integrator for geodesics (dp, rk4, rk2)
 ray_step        = 0.001            # step size control relative to radial coordinate
 ray_max_steps   = 100000            # maximum number of steps allowed for each geodesic
@@ -71,7 +71,7 @@ image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 2e14    # first frequency in Hz if image_frequency_num > 1
 image_frequency_end     = 3e16    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
-image_normalization   = camera  # frequency location (camera [w/ velocity], infinity [rest])
+image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
 image_rotation_split  = false     # flag for Strang splitting rotation from emission/absorption
 image_time            = false     # flag for producing image of geodesic times

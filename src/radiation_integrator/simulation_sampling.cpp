@@ -231,7 +231,11 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
       double val_extrap_camera_large_local = 0.0;
       double val_extrap_source_small_local = 0.0;
       double val_extrap_source_large_local = 0.0;
-
+      if(m==4610){
+        std::cout<<" in calculate simulation sampling for m=4610"<<std::endl;
+      }else if(m==240){
+        std::cout<<" in calculate simulation sampling for m=240"<<std::endl;
+      }
       // Go along geodesic
       for (int n = 0; n < num_steps; n++)
       {
@@ -244,6 +248,7 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
 
         // Cut outside camera radius
         double r = RadialGeodesicCoordinate(x1, x2, x3);
+        
         if (r > camera_r)
         {
           sample_cut[adaptive_level](m,n) = true;
@@ -301,6 +306,14 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
 
         // Convert coordinates
         ConvertFromCKS(&x1, &x2, &x3);
+        /*if(m==4610 ){
+          std::ofstream debugOut;
+          debugOut.open("./debugOutput/4610_sampling.csv",std::ios_base::app);
+          debugOut<<n<<
+          std::printf("pixel 4610 emission: %.5e\n",image[adaptive_level](l,m));
+        }else if(m==240){
+          std::printf("pixel 240 emission: %.5e\n",image[adaptive_level](l,m));
+        }*/
 
         // Calculate time interpolation
         int t_ind = 0;
@@ -390,6 +403,7 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
               sample_fallback[adaptive_level](m,n) = true;
             continue;
           }
+          
 
           // Set newly found block as one to search
           b = b_new;
@@ -688,6 +702,17 @@ void RadiationIntegrator::SampleSimulation()
     // Go along geodesic
     for (int n = 0; n < num_steps; n++)
     {
+      /*if(m==4610 ){
+          std::ofstream debugOut;
+          debugOut.open("./debugOutput/4610_sampling_r5.csv",std::ios_base::app);
+          debugOut<<n<<","<<sample_rho[adaptive_level](m,n)<<","<<sample_pgas[adaptive_level](m,n)<<","<<sample_cut[adaptive_level](m,n)<<","<<sample_fallback[adaptive_level](m,n)<<","<<b<<","<<j<<","<<k<<","<<i<<"\n";
+          debugOut.close();
+        }else if(m==240){
+          std::ofstream debugOut;
+          debugOut.open("./debugOutput/240_sampling_r5.csv",std::ios_base::app);
+          debugOut<<n<<","<<sample_rho[adaptive_level](m,n)<<","<<sample_pgas[adaptive_level](m,n)<<","<<sample_cut[adaptive_level](m,n)<<","<<sample_fallback[adaptive_level](m,n)<<","<<b<<","<<j<<","<<k<<","<<i<<"\n";
+          debugOut.close();
+        }*/
       // Set NaN values
       if (sample_nan[adaptive_level](m,n))
       {
