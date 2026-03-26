@@ -103,6 +103,8 @@ Coordinates InputReader::ReadCoordinates(const std::string &string)
     return Coordinates::fmks;
   else if(string == "spm")
     return Coordinates::spm;
+  else if(string == "cm")
+    return Coordinates::cm;
   else
     throw BlacklightException("Unknown string used for Coordinates value.");
 }

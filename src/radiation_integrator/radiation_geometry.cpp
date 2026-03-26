@@ -57,6 +57,8 @@ void RadiationIntegrator::ConvertFromCKS(double *p_x1, double *p_x2, double *p_x
     //or in general I should ask if it would be better to have the interpolation grid use spm coords directly
     //because realistically CKS and SKS and FMKS all describe the same spacetime, so conversion btwn them is straightforward
     //but SPM is a different spacetime altogether so maybe be better to interpolate directly over that flat spacetime
+
+    // I'm not sure if this is actually correct because I don't think this considers the KS-> minkowski
     double x = *p_x1;
     double y = *p_x2;
     double z = *p_x3;
@@ -69,6 +71,8 @@ void RadiationIntegrator::ConvertFromCKS(double *p_x1, double *p_x2, double *p_x
     *p_x1 = r;
     *p_x2 = th;
     *p_x3 = ph;
+  }else if(simulation_coord == Coordinates::cm){
+    //TEGAN: check if cks genuinely is just put into cm when ray_flat==true before implementing this
   }
   return;
 }
