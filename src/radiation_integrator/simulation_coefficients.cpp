@@ -642,14 +642,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             //Calculate emissivity and absorptivity due to scattering
             double sigma_t = 6.65248e-25;
             alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
-            //std::printf("m: %d ", m);
-            /*if(m==4725){
-              std::ofstream scattering_file;
-              scattering_file.open("./debugOutput/scattering_comparison.csv", std::ios_base::app);
-              scattering_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<scattering/(n_e_cgs*sigma_t)<<","<<scattering<<"\n";
-              scattering_file.close();
-            }*/
-            j_i[adaptive_level](l,m,n) += scattering/(nu_cgs*nu_cgs);
+            //j_i[adaptive_level](l,m,n) += scattering/(nu_cgs*nu_cgs);
+            if(scattering>=1e-12){
+              std::printf("scattering val: %.5e n_e: %.5e \n",scattering,n_e_cgs);
+            }
             //check that within the innermost region J_nu is similar to B_nu (J_nu is scattering /(n_e_cgs*sigma_t) )
           }
 

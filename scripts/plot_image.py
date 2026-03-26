@@ -401,7 +401,7 @@ def main(**kwargs):
     tick_locs = None
     cmap.set_bad(nan_color)
     bounds = None
-
+  print(image[image!=0.0])
   # Plot root image
   plt.imshow(image, cmap=cmap, vmin=vmin, vmax=vmax, aspect='equal', origin='lower', extent=extent,
       interpolation=interpolation)
