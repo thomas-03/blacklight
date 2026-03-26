@@ -319,10 +319,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         uu2_sim *=v_unit;
         uu3_sim *=v_unit;
 
-        if(uu1_sim>=1 or uu2_sim>=1 or uu3_sim>=1){
-          std::cout<<"Warning: you have a fluid velocity >= c in your simulation data. This is unphysical and will likely cause NaNs in the output. uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
-        }
-
         // Calculate simulation metric
         CovariantSimulationMetric(x1, x2, x3, gcov_sim);
         ContravariantSimulationMetric(x1, x2, x3, gcon_sim);
@@ -645,9 +641,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
             //Calculate emissivity and absorptivity due to scattering
             double sigma_t = 6.65248e-25;
-            double heabund = 0.09; //hardcode for now
-            double kappaes = sigma_t * (1. + 2.*heabund) / (Physics::m_p * (1.+4.*heabund) );
-            alpha_i[adaptive_level](l,m,n) += kappaes*rho_cgs*nu_cgs;
+            alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
             //std::printf("m: %d ", m);
             /*if(m==4725){
               std::ofstream scattering_file;
@@ -956,18 +950,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             rho_v[adaptive_level](l,m,n) +=
                 (1.0 - kappa_rho_frac) * rho_v_low + kappa_rho_frac * rho_v_high;
           }
-        }
-
-        /*if(m==6568){
-          std::ofstream out;
-          out.open("./debugOutput/geo6568noInner80.csv", std::ios_base::app);
-          out<<n<<","<<x1<<","<<x2<<","<<x3<<","<<rho_cgs<<","<<pgas_cgs<<","<<kb_tt_e_cgs<<","<<j_i[adaptive_level](5,m,n)<<","<<alpha_i[adaptive_level](5,m,n)<<"\n";
-        }else if(m==6583){
-          std::ofstream out;
-          out.open("./debugOutput/geo6583noInner80.csv", std::ios_base::app);
-          out<<n<<","<<x1<<","<<x2<<","<<x3<<","<<rho_cgs<<","<<pgas_cgs<<","<<kb_tt_e_cgs<<","<<j_i[adaptive_level](5,m,n)<<","<<alpha_i[adaptive_level](5,m,n)<<"\n";
-        }*/
-
+        }        
       }
     }
   }

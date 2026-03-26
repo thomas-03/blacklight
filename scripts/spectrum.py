@@ -111,8 +111,8 @@ def get_flux(**kwargs):
   if width_rg is None:
     raise RuntimeError('Must supply width.')
   rg = gg_msun * mass_msun / c ** 2
-  #width =  np.arctan(0.5*width_rg /(distance))
-  width = width_rg/distance
+  width =  2*np.arctan(0.5*width_rg /(distance))
+  #width = width_rg/distance
 
   # Prepare flag for NaN values
   nan_found = False
@@ -178,11 +178,11 @@ def main(**kwargs):
         if kwargs['labels'] is not None:
           plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
         else:
-          plt.plot(frequencies*h_ev,frequencies*lum/(4*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+          plt.plot(frequencies*h_ev,frequencies*lum/(2*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
       shaneResults = np.loadtxt(kwargs['compare_file'])
-      plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC')
+      plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],label='MC')
       
       if kwargs['compare_file2'] is not None:
         shaneResults2 = np.loadtxt(kwargs['compare_file2'])
@@ -216,8 +216,8 @@ def main(**kwargs):
       plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
-  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/spherical_ff_thomMC_Full.png')
-  #plt.show()
+  #plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/spherical_ff_thomMC_Full.png')
+  plt.show()
 
 
 # Execute main function
