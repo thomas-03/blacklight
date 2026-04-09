@@ -268,6 +268,10 @@ double MCReader::Read(int snapshot)
         }
         for(int j=0;j<x2f.n1;j++){
           for(int i=0;i<x2f.n2;i++){
+            if(simulation_coord==Coordinates::cks){
+              x2f(i,j) = simulation_r_rg*x2f(i,j);
+              x2v(i,j) = simulation_r_rg*x2v(i,j);
+            }
             if(std::fabs(x2f(i,j)-p_simulation_reader->x2f(i,j))>1e-8 ){
               std::printf("i: %d j: %d , MC x2f and x2v values : %.15f %.15f Regular x2f and x2v values : %.15f %.15f \n",i,j,x2f(i,j),x2v(i,j),p_simulation_reader->x2f(i,j),p_simulation_reader->x2v(i,j));
               throw BlacklightException("MC X2 grid bounds don't match file bounds within 1e-8");
@@ -276,29 +280,36 @@ double MCReader::Read(int snapshot)
         }
         for(int j=0;j<x3f.n1;j++){
           for(int i=0;i<x3f.n2;i++){
+            if(simulation_coord==Coordinates::cks){
+              x3f(i,j) = simulation_r_rg*x3f(i,j);
+              x3v(i,j) = simulation_r_rg*x3v(i,j);
+            }
             if(std::fabs(x3f(i,j)-p_simulation_reader->x3f(i,j))>1e-8 ){
               throw BlacklightException("MC X3 grid bounds don't match file bounds within 1e-8");
             }
           }
         }
-    }
-
+    } 
+    
     if (first_time)
       {
         //literally when i change the n1's here to n2's all of a sudden I get a "could not read MC file" from above
         std::cout<<num_freqs<<","<<levels.n1<<","<<x3v.n1<<","<<x2v.n1<<","<<x1v.n1<<std::endl;
+        //want it to be frequency, b, k ,j, i
         int n5 = num_freqs;
-        int n4 = levels.n1; // 256
-        int n3 = x3v.n1; //256 for n1, 8 for n2
-        int n2 = x2v.n1; //256 for n1, 8 for n2
-        int n1 = x1v.n1; //256 for n1, 32 for n
-        scattering_source_terms[0].Allocate(n5, n4, n3, n2, n1);
+        //int n4 = levels.n1; // 256
+        int n3 = x3v.n1; 
+        int n2 = x2v.n1; 
+        int n1 = x1v.n1;
+        int n4 = levels.n1;
+        //int n5 = phiBins;
+        scattering_source_terms[0].Allocate(n5,n4, n3, n2, n1);
       }
       //Array<float> source_terms(scattering_source_terms[0]);
 
       Array<float> shallow_scatter(scattering_source_terms[0]);
-      //std::cout<<"number of frequencies: "<<num_freqs<<std::endl;
-      shallow_scatter.Slice(5, 0, num_freqs-1);
+       //std::cout<<"number of frequencies: "<<num_freqs<<std::endl;
+
       //ReadHDF5FloatArray("prim", hydro);
       //scattering_source_terms[0].Slice(5, 0, num_freqs-1);
       //ReadHDF5FloatArray("mcscat",scattering_source_terms[0]);

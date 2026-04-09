@@ -307,6 +307,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         }*/
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
+        /*if(rho_cgs !=expected_rho && rho_cgs!=0.0){
+          std::printf("rho_cgs = %.5e, expected_rho = %.5e, r=%.5e\n",rho_cgs,expected_rho,1e11*std::sqrt(x1*x1+x2*x2+x3*x3));
+        }*/
+
         //std::printf("rho_cgs unit %.5e, pgas_cgs unit %.5e",d_unit,e_unit);
 
         //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
@@ -401,10 +405,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //(plasma_mu * Physics::m_p* e_unit/d_unit)/Physics::k_b is =5.444098e+06
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
-          if(rho_cgs!=0.0){
-            kb_tt_e_cgs = 1e5*Physics::k_b;
-            //std::printf("temp: %.3e",kb_tt_e_cgs/Physics::k_b);
-          }
           /*if(kb_tt_e_cgs<Physics::k_b*1e4){
             //std::printf("temperature lower than floor");
             kb_tt_e_cgs=Physics::k_b*1e4;
@@ -641,11 +641,24 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
             //Calculate emissivity and absorptivity due to scattering
             double sigma_t = 6.65248e-25;
-            alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
-            //j_i[adaptive_level](l,m,n) += scattering/(nu_cgs*nu_cgs);
-            if(scattering>=1e-12){
-              std::printf("scattering val: %.5e n_e: %.5e \n",scattering,n_e_cgs);
+            if(scattering!=0.0){
+              alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
+              j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs*nu_cgs*Physics::h);
             }
+            /*if(scattering>=1e-12){
+              std::printf("scattering val: %.5e n_e: %.5e \n",scattering,n_e_cgs);
+            }*/
+            /*if(scattering!=0 && l%2==0){
+              //std::cout<<rho_cgs<<","<<n_e_cgs<<std::endl;
+              std::ofstream scatteringDebug;
+              scatteringDebug.open("./debugOutput/scatteringDebug.csv",std::ios_base::app);
+              scatteringDebug<<sample_pos[adaptive_level](m,n,1)<<","<<sample_pos[adaptive_level](m,n,2)<<","<<sample_pos[adaptive_level](m,n,3)<<","<<mc_freqs(mid)<<","<<nu_cgs<<","<<scattering<<","<<rho_cgs<<","<<kb_tt_e_cgs<<"\n";
+              scatteringDebug.close();
+            }*/
+            /*double bnu = 2.0 * Physics::h / std::pow(Physics::c, 2) * std::pow(mc_freqs(mid), 3) / (std::exp(Physics::h * mc_freqs(mid) / (kb_tt_e_cgs)) - 1);
+            if(scattering !=0.0 and scattering!=bnu){
+              std::printf("scattering value %.5e is different from blackbody value %.5e fraction: %.5e freq: %.3e radii: %.3e\n",scattering,bnu,scattering/(bnu),mc_freqs(mid),std::sqrt(x1*x1+x2*x2+x3*x3));
+            }*/
             //check that within the innermost region J_nu is similar to B_nu (J_nu is scattering /(n_e_cgs*sigma_t) )
           }
 

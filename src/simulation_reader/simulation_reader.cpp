@@ -633,20 +633,26 @@ double SimulationReader::Read(int snapshot)
         ReadHDF5FloatArray("x1v", x1v);
         ReadHDF5FloatArray("x2v", x2v);
         ReadHDF5FloatArray("x3v", x3v);
-        double maxr=0.0;
-        double minr = 100000.0;
         for(int j=0;j<x1f.n1;j++){
           for(int i=0;i<x1f.n2;i++){
             x1f(i,j) = simulation_r_rg*x1f(i,j);
             x1v(i,j) = simulation_r_rg*x1v(i,j);
-            if(maxr<x1f(i,j)){
-              maxr=x1f(i,j);
-            }else if(minr>x1f(i,j)){
-              minr=x1f(i,j);
+          }
+        }
+        if(simulation_coord==Coordinates::cks){
+            for(int j=0;j<x2f.n1;j++){
+            for(int i=0;i<x2f.n2;i++){
+              x2f(i,j) = simulation_r_rg*x2f(i,j);
+              x2v(i,j) = simulation_r_rg*x2v(i,j);
+            }
+          }
+          for(int j=0;j<x3f.n1;j++){
+            for(int i=0;i<x3f.n2;i++){
+              x3f(i,j) = simulation_r_rg*x3f(i,j);
+              x3v(i,j) = simulation_r_rg*x3v(i,j);
             }
           }
         }
-        //std::cout<<"max r: "<<maxr<<" min r: "<<minr<<std::endl;
       }
       else if (simulation_format == SimulationFormat::iharm3d)
       {

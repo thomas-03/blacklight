@@ -367,9 +367,11 @@ def athdf(filename, raw=False, data=None, quantities=None, dtype=None, level=Non
             # Get metadata describing file layout
             dataset_names = np.array([x.decode('ascii', 'replace')
                                       for x in f.attrs['DatasetNames'][:]])
+            print(f"dataset names: {dataset_names}")
             dataset_sizes = f.attrs['NumVariables'][:]
             variable_names = np.array([x.decode('ascii', 'replace')
                                        for x in f.attrs['VariableNames'][:]])
+            print(f"variable names: {variable_names}")
 
             # Store cell data
             for dataset_index, dataset_name in enumerate(dataset_names):

@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/cartesian_thomson/mantemp_ff_thom_cart_i0_r10_nadara_1e3.npz  # file to be (over)written with output data
+output_file   = output/cartesian_thomson/ff_thom_cart_i0_r10_nadara.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -16,7 +16,7 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = data/spherical_thomson/nadaraFluid.athdf  # file containing data dump
+simulation_file         = /PellaShared/rnm8qc/wc_cart_thomson_1e8/mciso.out3.00000.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = cks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
@@ -25,7 +25,7 @@ simulation_all_cgs      = true
 simulation_rho_cgs      = 1.0          # unit code density in g/cm^3
 simulation_v_c          = 1.0             # unit code v0
 simulation_r_rg         = 1e-11              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
-simulation_interp       = true             # flag indicating interpolation should be used
+simulation_interp       = false             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 simulation_hd_only = true
 
@@ -34,8 +34,8 @@ opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
 mc_input = true
-mc_file = data/spherical_thomson/nadaraScat.athdf
-mc_freq_file = data/spherical_thomson/sourceterm_frequencies.txt
+mc_file = /PellaShared/rnm8qc/wc_cart_thomson_1e8/mciso.out2.00000.athdf
+mc_freq_file = /PellaShared/rnm8qc/wc_cart_thomson_1e8/sourceterm_frequencies.txt
 
 
 # Camera parameters
@@ -98,7 +98,7 @@ slow_light_on = false  # flag indicating slow light should be used
 adaptive_max_level = 0  # maximum number of adaptive levels beyond root
 
 # Plasma parameters
-plasma_mu         = 0.5         # molecular weight of fluid in proton masses
+plasma_mu         = 1.0         # molecular weight of fluid in proton masses
 plasma_ne_ni      = 1.0         # electrons per ion
 plasma_model      = one_temp  # thermal electron temperature model (ti_te_beta, code_kappa)
 plasma_use_p      = true        # flag indicating total p (rather than u) should match simulation

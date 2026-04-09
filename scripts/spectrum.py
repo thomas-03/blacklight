@@ -124,7 +124,10 @@ def get_flux(**kwargs):
       #this is in erg cm^-2 s^-1 Hz^-1
       tempImage = np.copy(image[freq,:,:])
       #print((width))
+      B_nu = h_erg/c**2*frequencies[freq]**3/(np.exp(h_erg*frequencies[freq]/(kB*1e5))-1)
+      print(f"mean image value: {np.nanmean(tempImage)} mean blackbody value: {B_nu} fraction: {np.nanmean(tempImage)/B_nu}")
       flux = np.append(flux, (np.nanmean(tempImage[np.isfinite(tempImage)])*width**2))
+      #flux = np.append(flux, (np.nanmean(tempImage[np.nonzero(tempImage)])))
       #print(flux.shape)
     
   #flux/=eV
@@ -157,6 +160,7 @@ def get_luminosity(**kwargs):
       mass_msun = f['mass_msun']
   rg = gg_msun * mass_msun / c ** 2
   dA = 4*np.pi*(kwargs['distance']*rg)**2
+  #dA=1
   return flux*dA, freqs
 
 
@@ -176,9 +180,10 @@ def main(**kwargs):
         lum,frequencies = get_luminosity(**kwargs)
         print(f"file:{file} luminosity:{lum}")
         if kwargs['labels'] is not None:
-          plt.plot(frequencies*h_ev,frequencies*lum,label=kwargs['labels'][files.index(file)])
+          plt.plot(frequencies*h_ev,frequencies*lum/(2*np.pi),label=kwargs['labels'][files.index(file)])
         else:
           plt.plot(frequencies*h_ev,frequencies*lum/(2*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+          #plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
       if kwargs['compare_file'] is not None:
@@ -198,11 +203,14 @@ def main(**kwargs):
       #get rid of the 2 because imu=sum so this basically returns flux
       #B_nu = h_erg/c**2*frequencies**3/(np.exp(h_erg*frequencies/(kB*1e5))-1)
       #plt.plot(frequencies*h_ev,frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
+      #plt.plot(frequencies*h_ev,frequencies*B_nu,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
       plt.xlabel('Frequency (eV)')
-      plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
+      plt.ylim(1e35, 1e40)
+      #plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
+      plt.ylabel('$I_\\nu$ ')
       #plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
       plt.title("MC vs Blacklight")
       #plt.savefig('../plots/cbdisk/ff_only/i45spectrum_comparison.png',dpi=300)
@@ -217,7 +225,7 @@ def main(**kwargs):
       plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
-  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/temp_ff_thom.png')
+  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/xrb_gr/xrb_multiInc_spec_zoom.png',dpi=300)
 
 
 

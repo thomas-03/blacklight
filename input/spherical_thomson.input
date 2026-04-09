@@ -4,8 +4,8 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/spherical_thomson/mantemp_ff_thom_spherical_i0_r10_nadara_1e3.npz  # file to be (over)written with output data
-output_camera = false                          # flag for saving camera details
+output_file   = output/spherical_thomson/ff_thom_spherical_i0_r10_shaneUpdated.npz  # file to be (over)written with output data
+output_camera = true                          # flag for saving camera details
 
 # Checkpoint parameters
 checkpoint_geodesic_save = false  # flag indicating geodesics should be saved
@@ -16,7 +16,7 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = data/spherical_thomson/nadaraFluid.athdf  # file containing data dump
+simulation_file         = /PellaShared/swd8g/spherical_thomson/thomson/isoth.out4.00000.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = spm              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
@@ -25,7 +25,7 @@ simulation_all_cgs      = true
 simulation_rho_cgs      = 1.0          # unit code density in g/cm^3
 simulation_v_c          = 1.0             # unit code v0
 simulation_r_rg         = 1e-11              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
-simulation_interp       = true             # flag indicating interpolation should be used
+simulation_interp       = false             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 simulation_hd_only = true
 
@@ -34,8 +34,8 @@ opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
 mc_input = true
-mc_file = data/spherical_thomson/nadaraScat.athdf
-mc_freq_file = data/spherical_thomson/sourceterm_frequencies.txt
+mc_file = /PellaShared/swd8g/spherical_thomson/thomson/isoth.out2.00000.athdf
+mc_freq_file = /PellaShared/swd8g/spherical_thomson/thomson/sourceterm_frequencies.txt
 
 
 # Camera parameters
@@ -58,18 +58,18 @@ ray_flat        = true           # flag indicating ray tracing should assume fla
 ray_terminate   = absolute  # termination condition (photon, multiplicative, additive)
 ray_factor      = 1e-13           # constant for terminate (only used for ray_terminate != photon)
 ray_integrator  = dp              # time integrator for geodesics (dp, rk4, rk2)
-ray_step        = 0.001            # step size control relative to radial coordinate
-ray_max_steps   = 100000            # maximum number of steps allowed for each geodesic
+ray_step        = 0.01            # step size control relative to radial coordinate
+ray_max_steps   = 10000            # maximum number of steps allowed for each geodesic
 ray_max_retries = 20              # maximum number of times a step can fail (dp)
 ray_tol_abs     = 1.0e-8          # absolute tolerance for taking full steps (dp)
 ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp)
 
 # Image parameters
 image_light           = true      # flag indicating real image of radiation should be produced
-image_num_frequencies   = 15       # number of observation frequencies
+image_num_frequencies   = 20       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 2e14    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3e16    # last frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 2.417989e+14    # first frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 1.920677e+16    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
@@ -98,7 +98,7 @@ slow_light_on = false  # flag indicating slow light should be used
 adaptive_max_level = 0  # maximum number of adaptive levels beyond root
 
 # Plasma parameters
-plasma_mu         = 0.5         # molecular weight of fluid in proton masses
+plasma_mu         = 1.0         # molecular weight of fluid in proton masses
 plasma_ne_ni      = 1.0         # electrons per ion
 plasma_model      = one_temp  # thermal electron temperature model (ti_te_beta, code_kappa)
 plasma_use_p      = true        # flag indicating total p (rather than u) should match simulation

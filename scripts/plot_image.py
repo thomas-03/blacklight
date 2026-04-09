@@ -139,6 +139,8 @@ def main(**kwargs):
             image_adaptive[level] = image_adaptive[level][kwargs['frequency_num']-1,...]
       elif len(image.shape) != 2:
         raise RuntimeError('Must specify frequency_num.')
+      
+      frequency = f['frequency'][kwargs['frequency_num']-1] if kwargs['frequency_num'] is not None else f['frequency'][0]
 
   # Read image data from .npy file
   elif kwargs['filename_data'][-4:] == '.npy':
@@ -418,6 +420,7 @@ def main(**kwargs):
   if kwargs['refinement_level'] or kwargs['name'] == 'crossings':
     cb.ax.tick_params(length=0)
 
+  plt.title('frequency = {0}'.format(frequency))
   # Adjust axes
   plt.xlim(extent[0], extent[1])
   plt.xlabel(x_label)

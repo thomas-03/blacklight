@@ -231,11 +231,7 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
       double val_extrap_camera_large_local = 0.0;
       double val_extrap_source_small_local = 0.0;
       double val_extrap_source_large_local = 0.0;
-      if(m==4610){
-        std::cout<<" in calculate simulation sampling for m=4610"<<std::endl;
-      }else if(m==240){
-        std::cout<<" in calculate simulation sampling for m=240"<<std::endl;
-      }
+
       // Go along geodesic
       for (int n = 0; n < num_steps; n++)
       {
@@ -784,7 +780,7 @@ void RadiationIntegrator::SampleSimulation()
           //TEGAN: put if statement here as to whether or not I should read in the MC data
           if(mc_input){
             for(int l=0; l<mc_num_freqs;l++){
-              sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);
+              sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);  
               //std::printf("l: %d b: %d k: %d j: %d i: %d sample scattering: %.5e grid scattering %.5e \n",l,b,k,j,i,sample_scattering[adaptive_level](m,n,l),grid_scatter[t](l,b,k,j,i));
             }
           }
