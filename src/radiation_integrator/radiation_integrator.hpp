@@ -56,6 +56,7 @@ struct RadiationIntegrator
   bool mc_input;
   int mc_num_freqs;
   Array<double> mc_freqs;
+  bool compton;
 
 
   // Input data - formula parameters
@@ -269,6 +270,8 @@ struct RadiationIntegrator
   Array<float> *sample_bb2 = nullptr;
   Array<float> *sample_bb3 = nullptr;
   Array<float> *sample_scattering = nullptr;
+  Array<float> *sample_scattering_prime = nullptr;
+  Array<float> *sample_scattering_prime_prime = nullptr;
   double extrapolation_tolerance;
 
   // Coefficient data
@@ -345,6 +348,8 @@ struct RadiationIntegrator
   double InterpolateSimple(const Array<float> &grid_vals, int grid_ind, int b, int k, int j, int i,
       double f_k, double f_j, double f_i);
   double InterpolateAdvanced(const Array<float> &grid_vals, int grid_ind, int m, int n);
+  float* Gradient4D(Array<float> &f, Array<double> &x, int b, int k, int j, int i);
+  float* Gradient1D(Array<float> &f, Array<double> &x);
 
   // Internal functions - simulation_coefficients.cpp
   void CalculateSimulationCoefficients();

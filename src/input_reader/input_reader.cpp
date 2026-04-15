@@ -175,6 +175,8 @@ int InputReader::Read()
       mc_file = val;
     else if(key == "mc_freq_file")
       mc_freq_file=val;
+    else if(key == "compton")
+      compton = ReadBool(val);
 
     // Store formula parameters
     else if( key == "formula_name")

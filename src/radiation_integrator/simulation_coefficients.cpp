@@ -613,10 +613,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           }
           }
           double scattering = 0.0;
-          //TEGAN: put here a way to pick the scattering value for the closest frequency
           if(mc_input){
             //find the nearest frequency from the current and use that scattering value
             // Binary search to find closest frequency
+
+            //TEGAN: make it so that if it's out of the bounds of mc frequencies, it simply doesn't do the scattering!
             int low = 0;
             int high = mc_num_freqs - 1;
             int mid = 0;
@@ -645,21 +646,17 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
               j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs*nu_cgs*Physics::h);
             }
-            /*if(scattering>=1e-12){
-              std::printf("scattering val: %.5e n_e: %.5e \n",scattering,n_e_cgs);
-            }*/
-            /*if(scattering!=0 && l%2==0){
-              //std::cout<<rho_cgs<<","<<n_e_cgs<<std::endl;
-              std::ofstream scatteringDebug;
-              scatteringDebug.open("./debugOutput/scatteringDebug.csv",std::ios_base::app);
-              scatteringDebug<<sample_pos[adaptive_level](m,n,1)<<","<<sample_pos[adaptive_level](m,n,2)<<","<<sample_pos[adaptive_level](m,n,3)<<","<<mc_freqs(mid)<<","<<nu_cgs<<","<<scattering<<","<<rho_cgs<<","<<kb_tt_e_cgs<<"\n";
-              scatteringDebug.close();
-            }*/
-            /*double bnu = 2.0 * Physics::h / std::pow(Physics::c, 2) * std::pow(mc_freqs(mid), 3) / (std::exp(Physics::h * mc_freqs(mid) / (kb_tt_e_cgs)) - 1);
-            if(scattering !=0.0 and scattering!=bnu){
-              std::printf("scattering value %.5e is different from blackbody value %.5e fraction: %.5e freq: %.3e radii: %.3e\n",scattering,bnu,scattering/(bnu),mc_freqs(mid),std::sqrt(x1*x1+x2*x2+x3*x3));
-            }*/
-            //check that within the innermost region J_nu is similar to B_nu (J_nu is scattering /(n_e_cgs*sigma_t) )
+            if(compton && scattering!=0.0){
+              double scattering_prime = sample_scattering_prime[adaptive_level](m,n,mid);
+              double scattering_prime_prime = sample_scattering_prime_prime[adaptive_level](m,n,mid);
+              //calculate the compton source term
+              double x = nu_cgs*Physics::h/(Physics::m_e*Physics::c*Physics::c);
+              //we aren't including the 
+              j_i[adaptive_level](l,m,n) += ((1-x)*scattering + (x-3*theta_e*scattering_prime) + theta_e*scattering_prime_prime)/(nu_cgs*nu_cgs);
+            }else{
+              //note that the extra nu_cgs*Physics::h is because of the like bad scaling thing
+              j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
+            }
           }
 
           // Calculate thermal synchrotron emissivities (M 28,30)

@@ -67,6 +67,7 @@ struct InputReader
   std::optional<bool> mc_input;
   std::optional<std::string> mc_file;
   std::optional<std::string> mc_freq_file;
+  std::optional<bool> compton;
 
   // Data - formula parameters
   std::optional<std::string> formula_name;

@@ -208,8 +208,8 @@ def main(**kwargs):
       plt.xscale('log')
       plt.yscale('log')
       plt.xlabel('Frequency (eV)')
-      plt.ylim(1e35, 1e40)
-      #plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
+      #plt.ylim(1e35, 1e40)
+      plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
       plt.ylabel('$I_\\nu$ ')
       #plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
       plt.title("MC vs Blacklight")
@@ -218,14 +218,14 @@ def main(**kwargs):
       flux, frequencies = get_flux(**kwargs)
       plt.plot(frequencies,frequencies*flux)
       plt.xscale('log')
-      plt.ylim(1e5, 1e25)
+      #plt.ylim(1e5, 1e25)
       plt.yscale('log')
       plt.xlabel('Frequency (Hz)')
       plt.ylabel('$\\nu F_\\nu (eV cm^{-2} s^{-1})$ ')
       plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
-  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/xrb_gr/xrb_multiInc_spec_zoom.png',dpi=300)
+  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/spherical_comp.png',dpi=300)
 
 
 

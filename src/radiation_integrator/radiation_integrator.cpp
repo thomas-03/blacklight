@@ -77,6 +77,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
       BlacklightWarning("Ignoring simulation_block_interp selection.");
     simulation_hd_only = p_input_reader->simulation_hd_only.value();
     mc_input = p_input_reader->mc_input.value();
+    compton = p_input_reader->compton.value();
   }
 
   // Copy formula parameters
