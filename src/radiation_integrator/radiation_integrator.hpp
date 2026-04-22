@@ -349,7 +349,7 @@ struct RadiationIntegrator
       double f_k, double f_j, double f_i);
   double InterpolateAdvanced(const Array<float> &grid_vals, int grid_ind, int m, int n);
   float* Gradient4D(Array<float> &f, Array<double> &x, int b, int k, int j, int i);
-  float* Gradient1D(Array<float> &f, Array<double> &x);
+  float* Gradient1D(float f[], Array<double> &x);
 
   // Internal functions - simulation_coefficients.cpp
   void CalculateSimulationCoefficients();

@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/spherical_thomson/ff_thom_spherical_i0_r10_shaneUpdated.npz  # file to be (over)written with output data
+output_file   = output/spherical_thomson/ff_comp_spherical_i0_r10_shaneUpdated.npz  # file to be (over)written with output data
 output_camera = true                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -36,6 +36,7 @@ opacity_file = data/out_opacity_table_nfreq64.txt
 mc_input = true
 mc_file = /PellaShared/swd8g/spherical_thomson/thomson/isoth.out2.00000.athdf
 mc_freq_file = /PellaShared/swd8g/spherical_thomson/thomson/sourceterm_frequencies.txt
+compton = true
 
 
 # Camera parameters

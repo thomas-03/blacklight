@@ -112,7 +112,7 @@ def getDataSlice(**kwargs):
         coord_labels = (r'$r$', r'$\theta$', r'$\phi$')
     else:
         coord_labels = (r'$x^1$', r'$x^2$', r'$x^3$')
-
+    print(data['x1v'])
     # Extract basic coordinate information
     if kwargs['direction'] == 1:
         xf = data['x2f']

@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/cartesian_thomson/ff_thom_cart_i0_r10_nadara.npz  # file to be (over)written with output data
+output_file   = plots/nadaraSeniorThesis/ff_cart_i0_r10_nadara.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -33,13 +33,14 @@ simulation_hd_only = true
 opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
-mc_input = true
+mc_input = false
 mc_file = /PellaShared/rnm8qc/wc_cart_thomson_1e8/mciso.out2.00000.athdf
 mc_freq_file = /PellaShared/rnm8qc/wc_cart_thomson_1e8/sourceterm_frequencies.txt
+compton = false
 
 
 # Camera parameters
-camera_type       = pinhole  # type of camera (plane, pinhole)
+camera_type       = plane  # type of camera (plane, pinhole)
 camera_r          = 10  # KS radial coordinate r in gravitational units
 camera_th         = 0.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees

@@ -186,11 +186,12 @@ double MCReader::Read(int snapshot)
   if(!mc_input)
     return 0.0;
 
-  std::cout << "Reading opacity table from file..." << mc_file_name << std::endl;
+  std::cout << "Reading MC results from file..." << mc_file_name << std::endl;
   double time_start = omp_get_wtime();
 
   int num_read = 1;
   ReadFreqFile();
+  std::cout<<"read freq file"<<std::endl;
 
   // Read new files
 
@@ -236,6 +237,7 @@ double MCReader::Read(int snapshot)
     // Read coordinates
     if (first_time)
     {
+      std::cout<<"in first time reading"<<std::endl;
         //the following way of getting the hdf5 file fails because it doesn't match the expected signature
         data_stream = std::ifstream(mc_file_name,std::ios_base::in|std::ios_base::binary);
         if (not data_stream.is_open())
@@ -294,7 +296,7 @@ double MCReader::Read(int snapshot)
     if (first_time)
       {
         //literally when i change the n1's here to n2's all of a sudden I get a "could not read MC file" from above
-        std::cout<<num_freqs<<","<<levels.n1<<","<<x3v.n1<<","<<x2v.n1<<","<<x1v.n1<<std::endl;
+        //std::cout<<num_freqs<<","<<levels.n1<<","<<x3v.n1<<","<<x2v.n1<<","<<x1v.n1<<std::endl;
         //want it to be frequency, b, k ,j, i
         int n5 = num_freqs;
         //int n4 = levels.n1; // 256
@@ -313,11 +315,13 @@ double MCReader::Read(int snapshot)
       //ReadHDF5FloatArray("prim", hydro);
       //scattering_source_terms[0].Slice(5, 0, num_freqs-1);
       //ReadHDF5FloatArray("mcscat",scattering_source_terms[0]);
+      std::cout<<"before read flaot array"<<std::endl;
       ReadHDF5FloatArray("mcscat",shallow_scatter);
+      std::cout<<"after read it"<<std::endl;
       //(20, 256, 8, 8, 32)
-      for(int i=0;i<num_freqs;i++){
+      /*for(int i=0;i<num_freqs;i++){
           std::cout<<scattering_source_terms[0](i,0,0,0,0)<<", ";
-      }
+      }*/
 
     // Close input file
     data_stream.close();

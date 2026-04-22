@@ -91,7 +91,7 @@ double OpacityTableReader::Read(int snapshot)
 
   // Determine file name
   std::string opacity_file_formatted = opacity_file;
-  std::cout << "Formatted opacity file name: " << opacity_file_formatted << std::endl;
+  //std::cout << "Formatted opacity file name: " << opacity_file_formatted << std::endl;
 
   // Open input file
   if ( (opac_file=fopen(opacity_file_formatted.c_str(),"r"))==NULL) {

@@ -5,12 +5,10 @@ import athena_read
 import h5py 
 
 if __name__ == '__main__':
-    df = pd.read_csv('./debugOutput/scatteringDebug.csv',header=None,names=['x1','x2','x3','nu_mc','nu','scat','rho','kt'])
+    #df = pd.read_csv('./debugOutput/scatteringDebug.csv',header=None,names=['x1','x2','x3','nu_mc','nu','scat','rho','kt'])
     
-    df['r'] = np.sqrt(df['x1']**2 + df['x2']**2 + df['x3']**2)
-    sigma_t = 6.65248e-25
-    mp = 1.672e-24
-    n_e = df['rho']/mp
+    #df['r'] = np.sqrt(df['x1']**2 + df['x2']**2 + df['x3']**2)
+    #n_e = df['rho']/mp
     #plt.scatter(df['nu_mc'][::15],df['scat'][::15]/(n_e[::15]*sigma_t),label='blacklight',marker='x')
     #print(df[df['r']==df['r'].abs().min()])
 
@@ -28,7 +26,7 @@ if __name__ == '__main__':
     file = h5py.File('/PellaShared/swd8g/spherical_thomson/thomson/isoth.out2.00000.athdf','r')
     scat = file['mcscat'][()]
     file2 = h5py.File('/PellaShared/swd8g/spherical_thomson/thomson/isoth.out4.00000.athdf','r')
-
+    print(file['x1v'].shape)
     #scat is in the shape nfreq, nMesh, nphi, ntheta, nr
     scat = np.average(scat[:,:,:,:,0],axis=(1,2,3))
     Bnu = 2*h_erg/c**2*np.array(mcFreqs)**3/(np.exp(h_erg*np.array(mcFreqs)/(kB*1e5))-1)

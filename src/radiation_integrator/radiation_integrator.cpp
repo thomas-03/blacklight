@@ -442,6 +442,8 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   sample_bb2 = new Array<float>[adaptive_max_level+1];
   sample_bb3 = new Array<float>[adaptive_max_level+1];
   sample_scattering = new Array<float>[adaptive_max_level+1];
+  sample_scattering_prime = new Array<float>[adaptive_max_level+1];
+  sample_scattering_prime_prime = new Array<float>[adaptive_max_level+1];
 
   // Allocate space for coefficient data
   j_i = new Array<double>[adaptive_max_level+1];
@@ -673,6 +675,8 @@ RadiationIntegrator::~RadiationIntegrator()
   delete[] sample_bb2;
   delete[] sample_bb3;
   delete[] sample_scattering;
+  delete[] sample_scattering_prime;
+  delete[] sample_scattering_prime_prime;
 
   // Free memory - coefficient data
   for (int level = 0; level <= adaptive_max_level; level++)

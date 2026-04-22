@@ -790,13 +790,13 @@ void RadiationIntegrator::SampleSimulation()
           sample_bb2[adaptive_level](m,n) = grid_prim[t](ind_bb2,b,k,j,i);
           sample_bb3[adaptive_level](m,n) = grid_prim[t](ind_bb3,b,k,j,i);
           //TEGAN: put if statement here as to whether or not I should read in the MC data
-
+          
           float* grid_scattering_prime = nullptr;
           float* grid_scattering_prime_prime = nullptr;
           if(mc_input){
             if(compton){
               grid_scattering_prime = Gradient4D(grid_scatter[0],mc_freqs,b,k,j,i);
-              grid_scattering_prime_prime = Gradient1D(grid_scatter[0],mc_freqs);
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_freqs);
             }
             
             for(int l=0; l<mc_num_freqs;l++){
@@ -930,7 +930,7 @@ void RadiationIntegrator::SampleSimulation()
           if(mc_input){
             if(compton){
               grid_scattering_prime = Gradient4D(grid_scatter[0],mc_freqs,b,k,j,i);
-              grid_scattering_prime_prime = Gradient1D(grid_scatter[0],mc_freqs);
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_freqs);
             }
             for(int l=0; l<mc_num_freqs;l++){
               scattering = InterpolateSimple(grid_scatter[0],l, b, k, j, i, f_k, f_j, f_i);
@@ -1065,7 +1065,7 @@ void RadiationIntegrator::SampleSimulation()
           if(mc_input){
             if(compton){
               grid_scattering_prime = Gradient4D(grid_scatter[0],mc_freqs,b,k,j,i);
-              grid_scattering_prime_prime = Gradient1D(grid_scatter[0],mc_freqs);   
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_freqs);   
             }
             for(int l=0; l<mc_num_freqs;l++){
               scattering = InterpolateAdvanced(grid_scatter[0],l,m,n);
@@ -1559,7 +1559,7 @@ float* RadiationIntegrator::Gradient4D(Array<float> &f, Array<double> &x, int b,
 // TEGAN: need to make gradient fine for different shapes
 
 // idea: instead accept an array of indices and then unpack it somehow
-float* RadiationIntegrator::Gradient1D(Array<float> &f, Array<double> &x){
+float* RadiationIntegrator::Gradient1D(float f[], Array<double> &x){
   //we want to get sample_scattering at (m,n) but across all the frequencies
   int nx = x.n1;
   //const int nx = mc_num_freqs;
@@ -1567,12 +1567,12 @@ float* RadiationIntegrator::Gradient1D(Array<float> &f, Array<double> &x){
     std::printf("nx: %d mc_num_freqs: %d",nx,mc_num_freqs);
   }
   float* gradient = new float[mc_num_freqs];
-  gradient[0] = (f(1) - f(0))/(x(1) - x(0));
-  gradient[nx-1] = (f(nx-1) - f(nx-2))/(x(nx-1) - x(nx-2));
+  gradient[0] = (f[1] - f[0])/(x(1) - x(0));
+  gradient[nx-1] = (f[nx-1] - f[nx-2])/(x(nx-1) - x(nx-2));
   for(int i=1;i<nx-1;i++){
     //the sub-array we are looking at is f(m,n) which leaves one dimension for the frequencies
     //use central difference for interior gradients
-    gradient[i] = (f(i+1) - f(i-1))/(x(i+1) - x(i-1));
+    gradient[i] = (f[i+1] - f[i-1])/(x(i+1) - x(i-1));
   }
   return gradient;
 }

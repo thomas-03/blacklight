@@ -33,7 +33,9 @@ def get_flux(**kwargs):
   max_level = kwargs['max_level']
 
   # Read data from .npz file
+  print(kwargs['filename_data'])
   if kwargs['filename_data'][-4:] == '.npz':
+    print('Reading data from file {0}...'.format(kwargs['filename_data']))
     with np.load(kwargs['filename_data']) as f:
       mass_msun = f['mass_msun']
       width_rg = f['width']
@@ -172,18 +174,20 @@ def main(**kwargs):
   if not kwargs['multiInc']:
     plt.figure(figsize=(8,6))
     if kwargs['luminosity']:
-      files = kwargs['filename_data']
+      files = [kwargs['filename_data']]
       if kwargs['files'] is not None:
         files.extend(kwargs['files'])
       for file in files:
         kwargs['filename_data'] = file
         lum,frequencies = get_luminosity(**kwargs)
         print(f"file:{file} luminosity:{lum}")
+        
         if kwargs['labels'] is not None:
           plt.plot(frequencies*h_ev,frequencies*lum/(2*np.pi),label=kwargs['labels'][files.index(file)])
         else:
           plt.plot(frequencies*h_ev,frequencies*lum/(2*np.pi),label='Inclination {0} deg'.format(kwargs['inclination'][0]))
           #plt.plot(frequencies*h_ev,frequencies*lum,label='Inclination {0} deg'.format(kwargs['inclination'][0]))
+      
       #make it so that I can add in the line whether or not we want to compare against something else!!!
       #if kwargs['compare']:
       if kwargs['compare_file'] is not None:
@@ -199,20 +203,22 @@ def main(**kwargs):
           mass_msun = f['mass_msun']
       rg = gg_msun * mass_msun / c ** 2
       #1e11 cm . 2rg = 5908253110111
-      #B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
       #get rid of the 2 because imu=sum so this basically returns flux
-      #B_nu = h_erg/c**2*frequencies**3/(np.exp(h_erg*frequencies/(kB*1e5))-1)
-      #plt.plot(frequencies*h_ev,frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
-      #plt.plot(frequencies*h_ev,frequencies*B_nu,label='Blackbody at 10^5 K')
+      #B_nu = (2*h_erg/c**2)*(frequencies**3)/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+
+      B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+      #plt.plot(frequencies*h_ev,lum/(2*np.pi*B_nu*4*np.pi*(1e11)**2),label='L_bl/L_bb at 10^5 K')
+      plt.plot(frequencies*h_ev,frequencies*B_nu*(1e11)**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
       plt.xlabel('Frequency (eV)')
+      #plt.xlim((0.8,1e2))
       #plt.ylim(1e35, 1e40)
       plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
-      plt.ylabel('$I_\\nu$ ')
+      #plt.ylabel('$I_\\nu$ ')
       #plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
-      plt.title("MC vs Blacklight")
+      plt.title("Cartesian Isothermal Spectrum")
       #plt.savefig('../plots/cbdisk/ff_only/i45spectrum_comparison.png',dpi=300)
     else:
       flux, frequencies = get_flux(**kwargs)
@@ -225,14 +231,15 @@ def main(**kwargs):
       plt.title('Flux vs Frequency for file '+kwargs['filename_data'].split('/')[-1])
   plt.legend()
   plt.grid()
-  plt.savefig('/PellaShared/kcu8rf/blacklight/plots/spherical_thomson/spherical_comp.png',dpi=300)
+  plt.savefig(kwargs['output_file'],dpi=300)
 
 
 
 # Execute main function
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('filename_data', nargs='+', help='name of file containing raw image data')
+  parser.add_argument('filename_data', help='name of file containing raw image data')
+  parser.add_argument('output_file',help='output file to save to')
   parser.add_argument('-d', '--distance', type=float, help='distance to black hole in gravitational radii')
   parser.add_argument('-m', '--mass', type=float, help='black hole mass in solar masses')
   parser.add_argument('-w', '--width', type=float,
@@ -244,7 +251,7 @@ if __name__ == '__main__':
   parser.add_argument('--files',nargs='+',help='list of files to process',type=str)
   parser.add_argument('--inclination',nargs='+',type=float,default=0.0,help='inclination of image (degrees)')
   parser.add_argument('--labels',nargs='+',type=str,default=None,help='labels for the plot')
-  parser.add_argument('--compare',type=bool,default=False,help='if true, compare against MC results')
+  #parser.add_argument('--compare',type=bool,default=False,help='if true, compare against MC results')
   parser.add_argument('--compare_file',type=str,default=None,help='file containing comparison data')
   parser.add_argument('--compare_file2',type=str,default=None,help='file containing comparison data')
   args = parser.parse_args()

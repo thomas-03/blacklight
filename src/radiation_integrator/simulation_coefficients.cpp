@@ -642,20 +642,30 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
             //Calculate emissivity and absorptivity due to scattering
             double sigma_t = 6.65248e-25;
+            /*if(rho_cgs!=0.0){
+              std::printf("rho_cgs: %.3e, n_e_cgs: %.3e, nu_cgs: %.3e, scattering: %.3e \n",rho_cgs,n_e_cgs,nu_cgs,scattering/(nu_cgs*Physics::h));
+            }*/
             if(scattering!=0.0){
+              //std::printf("scattering: %.3e,1/hnu: %.3e \n",scattering,(1/(nu_cgs*Physics::h)));
               alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
-              j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs*nu_cgs*Physics::h);
-            }
-            if(compton && scattering!=0.0){
-              double scattering_prime = sample_scattering_prime[adaptive_level](m,n,mid);
-              double scattering_prime_prime = sample_scattering_prime_prime[adaptive_level](m,n,mid);
-              //calculate the compton source term
-              double x = nu_cgs*Physics::h/(Physics::m_e*Physics::c*Physics::c);
-              //we aren't including the 
-              j_i[adaptive_level](l,m,n) += ((1-x)*scattering + (x-3*theta_e*scattering_prime) + theta_e*scattering_prime_prime)/(nu_cgs*nu_cgs);
-            }else{
-              //note that the extra nu_cgs*Physics::h is because of the like bad scaling thing
-              j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
+              if(compton){
+                double scattering_prime = sample_scattering_prime[adaptive_level](m,n,mid);
+                double scattering_prime_prime = sample_scattering_prime_prime[adaptive_level](m,n,mid);
+                //calculate the compton source term
+                double x = nu_cgs*Physics::h/(Physics::m_e*Physics::c*Physics::c);
+                //std::printf("x: %.3e, theta_e: %.3e, scattering: %.3e, scattering': %.3e, scattering'':%.3e \n",x,theta_e,scattering,scattering_prime,scattering_prime_prime);
+                //we aren't including the 2x term in anything
+                double compton_source = ((1-x)*scattering + (x-3*theta_e)*scattering_prime + theta_e*scattering_prime_prime)*sigma_t*n_e_cgs;
+                /*std::ofstream compton_file;
+                compton_file.open("./debugOutput/compton_comparison.csv", std::ios_base::app);
+                compton_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<scattering<<","<<compton_source<<"\n";
+                compton_file.close();*/
+                j_i[adaptive_level](l,m,n) += compton_source/(nu_cgs*nu_cgs*nu_cgs*Physics::h);
+                
+              }else{
+                //note that the extra nu_cgs*Physics::h is because of the like bad scaling thing
+                j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs*nu_cgs*Physics::h);
+              }
             }
           }
 
