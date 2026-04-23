@@ -660,11 +660,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
                 compton_file.open("./debugOutput/compton_comparison.csv", std::ios_base::app);
                 compton_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<scattering<<","<<compton_source<<"\n";
                 compton_file.close();*/
-                j_i[adaptive_level](l,m,n) += compton_source/(nu_cgs*nu_cgs*nu_cgs*Physics::h);
+                j_i[adaptive_level](l,m,n) += compton_source/(nu_cgs*nu_cgs);
                 
               }else{
                 //note that the extra nu_cgs*Physics::h is because of the like bad scaling thing
-                j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs*nu_cgs*Physics::h);
+                j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
               }
             }
           }

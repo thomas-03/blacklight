@@ -206,19 +206,19 @@ def main(**kwargs):
       #get rid of the 2 because imu=sum so this basically returns flux
       #B_nu = (2*h_erg/c**2)*(frequencies**3)/(np.exp(h_erg*frequencies/(kB*1e5))-1)
 
-      B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e5))-1)
+      #B_nu = 2*h_erg*frequencies**3/c**2/(np.exp(h_erg*frequencies/(kB*1e6))-1)
       #plt.plot(frequencies*h_ev,lum/(2*np.pi*B_nu*4*np.pi*(1e11)**2),label='L_bl/L_bb at 10^5 K')
-      plt.plot(frequencies*h_ev,frequencies*B_nu*(1e11)**2,label='Blackbody at 10^5 K')
+      #plt.plot(frequencies*h_ev,frequencies*B_nu*4*np.pi*(1e11)**2,label='Blackbody at 10^5 K')
       #plt.errorbar(shaneResults[:,0]*1e3,shaneResults[:,1],yerr=shaneResults[:,2],label='MC Results')
       plt.xscale('log')
       plt.yscale('log')
       plt.xlabel('Frequency (eV)')
       #plt.xlim((0.8,1e2))
-      #plt.ylim(1e35, 1e40)
+      plt.ylim(1e18, 1e38)
       plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
       #plt.ylabel('$I_\\nu$ ')
       #plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
-      plt.title("Cartesian Isothermal Spectrum")
+      #plt.title("Cartesian Isothermal Spectrum")
       #plt.savefig('../plots/cbdisk/ff_only/i45spectrum_comparison.png',dpi=300)
     else:
       flux, frequencies = get_flux(**kwargs)

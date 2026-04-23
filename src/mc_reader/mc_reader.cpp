@@ -157,6 +157,7 @@ MCReader::~MCReader()
 {
   if (num_freqs > 0){
     freq_grid.Deallocate();
+    ln_freq_grid.Deallocate();
   }
 
   if (num_dataset_names > 0)
@@ -362,6 +363,7 @@ void MCReader::ReadFreqFile()
 
   // allocate arrays
   freq_grid.Allocate(num_freqs);
+  ln_freq_grid.Allocate(num_freqs);
 
   double trash;
   for(int i=0; i<num_freqs; ++i){
@@ -370,6 +372,7 @@ void MCReader::ReadFreqFile()
     //std::cout<<freq_grid(i)<<std::endl;
     fscanf(mc_freq_file,"%lf",&(trash));
     fscanf(mc_freq_file,"%lf",&(trash));
+    ln_freq_grid(i) = std::log(freq_grid(i));
   }
 
   fclose(mc_freq_file);

@@ -61,12 +61,7 @@ struct MCReader
 
   Array<double> freq_grid;
   //Array<double>* freq_grid_ptr = &freq_grid;
-  Array<double> temp_grid;
-  //Array<double>* temp_grid_ptr = &temp_grid;
-  Array<double> rho_grid;
-  //Array<double>* rho_grid_ptr = &rho_grid;
-  Array<double> ross_tab;
-  Array<double> plan_tab;
+  Array<double> ln_freq_grid;
 
   double fmin, fmax, dlf;
   double tmin, tmax, dlt;

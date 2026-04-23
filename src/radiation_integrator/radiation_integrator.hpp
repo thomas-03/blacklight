@@ -56,6 +56,7 @@ struct RadiationIntegrator
   bool mc_input;
   int mc_num_freqs;
   Array<double> mc_freqs;
+  Array<double> mc_ln_freqs;
   bool compton;
 
 

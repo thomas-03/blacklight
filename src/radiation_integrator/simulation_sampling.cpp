@@ -656,6 +656,7 @@ void RadiationIntegrator::SampleSimulation()
     if(mc_input){
       mc_num_freqs = p_mc_reader->num_freqs;
       mc_freqs = p_mc_reader->freq_grid;
+      mc_ln_freqs = p_mc_reader->ln_freq_grid;
     }
   // Allocate arrays
   int num_pix = camera_num_pix;
@@ -795,8 +796,8 @@ void RadiationIntegrator::SampleSimulation()
           float* grid_scattering_prime_prime = nullptr;
           if(mc_input){
             if(compton){
-              grid_scattering_prime = Gradient4D(grid_scatter[0],mc_freqs,b,k,j,i);
-              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_freqs);
+              grid_scattering_prime = Gradient4D(grid_scatter[0],mc_ln_freqs,b,k,j,i);
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_ln_freqs);
             }
             
             for(int l=0; l<mc_num_freqs;l++){
@@ -929,8 +930,8 @@ void RadiationIntegrator::SampleSimulation()
           float* grid_scattering_prime_prime = nullptr;
           if(mc_input){
             if(compton){
-              grid_scattering_prime = Gradient4D(grid_scatter[0],mc_freqs,b,k,j,i);
-              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_freqs);
+              grid_scattering_prime = Gradient4D(grid_scatter[0],mc_ln_freqs,b,k,j,i);
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_ln_freqs);
             }
             for(int l=0; l<mc_num_freqs;l++){
               scattering = InterpolateSimple(grid_scatter[0],l, b, k, j, i, f_k, f_j, f_i);
@@ -1064,8 +1065,8 @@ void RadiationIntegrator::SampleSimulation()
           float* grid_scattering_prime_prime = nullptr;
           if(mc_input){
             if(compton){
-              grid_scattering_prime = Gradient4D(grid_scatter[0],mc_freqs,b,k,j,i);
-              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_freqs);   
+              grid_scattering_prime = Gradient4D(grid_scatter[0],mc_ln_freqs,b,k,j,i);
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_ln_freqs);   
             }
             for(int l=0; l<mc_num_freqs;l++){
               scattering = InterpolateAdvanced(grid_scatter[0],l,m,n);
