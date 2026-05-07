@@ -5,7 +5,7 @@ num_threads = 12           # number of threads to use in parallel
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
 output_file   = output/spherical_compton/ff_comp_tegan_T1e6_i0.npz  # file to be (over)written with output data
-output_camera = true                          # flag for saving camera details
+output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
 checkpoint_geodesic_save = false  # flag indicating geodesics should be saved
