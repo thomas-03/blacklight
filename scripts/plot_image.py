@@ -420,7 +420,7 @@ def main(**kwargs):
   if kwargs['refinement_level'] or kwargs['name'] == 'crossings':
     cb.ax.tick_params(length=0)
 
-  plt.title('frequency = {0:.3e}'.format(frequency))
+  plt.title('frequency = {0:.3e} Hz'.format(frequency))
   # Adjust axes
   plt.xlim(extent[0], extent[1])
   plt.xlabel(x_label)

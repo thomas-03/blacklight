@@ -655,12 +655,15 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
                 double x = nu_cgs*Physics::h/(Physics::m_e*Physics::c*Physics::c);
                 //std::printf("x: %.3e, theta_e: %.3e, scattering: %.3e, scattering': %.3e, scattering'':%.3e \n",x,theta_e,scattering,scattering_prime,scattering_prime_prime);
                 //we aren't including the 2x term in anything
-                double compton_source = ((1-x)*scattering + (x-3*theta_e)*scattering_prime + theta_e*scattering_prime_prime)*sigma_t*n_e_cgs;
+                double compton_source = (1-x)*scattering + (x-3*theta_e)*scattering_prime + theta_e*scattering_prime_prime;
+                if(stimulated_compton){
+                  compton_source += Physics::c*Physics::c/(2*Physics::h*nu_cgs*nu_cgs*nu_cgs)*scattering*2*x*(scattering_prime - scattering);
+                }
                 /*std::ofstream compton_file;
                 compton_file.open("./debugOutput/compton_comparison.csv", std::ios_base::app);
                 compton_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<scattering<<","<<compton_source<<"\n";
                 compton_file.close();*/
-                j_i[adaptive_level](l,m,n) += compton_source/(nu_cgs*nu_cgs);
+                j_i[adaptive_level](l,m,n) += compton_source*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
                 
               }else{
                 //note that the extra nu_cgs*Physics::h is because of the like bad scaling thing
@@ -668,7 +671,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               }
             }
           }
-
           // Calculate thermal synchrotron emissivities (M 28,30)
           double j_i_val;
           if (plasma_thermal_frac != 0.0 and image_synchrotron and !opacity_table)

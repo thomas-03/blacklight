@@ -316,9 +316,9 @@ double MCReader::Read(int snapshot)
       //ReadHDF5FloatArray("prim", hydro);
       //scattering_source_terms[0].Slice(5, 0, num_freqs-1);
       //ReadHDF5FloatArray("mcscat",scattering_source_terms[0]);
-      std::cout<<"before read flaot array"<<std::endl;
+      //std::cout<<"before read flaot array"<<std::endl;
       ReadHDF5FloatArray("mcscat",shallow_scatter);
-      std::cout<<"after read it"<<std::endl;
+      //std::cout<<"after read it"<<std::endl;
       //(20, 256, 8, 8, 32)
       /*for(int i=0;i<num_freqs;i++){
           std::cout<<scattering_source_terms[0](i,0,0,0,0)<<", ";

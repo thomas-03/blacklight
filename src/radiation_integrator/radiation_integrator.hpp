@@ -58,6 +58,7 @@ struct RadiationIntegrator
   Array<double> mc_freqs;
   Array<double> mc_ln_freqs;
   bool compton;
+  bool stimulated_compton;
 
 
   // Input data - formula parameters
