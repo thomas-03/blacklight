@@ -36,7 +36,7 @@ opacity_file = data/out_opacity_table_nfreq64.txt
 mc_input = true
 mc_file = /PellaShared/kcu8rf/spherical_compton/isoth.out2.00000.athdf
 mc_freq_file = /PellaShared/kcu8rf/spherical_compton/sourceterm_frequencies.txt
-compton = true
+
 stimulated_compton = true
 
 
@@ -137,3 +137,4 @@ fallback_nan = false  # flag indicating any fallback should result in NaN for th
 fallback_rho = 0.0      # the fallback option lets you have values 
 fallback_pgas = 0.0 
 fallback_kappa = 0.0
+

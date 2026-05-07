@@ -29,6 +29,14 @@ InputReader::InputReader(const std::string input_file_)
 
 //--------------------------------------------------------------------------------------------------
 
+// Input reader constructor
+// Inputs:
+//   input_file_: name of input file
+InputReader::InputReader(const std::string input_file_,std::string command_args_)
+  : input_file(input_file_),command_args(command_args_) {}
+
+//--------------------------------------------------------------------------------------------------
+
 // Input reader destructor
 InputReader::~InputReader()
 {
@@ -97,8 +105,53 @@ int InputReader::Read()
       throw BlacklightException("Invalid assignment in input file.");
     std::string key = line.substr(0, pos);
     std::string val = line.substr(pos + 1, line.size());
+    AssignInputVal(key,val);
+  }
 
-    // Store general data
+  std::istringstream command_stream(command_args);
+  //std::cout<<command_args<<std::endl;
+  for (std::string line; std::getline(command_stream, line); )
+  {
+    //std::cout<<line.substr(0,2)<<std::endl;
+    // Remove spaces
+    line.erase(std::remove_if(line.begin(), line.end(), RemoveableSpace), line.end());
+
+    // Skip blank lines
+    if (line.empty())
+      continue;
+    
+    if (line.substr(0,2)=="--"){
+      // Split on '='
+      std::string::size_type pos = line.find('=');
+      if (pos == std::string::npos)
+        throw BlacklightException("Invalid assignment in input file.");
+      std::string key = line.substr(0, pos);
+      key = key.substr(2, key.size());
+      std::string val = line.substr(pos + 1, line.size());
+      AssignInputVal(key,val);
+    }else if(line.substr(0,1)=="-"){
+      std::string key = line.substr(1, line.size());
+      std::string val = "true";
+      AssignInputVal(key,val);
+    }
+
+    
+  }
+
+  // Count number of runs to do
+  int num_runs = 1;
+  if (model_type.value() == ModelType::simulation and simulation_multiple.value())
+  {
+    if (slow_light_on.value())
+      num_runs = slow_num_images.value();
+    else
+      num_runs = simulation_end.value() - simulation_start.value() + 1;
+  }
+  return num_runs;
+}
+
+void InputReader::AssignInputVal(std::string key,std::string val){
+  // Store general data
     if (key == "model_type")
       model_type = ReadModelType(val);
     else if (key == "num_threads")
@@ -459,18 +512,6 @@ int InputReader::Read()
       message << "Unknown key (" << key << ") in input file.";
       throw BlacklightException(message.str().c_str());
     }
-  }
-
-  // Count number of runs to do
-  int num_runs = 1;
-  if (model_type.value() == ModelType::simulation and simulation_multiple.value())
-  {
-    if (slow_light_on.value())
-      num_runs = slow_num_images.value();
-    else
-      num_runs = simulation_end.value() - simulation_start.value() + 1;
-  }
-  return num_runs;
 }
 
 //--------------------------------------------------------------------------------------------------
