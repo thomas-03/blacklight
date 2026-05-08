@@ -137,6 +137,7 @@ def main(**kwargs):
           image = image[kwargs['frequency_num']-1,...]
           for level in range(1, max_level + 1):
             image_adaptive[level] = image_adaptive[level][kwargs['frequency_num']-1,...]
+            print(np.array(image_adaptive[level]).shape)
       elif len(image.shape) != 2:
         raise RuntimeError('Must specify frequency_num.')
       
@@ -250,7 +251,7 @@ def main(**kwargs):
       y_label = r'$y$ ($10^{' + repr(scale_exponent) + r'}\ \mathrm{\mu as}$)'
     half_width /= scale
     extent = np.array((-half_width, half_width, -half_width, half_width))
-
+  print(extent)
   # Calculate adaptive grid
   if max_level > 0:
     num_blocks_root_linear = image.shape[-1] / image_adaptive[1].shape[-1]
@@ -403,7 +404,6 @@ def main(**kwargs):
     tick_locs = None
     cmap.set_bad(nan_color)
     bounds = None
-  print(image[image!=0.0])
   # Plot root image
   plt.imshow(image, cmap=cmap, vmin=vmin, vmax=vmax, aspect='equal', origin='lower', extent=extent,
       interpolation=interpolation)
@@ -411,6 +411,7 @@ def main(**kwargs):
   # Plot adaptive image
   for level in range(1, max_level + 1):
     for block in range(num_blocks[level]):
+      #print(extent_adaptive[level][block,:])
       plt.imshow(image_adaptive[level][block,...], cmap=cmap, vmin=vmin, vmax=vmax, aspect='equal',
           origin='lower', extent=extent_adaptive[level][block,:], interpolation=interpolation)
 

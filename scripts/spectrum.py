@@ -218,7 +218,7 @@ def main(**kwargs):
       plt.ylabel('$\\nu L_\\nu (erg s^{-1})$ ')
       #plt.ylabel('$I_\\nu$ ')
       #plt.title('Spectrum for file '+kwargs['filename_data'].split('/')[-1])
-      #plt.title("Spherical Isothermal T=1e6K Free-Free Spectrum")
+      plt.title("Spherical Isothermal T=1e7K Compton Spectrum")
       #plt.savefig('../plots/cbdisk/ff_only/i45spectrum_comparison.png',dpi=300)
     else:
       flux, frequencies = get_flux(**kwargs)

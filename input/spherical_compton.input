@@ -4,19 +4,20 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/spherical_compton/ff_comp_tegan_T1e6_i0.npz  # file to be (over)written with output data
+output_file   = output/exampleAdaptiveFile.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
-checkpoint_geodesic_save = false  # flag indicating geodesics should be saved
+checkpoint_geodesic_save = true  # flag indicating geodesics should be saved
 checkpoint_geodesic_load = false  # flag indicating geodesics should be loaded
+checkpoint_geodesic_file = output/example_geodesics.dat 
 checkpoint_sample_save   = false  # flag indicating simulation sampling should be saved
 checkpoint_sample_load   = false  # flag indicating simulation sampling should be loaded
 checkpoint_sample_file   = data/sample.dat 
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = /PellaShared/kcu8rf/spherical_compton/isoth.out3.00000.athdf  # file containing data dump
+simulation_file         = /PellaShared/rnm8qc/spherical_comp_1e7temp/mciso.out3.00000.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = spm              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
@@ -33,17 +34,17 @@ simulation_hd_only = true
 opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
-mc_input = true
-mc_file = /PellaShared/kcu8rf/spherical_compton/isoth.out2.00000.athdf
-mc_freq_file = /PellaShared/kcu8rf/spherical_compton/sourceterm_frequencies.txt
-
+mc_input = false
+mc_file = /PellaShared/rnm8qc/spherical_comp_1e7temp/mciso.out2.00000.athdf
+mc_freq_file = /PellaShared/rnm8qc/spherical_comp_1e7temp/sourceterm_frequencies.txt
+compton = true
 stimulated_compton = true
 
 
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
 camera_r          = 10  # KS radial coordinate r in gravitational units
-camera_th         = 0.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_th         = 15.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
@@ -80,7 +81,7 @@ image_time            = false     # flag for producing image of geodesic times
 image_length          = false     # flag for producing image of geodesic lengths
 image_lambda          = false     # flag for producing image of affine path lengths
 image_emission        = false     # flag for producing image of emission coefficients
-image_tau             = false     # flag for producing image of optical depths
+image_tau             = true     # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
 image_tau_int         = false     # flag for producing tau-integrated images
@@ -97,7 +98,25 @@ render_num_images = 0  # number of false-color renderings
 slow_light_on = false  # flag indicating slow light should be used
 
 # Adaptive parameters
-adaptive_max_level = 0  # maximum number of adaptive levels beyond root
+adaptive_max_level = 1  # maximum number of adaptive levels beyond root
+adaptive_block_size     = 8     # linear size of adaptively refined blocks of pixels
+adaptive_frequency_num  = 1     # index (1-indexed) of frequency to use for evaluating refinement
+adaptive_val_cut        = 0.0   # absolute value minimum for signaling refinement
+adaptive_val_frac       = -1.0  # minimum fraction of cells exceeding cut for triggering refinement
+adaptive_abs_grad_cut   = 0.0   # absolute gradient minimum for signaling refinement
+adaptive_abs_grad_frac  = -1.0  # minimum fraction of cells exceeding cut for triggering refinement
+adaptive_rel_grad_cut   = 0.0   # relative gradient minimum for signaling refinement
+adaptive_rel_grad_frac  = -1.0  # minimum fraction of cells exceeding cut for triggering refinement
+adaptive_abs_lapl_cut   = 0.0   # absolute Laplacian minimum for signaling refinement
+adaptive_abs_lapl_frac  = -1.0  # minimum fraction of cells exceeding cut for triggering refinement
+adaptive_rel_lapl_cut   = 1.0   # relative Laplacian minimum for signaling refinement
+adaptive_rel_lapl_frac  = 0.25  # minimum fraction of cells exceeding cut for triggering refinement
+adaptive_num_regions    = 0     # number of forced refinement regions
+adaptive_region_1_level = 1     # region 1: minimum refinement level
+adaptive_region_1_x_min = -0.25  # region 1: left boundary in gravitational units
+adaptive_region_1_x_max = 0.25   # region 1: right boundary in gravitational units
+adaptive_region_1_y_min = -0.25  # region 1: bottom boundary in gravitational units
+adaptive_region_1_y_max = 0.25   # region 1: top boundary in gravitational units
 
 # Plasma parameters
 plasma_mu         = 1.0         # molecular weight of fluid in proton masses
