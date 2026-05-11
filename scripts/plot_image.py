@@ -10,6 +10,9 @@ import argparse
 # Numerical modules
 import numpy as np
 
+import matplotlib.colors as colors
+from matplotlib.colors import LogNorm
+
 # Main function
 def main(**kwargs):
 
@@ -405,8 +408,8 @@ def main(**kwargs):
     cmap.set_bad(nan_color)
     bounds = None
   # Plot root image
-  plt.imshow(image, cmap=cmap, vmin=vmin, vmax=vmax, aspect='equal', origin='lower', extent=extent,
-      interpolation=interpolation)
+  plt.imshow(image, cmap=cmap,  aspect='equal', origin='lower', extent=extent,
+      interpolation=interpolation,norm=colors.LogNorm(vmin=1e-1,vmax=1e2))
 
   # Plot adaptive image
   for level in range(1, max_level + 1):
