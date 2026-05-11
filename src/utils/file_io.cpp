@@ -4,6 +4,7 @@
 #include <cstddef>  // size_t
 #include <fstream>  // ifstream, ofstream
 #include <ios>      // streamsize
+#include <iostream>
 
 // Blacklight headers
 #include "file_io.hpp"
@@ -47,6 +48,7 @@ template<typename type> void WriteBinary(std::ofstream *p_stream, type val)
 // Outputs: (none)
 template<typename type> void WriteBinary(std::ofstream *p_stream, type vals[], long int num)
 {
+  std::cout<<"in reg array one"<<std::endl;
   const char *data_pointer = reinterpret_cast<const char *>(vals);
   std::streamsize data_size =
       static_cast<std::streamsize>(static_cast<std::size_t>(num) * sizeof(type));

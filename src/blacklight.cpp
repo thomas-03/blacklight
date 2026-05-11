@@ -3,6 +3,7 @@
 // C++ headers
 #include <iomanip>   // setprecision
 #include <iostream>  // cout
+#include <ios>       // ios_base
 #include <optional>  // bad_optional_access, optional
 #include <string>    // string
 
@@ -43,12 +44,33 @@ int main(int argc, char *argv[])
   double time_render = 0.0;
 
   // Parse command-line inputs
-  if (argc != 2)
+  /*if (argc != 2)
   {
     std::cout << "Error: Must give a single input file.\n";
     return 1;
-  }
+  }*/
   const std::string input_file(argv[1]);
+  std::string command_inputs = "\n";
+  
+  for(int i=0;i<argc-2;i++){
+    //std::cout<<argv[2+i]<<std::endl;
+    command_inputs.append(argv[2+i]);
+    command_inputs.push_back('\n');
+    /*std::string curr_arg = argv[2+i];
+    if(curr_arg.substr(0,2)=="--"){
+      in_file<<
+    }
+    std::cout<<substr<<std::endl;
+    std::cout<<argv[2+i][0]+argv[2+i][1]<<std::endl;*/
+    /*if ((argv[2+i][0]+argv[2+i][1])=='--'){
+
+    }*/
+
+    //std::cout<<argv[2+i]<<std::endl;
+    //in_file<<argv[2+i]<<'\n';
+  }
+  //std::cout<<command_inputs<<std::endl;
+  //in_file.close();
 
   // Prepare pointers to objects
   InputReader *p_input_reader;
@@ -63,7 +85,7 @@ int main(int argc, char *argv[])
   int num_runs;
   try
   {
-    p_input_reader = new InputReader(input_file);
+    p_input_reader = new InputReader(input_file,command_inputs);
     num_runs = p_input_reader->Read();
   }
   catch (const BlacklightException &exception)

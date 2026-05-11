@@ -122,6 +122,8 @@ OutputWriter::OutputWriter(const InputReader *p_input_reader_,
     mass_msun_array(0) = p_radiation_integrator->mass_msun;
     camera_width_array.Allocate(1);
     camera_width_array(0) = p_input_reader->camera_width.value();
+    camera_dist_array.Allocate(1);
+    camera_dist_array(0) = p_input_reader->camera_r.value();
     image_frequencies = p_geodesic_integrator->image_frequencies;
   }
 

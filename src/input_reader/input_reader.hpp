@@ -17,12 +17,14 @@ struct InputReader
 {
   // Constructors and destructor
   InputReader(const std::string input_file_);
+  InputReader(const std::string input_file_,std::string command_args_);
   InputReader(const InputReader &source) = delete;
   InputReader &operator=(const InputReader &source) = delete;
   ~InputReader();
 
   // Input file
   const std::string input_file;
+  std::string command_args;
 
   // Data - general
   std::optional<ModelType> model_type;
@@ -238,6 +240,7 @@ struct InputReader
 
   // External function
   int Read();
+  void AssignInputVal(std::string key,std::string val);
 
   // Internal functions - input_reader.cpp
   static bool RemoveableSpace(unsigned char c);

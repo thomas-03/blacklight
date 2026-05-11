@@ -91,6 +91,7 @@ struct OutputWriter
   // Metadata
   Array<double> mass_msun_array;
   Array<double> camera_width_array;
+  Array<double> camera_dist_array;
   Array<double> image_frequencies;
 
   // Camera data

@@ -57,7 +57,7 @@ void OutputWriter::WriteNpz()
       + (image_crossings ? 1 : 0);
   int num_full_arrays =
       (output_camera ? 1 : 0) + num_image_arrays + (render_num_images > 0 ? 1 : 0);
-  int num_arrays = 3 + 1 + (adaptive_max_level > 0 ? 1 : 0) + num_full_arrays
+  int num_arrays = 5 + (adaptive_max_level > 0 ? 1 : 0) + num_full_arrays
        + adaptive_num_levels_array(0) * (1 + num_full_arrays);
   const int max_name_length = 128;
   char *name_buffer = new char[max_name_length];
@@ -75,10 +75,16 @@ void OutputWriter::WriteNpz()
   local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
       data_lengths[array_offset], "mass_msun", &local_header_buffers[array_offset]);
   array_offset++;
+
   data_lengths[array_offset] =
       GenerateNpyFromArray(camera_width_array, 1, &data_buffers[array_offset]);
   local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
       data_lengths[array_offset], "width", &local_header_buffers[array_offset]);
+  array_offset++;
+  data_lengths[array_offset] =
+      GenerateNpyFromArray(camera_dist_array, 1, &data_buffers[array_offset]);
+  local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
+      data_lengths[array_offset], "distance", &local_header_buffers[array_offset]);
   array_offset++;
   data_lengths[array_offset] =
       GenerateNpyFromArray(image_frequencies, 1, &data_buffers[array_offset]);
