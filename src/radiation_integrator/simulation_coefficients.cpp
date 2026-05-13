@@ -637,8 +637,19 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
                 std::abs(mc_freqs(low - 1) - nu_cgs) < std::abs(mc_freqs(low) - nu_cgs))) {
               mid = low - 1;
             }
+
+            if (mid==0 && (std::log10(nu_cgs)+mc_dlf)<std::log10(mc_freqs(mid))){
+              //std::printf("scattering frequency too low. choice: %.10e, true frequency: %.10e \n",mc_freqs(mid),nu_cgs);
+              scattering = 0.0;
+            }else if(mid==mc_num_freqs-1 && (std::log10(nu_cgs)-mc_dlf)>std::log10(mc_freqs(mid))){
+              //std::printf("scattering frequency too low. choice: %.10e, true frequency: %.10e \n",mc_freqs(mid),nu_cgs);
+              scattering = 0.0;
+            }else{
+              scattering = sample_scattering[adaptive_level](m,n,mid);
+            }
+
             //std::printf("scattering frequency choice: %.10e, true frequency: %.10e \n",mc_freqs(mid),nu_cgs);
-            scattering = sample_scattering[adaptive_level](m,n,mid);
+            
 
             //Calculate emissivity and absorptivity due to scattering
             double sigma_t = 6.65248e-25;

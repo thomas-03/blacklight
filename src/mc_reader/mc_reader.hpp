@@ -63,9 +63,7 @@ struct MCReader
   //Array<double>* freq_grid_ptr = &freq_grid;
   Array<double> ln_freq_grid;
 
-  double fmin, fmax, dlf;
-  double tmin, tmax, dlt;
-  double rmin, rmax, dlr;
+  double dlf;
 
    std::ifstream data_stream;
   unsigned long int root_object_header_address;

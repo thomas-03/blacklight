@@ -57,6 +57,7 @@ struct RadiationIntegrator
   int mc_num_freqs;
   Array<double> mc_freqs;
   Array<double> mc_ln_freqs;
+  double mc_dlf;
   bool compton;
   bool stimulated_compton;
 

@@ -657,6 +657,7 @@ void RadiationIntegrator::SampleSimulation()
       mc_num_freqs = p_mc_reader->num_freqs;
       mc_freqs = p_mc_reader->freq_grid;
       mc_ln_freqs = p_mc_reader->ln_freq_grid;
+      mc_dlf = p_mc_reader->dlf;
     }
   // Allocate arrays
   int num_pix = camera_num_pix;

@@ -79,7 +79,6 @@ def main(**kwargs):
 
     if (kwargs['calclum']):
         print("List luminosity: ", list_lum)
-    print(spectrum.keys())
     # Write spectrum to file
     if outfile is None:
         outfile = infile.replace('.list','.spec')
