@@ -929,6 +929,7 @@ void RadiationIntegrator::SampleSimulation()
           double scattering = 0.0;
           float* grid_scattering_prime = nullptr;
           float* grid_scattering_prime_prime = nullptr;
+          float scattering_arr[mc_num_freqs];
           if(mc_input){
             if(compton){
               grid_scattering_prime = Gradient4D(grid_scatter[0],mc_ln_freqs,b,k,j,i);
@@ -940,12 +941,17 @@ void RadiationIntegrator::SampleSimulation()
                 scattering = static_cast<double>(grid_scatter[0](l,b,k,j,i));
 
               sample_scattering[adaptive_level](m,n,l) = static_cast<float>(scattering);
-              if(compton){
-                throw BlacklightException("Compton scattering is not implemented for interpolation yet.");
-                sample_scattering_prime[adaptive_level](m,n,l) = grid_scattering_prime[l];
-                sample_scattering_prime_prime[adaptive_level](m,n,l) = grid_scattering_prime_prime[l];
+              scattering_arr[l] = static_cast<float>(scattering);
+            }
+            if(compton){
+              //the initial J_nu is spatially interpolated and so should be the derivatives taken from that value
+              grid_scattering_prime = Gradient1D(scattering_arr,mc_ln_freqs);
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_ln_freqs);   
+
+              for(int l=0;l<mc_num_freqs;l++){
+                  sample_scattering_prime[adaptive_level](m,n,l) = grid_scattering_prime[l];
+                  sample_scattering_prime_prime[adaptive_level](m,n,l) = grid_scattering_prime_prime[l];
               }
-            
             }
             delete[] grid_scattering_prime;
             delete[] grid_scattering_prime_prime;
@@ -1064,21 +1070,24 @@ void RadiationIntegrator::SampleSimulation()
           double scattering = 0.0;
           float* grid_scattering_prime = nullptr;
           float* grid_scattering_prime_prime = nullptr;
+          float scattering_arr[mc_num_freqs];
           if(mc_input){
-            if(compton){
-              grid_scattering_prime = Gradient4D(grid_scatter[0],mc_ln_freqs,b,k,j,i);
-              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_ln_freqs);   
-            }
             for(int l=0; l<mc_num_freqs;l++){
               scattering = InterpolateAdvanced(grid_scatter[0],l,m,n);
               if(scattering<=0.0)
                 scattering = static_cast<double>(grid_scatter[0](l,b,k,j,i));
 
               sample_scattering[adaptive_level](m,n,l) = static_cast<float>(scattering);
-              if(compton){
-                throw BlacklightException("compton scattering not fully implemented with interpolation yet!");
-                sample_scattering_prime[adaptive_level](m,n,l) = grid_scattering_prime[l];
-                sample_scattering_prime_prime[adaptive_level](m,n,l) = grid_scattering_prime_prime[l];
+              scattering_arr[l] = static_cast<float>(scattering);
+            }
+            if(compton){
+              //the initial J_nu is spatially interpolated and so should be the derivatives taken from that value
+              grid_scattering_prime = Gradient1D(scattering_arr,mc_ln_freqs);
+              grid_scattering_prime_prime = Gradient1D(grid_scattering_prime,mc_ln_freqs);   
+
+              for(int l=0;l<mc_num_freqs;l++){
+                  sample_scattering_prime[adaptive_level](m,n,l) = grid_scattering_prime[l];
+                  sample_scattering_prime_prime[adaptive_level](m,n,l) = grid_scattering_prime_prime[l];
               }
             }
             delete[] grid_scattering_prime;
