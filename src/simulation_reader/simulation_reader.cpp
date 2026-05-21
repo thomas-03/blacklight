@@ -169,7 +169,6 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
   if (num_arrays > 0)
     prim = new Array<float>[num_arrays];
   
-  std::printf("built simulation reader fine ");
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -262,7 +261,12 @@ double SimulationReader::Read(int snapshot)
       if (simulation_format == SimulationFormat::athena)
       {
         float time_temp;
-        time_temp=1367;
+        try{
+          ReadHDF5FloatAttribute("Time", &time_temp);
+        }catch(BlacklightException e){
+          BlacklightWarning("Could not read time from HDF5 file. Using random default time.");
+          time_temp = 1367;
+        }
         //ReadHDF5FloatAttribute("Time", &time_temp);
         latest_time = time_temp;
       }
@@ -357,7 +361,6 @@ double SimulationReader::Read(int snapshot)
     // Read time
     if (simulation_format == SimulationFormat::athena)
     {
-      std::printf("defining time ");
       float time_temp;
       //TEGAN: fix this so it's not hardcoded
       time_temp=1367;
@@ -796,7 +799,6 @@ double SimulationReader::Read(int snapshot)
     // Read cell data
     if (simulation_format == SimulationFormat::athena)
     {
-      std::printf("read vars");
       if (first_time)
       {
         VerifyVariablesAthena();

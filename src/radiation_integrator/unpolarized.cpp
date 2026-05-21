@@ -236,12 +236,7 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             plane_sign = plane_sign_new;
           }
         }
-        if(m==4610 && l==5){
-          std::printf("pixel 4610 emission: %.5e\n",image[adaptive_level](l,m));
-        }else if(m==240 && l==5){
-          std::printf("pixel 240 emission: %.5e\n",image[adaptive_level](l,m));
-        }
-
+        
         // Store integrated quantities
         if (image_lambda)
           image[adaptive_level](image_offset_lambda+l,m) = integrated_lambda;

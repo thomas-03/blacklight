@@ -40,14 +40,13 @@ MCReader::MCReader(const InputReader *p_input_reader_, const SimulationReader *p
   // Copy general input data
   model_type = p_input_reader->model_type.value();
   mc_input = p_input_reader->mc_input.value();
-  mc_file_name = p_input_reader->mc_file.value();
-  mc_freq_file_name = p_input_reader->mc_freq_file.value();
-  simulation_coord = p_input_reader->simulation_coord.value();
-  simulation_m_msun = p_input_reader->simulation_m_msun.value();
-  simulation_all_cgs = p_input_reader->simulation_all_cgs.value();
-  
   
   if(mc_input){
+    mc_file_name = p_input_reader->mc_file.value();
+    mc_freq_file_name = p_input_reader->mc_freq_file.value();
+    simulation_coord = p_input_reader->simulation_coord.value();
+    simulation_m_msun = p_input_reader->simulation_m_msun.value();
+    simulation_all_cgs = p_input_reader->simulation_all_cgs.value();
     compton = p_input_reader->compton.value();
     stimulated_compton = p_input_reader->stimulated_compton.value();
   }
@@ -259,7 +258,6 @@ double MCReader::Read(int snapshot)
         Gradient(shallow_second_deriv, shallow_first_deriv, ln_freq_grid);
       }
       CalculateSourceTerm(shallow_source_terms, shallow_scatter, shallow_first_deriv, shallow_second_deriv);
-      std::cout<<scattering_source_terms[0](0,0,0,0,0)<<","<<scattering[0](0,0,0,0,0)<<","<<scattering_first_derivs[0](0,0,0,0,0)<<std::endl;
       //std::cout<<"after read it"<<std::endl;
       //(20, 256, 8, 8, 32)
       /*for(int i=0;i<num_freqs;i++){

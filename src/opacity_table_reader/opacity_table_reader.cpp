@@ -39,7 +39,9 @@ OpacityTableReader::OpacityTableReader(const InputReader *p_input_reader_)
   // Copy general input data
   model_type = p_input_reader->model_type.value();
   opacity_table = p_input_reader->opacity_table.value();
-  opacity_file = p_input_reader->opacity_file.value();
+  if(opacity_table){
+    opacity_file = p_input_reader->opacity_file.value();
+  }
 
 }
 
@@ -77,12 +79,13 @@ OpacityTableReader::~OpacityTableReader()
 double OpacityTableReader::Read(int snapshot)
 {
 
-  std::cout << "Reading opacity table from file..." << opacity_file << std::endl;
   // Only proceed if needed
   if (model_type != ModelType::simulation)
     return 0.0;
   if(!opacity_table)
     return 0.0;
+
+  std::cout << "Reading opacity table from file..." << opacity_file << std::endl;
   double time_start = omp_get_wtime();
 
   int num_read = 1;
