@@ -386,37 +386,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         }
         if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
         {
-          //confused because the plasma_mu and m_p both match the T0 units (and the v0**2 term is already accounted for within Pgas_cgs I believe)
-          //this definition below of kb_tt_tot_cgs also matches the athena++ definition at line 97 of units.cpp
-          //double kb_tt_tot_cgs = Physics::k_b*6.553e6*pgas/ rho;
-          //kb_tt_e_cgs = 2* kb_tt_tot_cgs / (0.667);
-          /*if(kb_tt_tot_cgs<Physics::k_b*8e3){
-            //std::printf("temperature lower than floor");
-            kb_tt_tot_cgs=Physics::k_b*8e3;
-          }*/
-
-          //double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
-          //kb_tt_e_cgs = kb_tt_tot_cgs;
-
-          //tgas_cgs = 6.553e+06 
-          //gamma-1 is 0.666667
           double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
           
-          //(plasma_mu * Physics::m_p* e_unit/d_unit)/Physics::k_b is =5.444098e+06
-          
           kb_tt_e_cgs = kb_tt_tot_cgs;
-          /*if(kb_tt_e_cgs<Physics::k_b*1e4){
-            //std::printf("temperature lower than floor");
-            kb_tt_e_cgs=Physics::k_b*1e4;
-          }*/
-          
-
-          //when I have it just the typical blacklight way, the temperatures are way too low
-          //when I have it based off of the MC, the temperatures are way too high and I get a really broad peak
-          //when I do 6.553e6*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs, the temperatures are too high still as well
-          //if I do 6.553e6*Physics::k_b*plasma_mu * Physics::m_p * pgas_cgs / rho_cgs, the temperatures are too low
-          //changing the number density stuff doesn't seem to make any difference
-          
           
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
 
@@ -553,24 +525,16 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             double log_temp = std::log10(kb_tt_e_cgs/Physics::k_b);
             double log_rho = std::log10(rho_cgs);
             if(log_freq < p_opacity_table_reader->fmin || log_freq > p_opacity_table_reader->fmax){
-              //std::printf("log_freq underflow: %d \n", log_freq);
-              //std::printf("log_freq: %f, fmin: %f, fmax: %f \n", log_freq, p_opacity_table_reader->fmin, p_opacity_table_reader->fmax);
               default_to_free_free = true;
             }
             if(log_temp < p_opacity_table_reader->tmin || log_temp > p_opacity_table_reader->tmax){
-              //std::printf("log_temp underflow: %d logK , %lf K \n", log_temp, kb_tt_e_cgs);
-              //std::printf("temp: %f, log_temp: %f, tmin: %f, tmax: %f \n",  kb_tt_e_cgs, log_temp, p_opacity_table_reader->tmin, p_opacity_table_reader->tmax);
               default_to_free_free = true;
             }
             if(log_rho < p_opacity_table_reader->rmin || log_rho > p_opacity_table_reader->rmax){
-              //std::printf("log_rho underflow: %d \n", log_rho);
-              //std::printf("log_rho: %f, rmin: %f, rmax: %f \n", log_rho, p_opacity_table_reader->rmin, p_opacity_table_reader->rmax);
               default_to_free_free = true;
             }
           
             if(!default_to_free_free){
-              //std::printf("using opacity table value \n");
-              //check if here instead of using logs I should be using regular linear values
               double xi = (log_rho - p_opacity_table_reader->rmin)/p_opacity_table_reader->dlr;
               double xj = (log_temp - p_opacity_table_reader->tmin)/p_opacity_table_reader->dlt;
               double xk = (log_freq - p_opacity_table_reader->fmin)/p_opacity_table_reader->dlf;
@@ -578,7 +542,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               int i = std::floor(xi);
               int j = std::floor(xj);
               int k = std::floor(xk);
-              //it seems like the indices I get for each one seems reasonable. 
 
               double xd = xi - i;
               double yd = xj - j;
@@ -591,21 +554,14 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               double c1 = c01*(1 - yd) + c11*yd;
               table_opacity_value = c0*(1 - zd) + c1*zd;
 
-              /*if(std::abs(table_opacity_value - p_opacity_table_reader->plan_tab(k,j,i))>1e-15){
-                std::printf("notable interpolation impact: %e \n", table_opacity_value - p_opacity_table_reader->plan_tab(k,j,i));
-              }*/
               alpha_i[adaptive_level](l,m,n)+= table_opacity_value*nu_cgs;
-              //maybe try seeing if it improves if I store kappa and then multiply by nu_cgs
               
               double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
               double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
               double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
               
               double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
-              /*std::ofstream opacity_file;
-              opacity_file.open("./debugOutput/opacity_comparison.csv", std::ios_base::app);
-              opacity_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<image_frequencies(l)<<","<<coefficient<<","<<table_opacity_value<<"\n";
-              opacity_file.close();*/
+             
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
                   / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
               j_i[adaptive_level](l,m,n) += table_opacity_value* planck_function/(nu_cgs*nu_cgs);
@@ -616,8 +572,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           if(mc_input){
             //find the nearest frequency from the current and use that scattering value
             // Binary search to find closest frequency
-
-            //TEGAN: make it so that if it's out of the bounds of mc frequencies, it simply doesn't do the scattering!
             int low = 0;
             int high = mc_num_freqs - 1;
             int mid = 0;
@@ -638,49 +592,22 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               mid = low - 1;
             }
 
+            // If the frequency is outside the range of the MC frequencies + delta_nu, then default to no scattering
             if (mid==0 && (std::log10(nu_cgs)+mc_dlf)<std::log10(mc_freqs(mid))){
-              //std::printf("scattering frequency too low. choice: %.10e, true frequency: %.10e \n",mc_freqs(mid),nu_cgs);
               scattering = 0.0;
             }else if(mid==mc_num_freqs-1 && (std::log10(nu_cgs)-mc_dlf)>std::log10(mc_freqs(mid))){
-              //std::printf("scattering frequency too low. choice: %.10e, true frequency: %.10e \n",mc_freqs(mid),nu_cgs);
               scattering = 0.0;
             }else{
               scattering = sample_scattering[adaptive_level](m,n,mid);
             }
 
-            //std::printf("scattering frequency choice: %.10e, true frequency: %.10e \n",mc_freqs(mid),nu_cgs);
-            
-
             //Calculate emissivity and absorptivity due to scattering
             double sigma_t = 6.65248e-25;
-            /*if(rho_cgs!=0.0){
-              std::printf("rho_cgs: %.3e, n_e_cgs: %.3e, nu_cgs: %.3e, scattering: %.3e \n",rho_cgs,n_e_cgs,nu_cgs,scattering/(nu_cgs*Physics::h));
-            }*/
             if(scattering!=0.0){
-              //std::printf("scattering: %.3e,1/hnu: %.3e \n",scattering,(1/(nu_cgs*Physics::h)));
               alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
-              if(compton){
-                double scattering_prime = sample_scattering_prime[adaptive_level](m,n,mid);
-                double scattering_prime_prime = sample_scattering_prime_prime[adaptive_level](m,n,mid);
-                //calculate the compton source term
-                double x = nu_cgs*Physics::h/(Physics::m_e*Physics::c*Physics::c);
-                //std::printf("x: %.3e, theta_e: %.3e, scattering: %.3e, scattering': %.3e, scattering'':%.3e \n",x,theta_e,scattering,scattering_prime,scattering_prime_prime);
-                //we aren't including the 2x term in anything
-                double compton_source = (1-x)*scattering + (x-3*theta_e)*scattering_prime + theta_e*scattering_prime_prime;
-                if(stimulated_compton){
-                  compton_source += Physics::c*Physics::c/(2*Physics::h*nu_cgs*nu_cgs*nu_cgs)*scattering*2*x*(scattering_prime - scattering);
-                }
-                /*std::ofstream compton_file;
-                compton_file.open("./debugOutput/compton_comparison.csv", std::ios_base::app);
-                compton_file<<rho_cgs<<","<<kb_tt_e_cgs/Physics::k_b<<","<<nu_cgs<<","<<scattering<<","<<compton_source<<"\n";
-                compton_file.close();*/
-                j_i[adaptive_level](l,m,n) += compton_source*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
-                
-              }else{
-                //note that the extra nu_cgs*Physics::h is because of the like bad scaling thing
-                j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
-              }
+              j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
             }
+
           }
           // Calculate thermal synchrotron emissivities (M 28,30)
           double j_i_val;

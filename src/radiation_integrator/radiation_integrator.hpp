@@ -248,6 +248,8 @@ struct RadiationIntegrator
   double *time;
   Array<float> *grid_prim;
   Array<float> *grid_scatter;
+  Array<float> *grid_scatter_prime;
+  Array<float> *grid_scatter_prime_prime;
   int ind_rho, ind_pgas, ind_kappa;
   int ind_uu1, ind_uu2, ind_uu3;
   int ind_bb1, ind_bb2, ind_bb3;
@@ -273,8 +275,6 @@ struct RadiationIntegrator
   Array<float> *sample_bb2 = nullptr;
   Array<float> *sample_bb3 = nullptr;
   Array<float> *sample_scattering = nullptr;
-  Array<float> *sample_scattering_prime = nullptr;
-  Array<float> *sample_scattering_prime_prime = nullptr;
   double extrapolation_tolerance;
 
   // Coefficient data

@@ -45,9 +45,8 @@ struct MCReader
 
   // Data arrays
   int num_freqs;
-  int num_temps;
-  int num_rho;
   Array<float> *scattering_source_terms;
+  Array<float> *grid_prim;
 
   Coordinates simulation_coord;
   SimulationFormat simulation_format;
@@ -58,12 +57,30 @@ struct MCReader
   double simulation_m_msun;
   bool simulation_all_cgs;
   double simulation_r_rg;
+  double simulation_rho_cgs;
+  double simulation_v_c;
+  bool compton;
+  bool stimulated_compton;
 
   Array<double> freq_grid;
   //Array<double>* freq_grid_ptr = &freq_grid;
   Array<double> ln_freq_grid;
 
   double dlf;
+
+  int ind_rho, ind_pgas, ind_kappa;
+  PlasmaModel plasma_model;
+  bool plasma_use_p;
+  double plasma_thermal_frac;
+  double plasma_kappa_frac;
+  double plasma_power_frac;
+  double plasma_mu;
+  double plasma_ne_ni;
+  double plasma_gamma;
+  double plasma_gamma_i;
+  double plasma_gamma_e;
+  double plasma_rat_low;
+  double plasma_rat_high;
 
    std::ifstream data_stream;
   unsigned long int root_object_header_address;
@@ -80,12 +97,13 @@ struct MCReader
   Array<int> num_variables;
    
   
-  // External function
+  // Internal functions
   double Read(int snapshot);
   void ReadFreqFile();
+  void Gradient(Array<float> &grad,Array<float> &f, Array<double> &x); 
+  void CalculateSourceTerm(Array<float> &source_term,Array<float> &scattering,Array<float> &scattering_prime,Array<float> &scattering_prime_prime);
 
-  // Internal functions - opacity_reader.cpp
-  //std::string FormatFilename(int file_number);
+  
   // Internal functions - hdf5_format_structure.cpp
   void ReadHDF5Superblock();
   void ReadHDF5RootGroupSymbolTableEntry();
