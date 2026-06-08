@@ -784,9 +784,17 @@ void RadiationIntegrator::SampleSimulation()
           //TEGAN: put if statement here as to whether or not I should read in the MC data
           
           if(mc_input){
+            double rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
+
+            double e_unit = simulation_rho_cgs * Physics::c * Physics::c * simulation_v_c*simulation_v_c;
+            double pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
+            double kb_tt_e_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
             
             for(int l=0; l<mc_num_freqs;l++){
               sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);  
+              //double blackbody = 2*Physics::h*mc_freqs(l)*mc_freqs(l)*mc_freqs(l)/(Physics::c*Physics::c*(std::exp(Physics::h*mc_freqs(l)/kb_tt_e_cgs)-1.0));
+              
+              //sample_scattering[adaptive_level](m,n,l) = blackbody;
               //std::printf("l: %d b: %d k: %d j: %d i: %d sample scattering: %.5e grid scattering %.5e \n",l,b,k,j,i,sample_scattering[adaptive_level](m,n,l),grid_scatter[t](l,b,k,j,i));
               
             }

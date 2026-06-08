@@ -357,14 +357,16 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
   // Calculate the source term using the scattering and its derivatives
 
   double e_unit = simulation_rho_cgs * Physics::c * Physics::c * simulation_v_c*simulation_v_c;
-
+  //std::cout<<"MC ind_rho: "<<ind_rho<<" MC ind_pgas: "<<p_simulation_reader->ind_pgas<<std::endl;
   #pragma omp parallel for schedule(static) collapse(4)
   for(int i=0;i<source_term.n1;i++){
     for(int j=0;j<source_term.n2;j++){
       for(int k=0;k<source_term.n3;k++){
         for(int b=0;b<source_term.n4;b++){
           double rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
-          double pgas_cgs = e_unit*grid_prim[0](ind_pgas,b,k,j,i);
+          double pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
+          //std::cout<<"rho_cgs: "<<rho_cgs<<", pgas_cgs: "<<pgas_cgs<<"b: "<<b<<" k: "<<k<<" j: "<<j<<" i: "<<i<<std::endl;
+          //std::cout<<"simulation_rho_cgs: "<<simulation_rho_cgs<<" e_unit: "<<e_unit<<std::endl;
           // Calculate electron temperature for model with T_i/T_e a function of beta (E1 1)
           double kb_tt_e_cgs = std::numeric_limits<double>::quiet_NaN();
           double theta_e = std::numeric_limits<double>::quiet_NaN();
@@ -389,7 +391,8 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
           }
           if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
           {
-            double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+            //double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+            double kb_tt_tot_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
             
             kb_tt_e_cgs = kb_tt_tot_cgs;
             

@@ -123,8 +123,9 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             {
               if (optically_thin)
                 image[adaptive_level](l,m) = exp_neg * (image[adaptive_level](l,m) + ss * expm1);
-              else
+              else 
                 image[adaptive_level](l,m) = ss;
+
             }
             else
               image[adaptive_level](l,m) += j * delta_lambda_cgs;

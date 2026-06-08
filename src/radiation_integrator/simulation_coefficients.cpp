@@ -386,7 +386,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         }
         if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
         {
-          double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+          //i think that technically the athenaMC computes this such that you have mu=1 even if untrue
+          //double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+          double kb_tt_tot_cgs = Physics::m_p *pgas_cgs / rho_cgs;
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
           
@@ -499,7 +501,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double sin2_theta_b = 1.0 - cos2_theta_b;
         double sin_theta_b = std::sqrt(sin2_theta_b);
         double cos_theta_b = std::sqrt(cos2_theta_b) * (k_b_tet >= 0.0 ? 1.0 : -1.0);
-
         // Go through frequencies
         for (int l = 0; l < image_num_frequencies; l++)
         {
@@ -592,20 +593,40 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               mid = low - 1;
             }
 
+            double sigma_t = 6.65248e-25;
+            // TEGAN: go through and handle edge cases.
+
             // If the frequency is outside the range of the MC frequencies + delta_nu, then default to no scattering
             if (mid==0 && (std::log10(nu_cgs)+mc_dlf)<std::log10(mc_freqs(mid))){
               scattering = 0.0;
             }else if(mid==mc_num_freqs-1 && (std::log10(nu_cgs)-mc_dlf)>std::log10(mc_freqs(mid))){
               scattering = 0.0;
             }else{
-              scattering = sample_scattering[adaptive_level](m,n,mid);
+              
+              //perform linear interpolation in linear-log space to find scattering value at nu_cgs
+              if(std::log10(mc_freqs(mid))==std::log10(nu_cgs) || mid==0 || mid==mc_num_freqs-1){
+                scattering = sample_scattering[adaptive_level](m,n,mid)*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
+              }else if(std::log10(mc_freqs(mid))<std::log10(nu_cgs)){
+                double scattering_low = sample_scattering[adaptive_level](m,n,mid)*sigma_t*n_e_cgs/(mc_freqs(mid)*mc_freqs(mid));
+                double scattering_high = sample_scattering[adaptive_level](m,n,mid+1)*sigma_t*n_e_cgs/(mc_freqs(mid+1)*mc_freqs(mid+1));
+                double log_nu_low = std ::log10(mc_freqs(mid));
+                double log_nu_high = std::log10(mc_freqs(mid+1));
+                double scattering_interp = scattering_low*(log_nu_high-std::log10(nu_cgs))/(log_nu_high-log_nu_low) + (scattering_high) * (std::log10(nu_cgs) - log_nu_low) / (log_nu_high - log_nu_low);
+                scattering = scattering_interp;
+              }else{
+                double scattering_low = sample_scattering[adaptive_level](m,n,mid-1)*sigma_t*n_e_cgs/(mc_freqs(mid-1)*mc_freqs(mid-1));
+                double scattering_high = sample_scattering[adaptive_level](m,n,mid)*sigma_t*n_e_cgs/(mc_freqs(mid)*mc_freqs(mid));
+                double log_nu_low = std ::log10(mc_freqs(mid-1));
+                double log_nu_high = std::log10(mc_freqs(mid));
+                double scattering_interp = scattering_low*(log_nu_high-std::log10(nu_cgs))/(log_nu_high-log_nu_low) + (scattering_high) * (std::log10(nu_cgs) - log_nu_low) / (log_nu_high - log_nu_low);
+                scattering = scattering_interp;
+              }
             }
 
             //Calculate emissivity and absorptivity due to scattering
-            double sigma_t = 6.65248e-25;
             if(scattering!=0.0){
               alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
-              j_i[adaptive_level](l,m,n) += scattering*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
+              j_i[adaptive_level](l,m,n) += scattering;
             }
 
           }
@@ -702,8 +723,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           //Calculate thermal free-free emissivities (Rybicki & Lightman, eqn 5.14a)
           if (plasma_thermal_frac != 0.0 and image_free_free and (!opacity_table || default_to_free_free))
           {
-           //std::printf("free-free emission active\n");
-           double partA = 16.0*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
+           double partA = 8.0*std::pow(Physics::e,6.)/(3.0*Physics::m_e*std::pow(Physics::c,3.));
            double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
            double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
            //std::printf("j coeff cgs: %e\n", partA*partB*std::sqrt(kb_tt_e_cgs/Physics::k_b));

@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = spherical_isothermal/compton/ff_comp_tegan_T1e7_i0.npz  # file to be (over)written with output data
+output_file   = spherical_isothermal/compton/ff_comp_tegan_T1e6_i0.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -17,7 +17,7 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = /PellaShared/kcu8rf/spherical_compton_1e7/isoth.out3.00000.athdf  # file containing data dump
+simulation_file         = /PellaShared/kcu8rf/spherical_compton/isoth.out3.00000.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = spm              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
@@ -35,8 +35,8 @@ opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
 mc_input = true
-mc_file = /PellaShared/kcu8rf/spherical_compton_1e7/isoth.out2.00000.athdf
-mc_freq_file = /PellaShared/kcu8rf/spherical_compton_1e7/sourceterm_frequencies.txt
+mc_file = /PellaShared/kcu8rf/spherical_compton/isoth.out2.00000.athdf
+mc_freq_file = /PellaShared/kcu8rf/spherical_compton/sourceterm_frequencies.txt
 compton = true
 stimulated_compton = true
 
@@ -71,16 +71,16 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 image_light           = true      # flag indicating real image of radiation should be produced
 image_num_frequencies   = 30       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 2.417989e+14    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 1.920677e+19    # last frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 2.713029e+14    # first frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 2.155035e+17    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
-image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
+image_normalization     = camera  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
 image_rotation_split  = false     # flag for Strang splitting rotation from emission/absorption
 image_time            = false     # flag for producing image of geodesic times
 image_length          = false     # flag for producing image of geodesic lengths
 image_lambda          = false     # flag for producing image of affine path lengths
-image_emission        = false     # flag for producing image of emission coefficients
+image_emission        = true    # flag for producing image of emission coefficients
 image_tau             = true     # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
@@ -101,8 +101,8 @@ slow_light_on = false  # flag indicating slow light should be used
 adaptive_max_level = 0  # maximum number of adaptive levels beyond root
 
 # Plasma parameters
-plasma_mu         = 1.0         # molecular weight of fluid in proton masses
-plasma_ne_ni      = 1.0         # electrons per ion
+plasma_mu         = 1.2477         # molecular weight of fluid in proton masses
+plasma_ne_ni      = 1.08257         # electrons per ion
 plasma_model      = one_temp  # thermal electron temperature model (ti_te_beta, code_kappa)
 plasma_use_p      = true        # flag indicating total p (rather than u) should match simulation
 plasma_rat_low    = 1.0         # ion-electron temperature ratio at zero plasma beta
