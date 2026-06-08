@@ -59,6 +59,7 @@ MCReader::MCReader(const InputReader *p_input_reader_, const SimulationReader *p
     simulation_r_rg = p_input_reader->simulation_r_rg.value();
     simulation_v_c = p_input_reader->simulation_v_c.value();
   }
+  simulation_mc_temp = p_input_reader->simulation_mc_temp.value();
   plasma_model = p_input_reader->plasma_model.value();
   if (plasma_model == PlasmaModel::ti_te_beta)
     {
@@ -365,8 +366,7 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
         for(int b=0;b<source_term.n4;b++){
           double rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
           double pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
-          //std::cout<<"rho_cgs: "<<rho_cgs<<", pgas_cgs: "<<pgas_cgs<<"b: "<<b<<" k: "<<k<<" j: "<<j<<" i: "<<i<<std::endl;
-          //std::cout<<"simulation_rho_cgs: "<<simulation_rho_cgs<<" e_unit: "<<e_unit<<std::endl;
+
           // Calculate electron temperature for model with T_i/T_e a function of beta (E1 1)
           double kb_tt_e_cgs = std::numeric_limits<double>::quiet_NaN();
           double theta_e = std::numeric_limits<double>::quiet_NaN();
@@ -391,8 +391,12 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
           }
           if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
           {
-            //double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
-            double kb_tt_tot_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
+            double kb_tt_tot_cgs = 0.0;
+            if(simulation_mc_temp){
+              kb_tt_tot_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
+            }else{
+              kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+            }
             
             kb_tt_e_cgs = kb_tt_tot_cgs;
             
@@ -427,45 +431,3 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
   }
 }
 
-// idea: instead accept an array of indices and then unpack it somehow
-/*float* MCReader::Gradient4D(Array<float> &f, Array<double> &x, int b, int k, int j, int i){
-  //we want to get sample_scattering at (m,n) but across all the frequencies
-  int nx = x.n1;
-  if(nx!=mc_num_freqs){
-    std::printf("nx: %d mc_num_freqs: %d",nx,mc_num_freqs);
-  }
-  float* gradient = new float[mc_num_freqs];
-  gradient[0] = (f(1,b,k,j,i) - f(0,b,k,j,i))/(x(1) - x(0));
-  gradient[nx-1] = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
-  for(int i=1;i<nx-1;i++){
-    //the sub-array we are looking at is f(m,n) which leaves one dimension for the frequencies
-    //use central difference for interior gradients
-    gradient[i] = (f(i+1,b,k,j,i) - f(i-1,b,k,j,i))/(x(i+1) - x(i-1));
-  }
-  return gradient;
-}
-
-//--------------------------------------------------------------------------------------------------
-
-// Function for evaluating the gradient of f over x 
-// Used specifically to calculate the gradient of J over frequency for the Compton source term
-// TEGAN: need to make gradient fine for different shapes
-
-// idea: instead accept an array of indices and then unpack it somehow
-float* MCReader::Gradient1D(float f[], Array<double> &x){
-  //we want to get sample_scattering at (m,n) but across all the frequencies
-  int nx = x.n1;
-  //const int nx = mc_num_freqs;
-  if(nx!=mc_num_freqs){
-    std::printf("nx: %d mc_num_freqs: %d",nx,mc_num_freqs);
-  }
-  float* gradient = new float[mc_num_freqs];
-  gradient[0] = (f[1] - f[0])/(x(1) - x(0));
-  gradient[nx-1] = (f[nx-1] - f[nx-2])/(x(nx-1) - x(nx-2));
-  for(int i=1;i<nx-1;i++){
-    //the sub-array we are looking at is f(m,n) which leaves one dimension for the frequencies
-    //use central difference for interior gradients
-    gradient[i] = (f[i+1] - f[i-1])/(x(i+1) - x(i-1));
-  }
-  return gradient;
-}*/

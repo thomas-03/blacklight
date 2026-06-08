@@ -59,6 +59,7 @@ struct MCReader
   double simulation_r_rg;
   double simulation_rho_cgs;
   double simulation_v_c;
+  bool simulation_mc_temp;
   bool compton;
   bool stimulated_compton;
 

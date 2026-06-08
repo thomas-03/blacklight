@@ -29,6 +29,7 @@ simulation_r_rg         = 1e-11              # flag indicating r_g/simulation r_
 simulation_interp       = false             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 simulation_hd_only = true
+simulation_mc_temp = true
 
 #opacity table parameters
 opacity_table = false

@@ -210,9 +210,11 @@ void InputReader::AssignInputVal(std::string key,std::string val){
       simulation_interp = ReadBool(val);
     else if (key == "simulation_block_interp")
       simulation_block_interp = ReadBool(val);
-    else if (key == "simulation_hd_only"){
+    else if (key == "simulation_hd_only")
       simulation_hd_only = ReadBool(val);
-    }
+    else if (key == "simulation_mc_temp")
+      simulation_mc_temp = ReadBool(val);
+    
       
 
     // Store opacity table parameters

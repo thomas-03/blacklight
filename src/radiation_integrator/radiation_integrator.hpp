@@ -52,6 +52,7 @@ struct RadiationIntegrator
   bool simulation_interp;
   bool simulation_block_interp;
   bool simulation_hd_only;
+  bool simulation_mc_temp;
 
   bool mc_input;
   int mc_num_freqs;

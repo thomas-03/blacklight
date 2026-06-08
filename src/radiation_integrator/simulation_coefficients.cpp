@@ -386,9 +386,13 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         }
         if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
         {
-          //i think that technically the athenaMC computes this such that you have mu=1 even if untrue
-          //double kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
-          double kb_tt_tot_cgs = Physics::m_p *pgas_cgs / rho_cgs;
+          double kb_tt_tot_cgs=0.0;
+          if(simulation_mc_temp){
+            kb_tt_tot_cgs = Physics::m_p *pgas_cgs / rho_cgs;
+          }else{
+            kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+          }
+          
           
           kb_tt_e_cgs = kb_tt_tot_cgs;
           
