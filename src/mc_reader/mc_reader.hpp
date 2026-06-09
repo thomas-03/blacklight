@@ -59,6 +59,7 @@ struct MCReader
   double simulation_r_rg;
   double simulation_rho_cgs;
   double simulation_v_c;
+  bool simulation_hd_only;
   bool simulation_mc_temp;
   bool compton;
   bool stimulated_compton;
@@ -70,6 +71,8 @@ struct MCReader
   double dlf;
 
   int ind_rho, ind_pgas, ind_kappa;
+  int ind_uu1, ind_uu2, ind_uu3;
+  int ind_bb1, ind_bb2, ind_bb3;
   PlasmaModel plasma_model;
   bool plasma_use_p;
   double plasma_thermal_frac;
@@ -82,8 +85,9 @@ struct MCReader
   double plasma_gamma_e;
   double plasma_rat_low;
   double plasma_rat_high;
+  double bh_m, bh_a;
 
-   std::ifstream data_stream;
+  std::ifstream data_stream;
   unsigned long int root_object_header_address;
   unsigned long int root_btree_address;
   unsigned long int root_name_heap_address;
@@ -98,21 +102,21 @@ struct MCReader
   Array<int> num_variables;
    
   
-  // Internal functions
+  // Internal functions - mc_reader.cpp
   double Read(int snapshot);
   void ReadFreqFile();
   void Gradient(Array<float> &grad,Array<float> &f, Array<double> &x); 
   void CalculateSourceTerm(Array<float> &source_term,Array<float> &scattering,Array<float> &scattering_prime,Array<float> &scattering_prime_prime);
 
   
-  // Internal functions - hdf5_format_structure.cpp
+  // Internal functions - mc_hdf5_format_structure.cpp
   void ReadHDF5Superblock();
   void ReadHDF5RootGroupSymbolTableEntry();
   unsigned long int ReadHDF5Heap(unsigned long int heap_address);
   void ReadHDF5RootObjectHeader();
   void ReadHDF5FloatAttribute(const char *attribute_name, float *p_val);
 
-  // Internal functions - hdf5_format_metadata.cpp
+  // Internal functions - mc_hdf5_format_metadata.cpp
   unsigned long int ReadHDF5DatasetHeaderAddress(const char *name, unsigned long int btree_address,
       unsigned long int data_segment_address);
   void ReadHDF5DataObjectHeader(unsigned long int data_object_header_address,
@@ -120,7 +124,7 @@ struct MCReader
   static void ReadHDF5DataspaceDims(const unsigned char *dataspace_raw, unsigned long int **p_dims,
       int *p_num_dims);
 
-  // Internal functions - hdf5_format_arrays.cpp
+  // Internal functions - mc_hdf5_format_arrays.cpp
   void ReadHDF5StringArray(const char *name, bool allocate, std::string **p_string_array,
       int *p_array_length);
   void ReadHDF5IntArray(const char *name, Array<int> &int_array);
@@ -140,6 +144,10 @@ struct MCReader
   static void SetHDF5DoubleArray(const unsigned char *datatype_raw,
       const unsigned char *dataspace_raw, const unsigned char *data_raw,
       Array<double> &double_array);
+
+  //Internal functions - simulation_geometry.cpp
+  void ContravariantSimulationMetric(double x, double y, double z,double gcon[4][4]) const;
+  void CovariantSimulationMetric(double x, double y, double z, double gcov[4][4]) const;
 };
 
 #endif

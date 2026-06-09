@@ -701,17 +701,6 @@ void RadiationIntegrator::SampleSimulation()
     // Go along geodesic
     for (int n = 0; n < num_steps; n++)
     {
-      /*if(m==4610 ){
-          std::ofstream debugOut;
-          debugOut.open("./debugOutput/4610_sampling_r5.csv",std::ios_base::app);
-          debugOut<<n<<","<<sample_rho[adaptive_level](m,n)<<","<<sample_pgas[adaptive_level](m,n)<<","<<sample_cut[adaptive_level](m,n)<<","<<sample_fallback[adaptive_level](m,n)<<","<<b<<","<<j<<","<<k<<","<<i<<"\n";
-          debugOut.close();
-        }else if(m==240){
-          std::ofstream debugOut;
-          debugOut.open("./debugOutput/240_sampling_r5.csv",std::ios_base::app);
-          debugOut<<n<<","<<sample_rho[adaptive_level](m,n)<<","<<sample_pgas[adaptive_level](m,n)<<","<<sample_cut[adaptive_level](m,n)<<","<<sample_fallback[adaptive_level](m,n)<<","<<b<<","<<j<<","<<k<<","<<i<<"\n";
-          debugOut.close();
-        }*/
       // Set NaN values
       if (sample_nan[adaptive_level](m,n))
       {
@@ -781,7 +770,6 @@ void RadiationIntegrator::SampleSimulation()
           sample_bb1[adaptive_level](m,n) = grid_prim[t](ind_bb1,b,k,j,i);
           sample_bb2[adaptive_level](m,n) = grid_prim[t](ind_bb2,b,k,j,i);
           sample_bb3[adaptive_level](m,n) = grid_prim[t](ind_bb3,b,k,j,i);
-          //TEGAN: put if statement here as to whether or not I should read in the MC data
           
           if(mc_input){
             double rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
@@ -792,11 +780,6 @@ void RadiationIntegrator::SampleSimulation()
             
             for(int l=0; l<mc_num_freqs;l++){
               sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);  
-              //double blackbody = 2*Physics::h*mc_freqs(l)*mc_freqs(l)*mc_freqs(l)/(Physics::c*Physics::c*(std::exp(Physics::h*mc_freqs(l)/kb_tt_e_cgs)-1.0));
-              
-              //sample_scattering[adaptive_level](m,n,l) = blackbody;
-              //std::printf("l: %d b: %d k: %d j: %d i: %d sample scattering: %.5e grid scattering %.5e \n",l,b,k,j,i,sample_scattering[adaptive_level](m,n,l),grid_scatter[t](l,b,k,j,i));
-              
             }
           }
         }
@@ -895,12 +878,10 @@ void RadiationIntegrator::SampleSimulation()
           if (rho <= 0.0)
             rho = static_cast<double>(grid_prim[t](ind_rho,b,k,j,i));
           if (pgas <= 0.0){
-            //std::cout<<"bad pgas value at step "<<n<<" on ray "<<m<<" of value "<<pgas<<"\n";
             pgas = static_cast<double>(grid_prim[t](ind_pgas,b,k,j,i));
           }
           if (plasma_model == PlasmaModel::code_kappa and kappa <= 0.0)
             kappa = static_cast<double>(grid_prim[t](ind_kappa,b,k,j,i));
-          //std::cout<<"pgas: "<<pgas<<" uu1: "<<uu1<<"\n";
           // Assign values
           sample_rho[adaptive_level](m,n) = static_cast<float>(rho);
           sample_pgas[adaptive_level](m,n) = static_cast<float>(pgas);

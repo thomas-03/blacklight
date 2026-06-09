@@ -24,6 +24,7 @@ namespace Physics
   constexpr double m_e = 9.1093837015e-28;
   constexpr double e = 4.80320425e-10;
   constexpr double gg_msun = 1.32712440018e26;
+  constexpr double sigma_t = 6.65248e-25;
 }
 
 // Unscoped enumerations

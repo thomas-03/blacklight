@@ -292,36 +292,22 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double bb1_sim = sample_bb1[adaptive_level](m,n);
         double bb2_sim = sample_bb2[adaptive_level](m,n);
         double bb3_sim = sample_bb3[adaptive_level](m,n);
-        //std::cout<<"bb1_sim = "<<bb1_sim<<", bb2_sim = "<<bb2_sim<<", bb3_sim = "<<bb3_sim<<std::endl;
-        //std::cout<<"uu1_sim = "<<uu1_sim<<", uu2_sim = "<<uu2_sim<<", uu3_sim = "<<uu3_sim<<std::endl;
 
         //scale model velocities appropriately
         uu1_sim *= v_unit;
         uu2_sim *= v_unit;
         uu3_sim *= v_unit;
+        //note that before I did this twice.
 
         // Calculate densities and pressures
         double rho_cgs = rho * d_unit;
-        /*if(pgas>0.0){
-          std::printf("positive pressure of %.5e in code units, which is %.5e in cgs units\n",pgas,pgas*e_unit);
-        }*/
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
-        /*if(rho_cgs !=expected_rho && rho_cgs!=0.0){
-          std::printf("rho_cgs = %.5e, expected_rho = %.5e, r=%.5e\n",rho_cgs,expected_rho,1e11*std::sqrt(x1*x1+x2*x2+x3*x3));
-        }*/
-
-        //std::printf("rho_cgs unit %.5e, pgas_cgs unit %.5e",d_unit,e_unit);
 
         //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
 
-
-        // properly scale velocities
-        uu1_sim *=v_unit;
-        uu2_sim *=v_unit;
-        uu3_sim *=v_unit;
 
         // Calculate simulation metric
         CovariantSimulationMetric(x1, x2, x3, gcov_sim);
@@ -380,7 +366,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             kb_tt_e_cgs /= tti_tte / (plasma_gamma_i - 1.0) + plasma_ne_ni / (plasma_gamma_e - 1.0);
           }
           
-          kb_tt_e_cgs = kb_tt_tot_cgs;
           
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
         }
@@ -561,12 +546,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
               alpha_i[adaptive_level](l,m,n)+= table_opacity_value*nu_cgs;
               
-              double partA = 4*pow(Physics::e,6.)/(3*Physics::m_e*Physics::c*Physics::h);
-              double partB = std::sqrt(2.0*Math::pi/(3.0*kb_tt_e_cgs*Physics::m_e));
-              double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
-              
-              double coefficient = partA*partB*n_e_cgs*n_i_cgs*(1.0 - std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs))*gaunt_factor/(nu_cgs*nu_cgs*nu_cgs);
-             
               double planck_function = 2.0 * Physics::h * nu_cgs * nu_cgs * nu_cgs
                   / (Physics::c * Physics::c) / std::expm1(Physics::h * nu_cgs / kb_tt_e_cgs);
               j_i[adaptive_level](l,m,n) += table_opacity_value* planck_function/(nu_cgs*nu_cgs);
@@ -597,8 +576,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               mid = low - 1;
             }
 
-            double sigma_t = 6.65248e-25;
-            // TEGAN: go through and handle edge cases.
 
             // If the frequency is outside the range of the MC frequencies + delta_nu, then default to no scattering
             if (mid==0 && (std::log10(nu_cgs)+mc_dlf)<std::log10(mc_freqs(mid))){
@@ -606,20 +583,19 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             }else if(mid==mc_num_freqs-1 && (std::log10(nu_cgs)-mc_dlf)>std::log10(mc_freqs(mid))){
               scattering = 0.0;
             }else{
-              
               //perform linear interpolation in linear-log space to find scattering value at nu_cgs
               if(std::log10(mc_freqs(mid))==std::log10(nu_cgs) || mid==0 || mid==mc_num_freqs-1){
-                scattering = sample_scattering[adaptive_level](m,n,mid)*sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
+                scattering = sample_scattering[adaptive_level](m,n,mid)*Physics::sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
               }else if(std::log10(mc_freqs(mid))<std::log10(nu_cgs)){
-                double scattering_low = sample_scattering[adaptive_level](m,n,mid)*sigma_t*n_e_cgs/(mc_freqs(mid)*mc_freqs(mid));
-                double scattering_high = sample_scattering[adaptive_level](m,n,mid+1)*sigma_t*n_e_cgs/(mc_freqs(mid+1)*mc_freqs(mid+1));
+                double scattering_low = sample_scattering[adaptive_level](m,n,mid)*Physics::sigma_t*n_e_cgs/(mc_freqs(mid)*mc_freqs(mid));
+                double scattering_high = sample_scattering[adaptive_level](m,n,mid+1)*Physics::sigma_t*n_e_cgs/(mc_freqs(mid+1)*mc_freqs(mid+1));
                 double log_nu_low = std ::log10(mc_freqs(mid));
                 double log_nu_high = std::log10(mc_freqs(mid+1));
                 double scattering_interp = scattering_low*(log_nu_high-std::log10(nu_cgs))/(log_nu_high-log_nu_low) + (scattering_high) * (std::log10(nu_cgs) - log_nu_low) / (log_nu_high - log_nu_low);
                 scattering = scattering_interp;
               }else{
-                double scattering_low = sample_scattering[adaptive_level](m,n,mid-1)*sigma_t*n_e_cgs/(mc_freqs(mid-1)*mc_freqs(mid-1));
-                double scattering_high = sample_scattering[adaptive_level](m,n,mid)*sigma_t*n_e_cgs/(mc_freqs(mid)*mc_freqs(mid));
+                double scattering_low = sample_scattering[adaptive_level](m,n,mid-1)*Physics::sigma_t*n_e_cgs/(mc_freqs(mid-1)*mc_freqs(mid-1));
+                double scattering_high = sample_scattering[adaptive_level](m,n,mid)*Physics::sigma_t*n_e_cgs/(mc_freqs(mid)*mc_freqs(mid));
                 double log_nu_low = std ::log10(mc_freqs(mid-1));
                 double log_nu_high = std::log10(mc_freqs(mid));
                 double scattering_interp = scattering_low*(log_nu_high-std::log10(nu_cgs))/(log_nu_high-log_nu_low) + (scattering_high) * (std::log10(nu_cgs) - log_nu_low) / (log_nu_high - log_nu_low);
@@ -629,7 +605,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
             //Calculate emissivity and absorptivity due to scattering
             if(scattering!=0.0){
-              alpha_i[adaptive_level](l,m,n) += sigma_t*n_e_cgs*nu_cgs;
+              alpha_i[adaptive_level](l,m,n) += Physics::sigma_t*n_e_cgs*nu_cgs;
               j_i[adaptive_level](l,m,n) += scattering;
             }
 
