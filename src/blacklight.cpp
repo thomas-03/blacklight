@@ -337,21 +337,13 @@ int main(int argc, char *argv[])
   }
   
   // Free memory
-  std::printf("freeing memory\n");
   delete p_output_writer;
-  std::printf("freed output ");
   delete p_radiation_integrator;
-  std::printf("freed rad ");
   delete p_simulation_reader;
-  std::printf("freed sim ");
   delete p_opacity_table_reader;
-  std::printf("freed opac ");
   delete p_mc_reader;
-  std::printf("freed mc ");
   delete p_geodesic_integrator;
-  std::printf("freed geo ");
   delete p_input_reader;
-  std::printf("freed input ");
 
   // Report timings
   double time_full = omp_get_wtime() - time_start;

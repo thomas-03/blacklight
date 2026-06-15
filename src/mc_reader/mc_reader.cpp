@@ -111,7 +111,12 @@ MCReader::~MCReader()
     delete[] dataset_names;
   if (num_variable_names > 0)
     delete[] variable_names;
-  scattering_source_terms[0].Deallocate();
+  
+  if (scattering_source_terms != nullptr)
+  {
+    scattering_source_terms[0].Deallocate();
+    delete[] scattering_source_terms;
+  }
   delete[] scattering_source_terms;
 }
 
