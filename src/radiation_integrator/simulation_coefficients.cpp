@@ -297,7 +297,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         uu1_sim *= v_unit;
         uu2_sim *= v_unit;
         uu3_sim *= v_unit;
-        //note that before I did this twice.
+        //TEGAN: try to understand why I have to multiply v_unit twice!!
+        uu1_sim *= v_unit;
+        uu2_sim *= v_unit;
+        uu3_sim *= v_unit;
 
         // Calculate densities and pressures
         double rho_cgs = rho * d_unit;
