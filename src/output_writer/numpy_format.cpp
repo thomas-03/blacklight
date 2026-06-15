@@ -282,7 +282,6 @@ void OutputWriter::WriteNpz()
       if (num_written < 0 or num_written >= max_name_length)
         throw BlacklightException("Error naming output array.");
       for (int l = 0; l < image_num_frequencies; l++){
-        std::printf("offset_src: %d offset_dest: %d other.n_tot: %d \n",(image_offset_photosphere_int + l * CellValues::num_cell_values + n) * num_pix,l*num_pix,image[0].n_tot);
         image_deep_copy.CopyFrom(image[0],
             (image_offset_photosphere_int + l * CellValues::num_cell_values + n) * num_pix, l * num_pix,
             num_pix);

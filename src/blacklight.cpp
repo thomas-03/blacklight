@@ -53,24 +53,9 @@ int main(int argc, char *argv[])
   std::string command_inputs = "\n";
   
   for(int i=0;i<argc-2;i++){
-    //std::cout<<argv[2+i]<<std::endl;
     command_inputs.append(argv[2+i]);
     command_inputs.push_back('\n');
-    /*std::string curr_arg = argv[2+i];
-    if(curr_arg.substr(0,2)=="--"){
-      in_file<<
-    }
-    std::cout<<substr<<std::endl;
-    std::cout<<argv[2+i][0]+argv[2+i][1]<<std::endl;*/
-    /*if ((argv[2+i][0]+argv[2+i][1])=='--'){
-
-    }*/
-
-    //std::cout<<argv[2+i]<<std::endl;
-    //in_file<<argv[2+i]<<'\n';
   }
-  //std::cout<<command_inputs<<std::endl;
-  //in_file.close();
 
   // Prepare pointers to objects
   InputReader *p_input_reader;
@@ -350,15 +335,23 @@ int main(int argc, char *argv[])
       return 1;
     }
   }
-
+  
   // Free memory
+  std::printf("freeing memory\n");
   delete p_output_writer;
+  std::printf("freed output ");
   delete p_radiation_integrator;
+  std::printf("freed rad ");
   delete p_simulation_reader;
+  std::printf("freed sim ");
   delete p_opacity_table_reader;
+  std::printf("freed opac ");
   delete p_mc_reader;
+  std::printf("freed mc ");
   delete p_geodesic_integrator;
+  std::printf("freed geo ");
   delete p_input_reader;
+  std::printf("freed input ");
 
   // Report timings
   double time_full = omp_get_wtime() - time_start;
