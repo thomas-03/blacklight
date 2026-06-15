@@ -210,7 +210,8 @@ double OpacityTableReader::Read(int snapshot)
           //note that I hardcoded in the 0.5 mean molecular weight here
           double coefficient = partA*partB*(rho_grid(i)/(0.5*Physics::m_p))*(rho_grid(i)/(0.5*Physics::m_p))*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
           //kTFile<<plan_tab(k,j,i)<<","<<coefficient<<","<<plan_tab(k,j,i)/coefficient<< ","<<nu<<","<<temp_grid(j)<<","<<rho_grid(i)<<std::endl;
-          plan_tab(k,j,i) = coefficient;
+          //plan_tab(k,j,i) = coefficient;
+          plan_tab(k,j,i) = 1.e-60;
         }
       }/*else{
         //manually check if the tables always deviated from free free or if it's a new thing
