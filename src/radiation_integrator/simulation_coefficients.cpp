@@ -509,6 +509,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           double table_opacity_value=0.0;
           
           bool default_to_free_free = false;
+          //TEGAN: maybe consider doing the interpolation over temp and density via simulation_sampling
           if(opacity_table){
             //if we have NaN frequency, just treat it as blacklight does normally
             if(nu_cgs != nu_cgs){
