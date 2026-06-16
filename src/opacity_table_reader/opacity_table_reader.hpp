@@ -54,6 +54,9 @@ struct OpacityTableReader
   double fmin, fmax, dlf;
   double tmin, tmax, dlt;
   double rmin, rmax, dlr;
+
+  double ne_ni;
+  double mu;
   
   // External function
   double Read(int snapshot);

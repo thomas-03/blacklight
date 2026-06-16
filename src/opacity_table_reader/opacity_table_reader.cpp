@@ -41,6 +41,8 @@ OpacityTableReader::OpacityTableReader(const InputReader *p_input_reader_)
   opacity_table = p_input_reader->opacity_table.value();
   if(opacity_table){
     opacity_file = p_input_reader->opacity_file.value();
+    ne_ni = p_input_reader->plasma_ne_ni.value();
+    mu = p_input_reader->plasma_mu.value();
   }
 
 }
@@ -207,8 +209,9 @@ double OpacityTableReader::Read(int snapshot)
           double partB = std::sqrt(2.0*Math::pi/(3.0*Physics::k_b*temp_grid(j)*Physics::m_e));
           double gaunt_factor = 1.0; //approximate it as this because shouldn't impact too much
           double nu = freq_grid(k) / Physics::h;
-          double n_e = plasma_ne_ni*rho_cgs / (plasma_mu * Physics::m_p);
-          double n_i = rho_cgs / (plasma_mu * Physics::m_p);
+          
+          double n_e = ne_ni*rho_grid(i) / (mu * Physics::m_p);
+          double n_i = rho_grid(i) / (mu * Physics::m_p);
           //note that I hardcoded in the 0.5 mean molecular weight here
           double coefficient = partA*partB*n_e*n_i*(1.0 - std::exp(-Physics::h*nu/ (Physics::k_b * temp_grid(j))))*gaunt_factor/(nu*nu*nu);
           //kTFile<<plan_tab(k,j,i)<<","<<coefficient<<","<<plan_tab(k,j,i)/coefficient<< ","<<nu<<","<<temp_grid(j)<<","<<rho_grid(i)<<std::endl;
