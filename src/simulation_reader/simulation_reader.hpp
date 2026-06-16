@@ -170,6 +170,7 @@ struct SimulationReader
   void ReadHDF5FloatArray(const char *name, Array<float> &float_array);
   void ReadHDF5FloatArray(const char *name, Array<double> &double_array);
   void ReadHDF5DoubleArray(const char *name, Array<double> &double_array);
+  void ReadHDF5DoubleArray(const char *name, Array<float> &float_array);
   static void SetHDF5StringArray(const unsigned char *datatype_raw,
       const unsigned char *dataspace_raw, const unsigned char *data_raw, bool allocate,
       std::string **string_array, int *p_array_length);
@@ -183,6 +184,9 @@ struct SimulationReader
   static void SetHDF5DoubleArray(const unsigned char *datatype_raw,
       const unsigned char *dataspace_raw, const unsigned char *data_raw,
       Array<double> &double_array);
+  static void SetHDF5DoubleArray(const unsigned char *datatype_raw,
+    const unsigned char *dataspace_raw, const unsigned char *data_raw, 
+    Array<float> &float_array);
 };
 
 #endif

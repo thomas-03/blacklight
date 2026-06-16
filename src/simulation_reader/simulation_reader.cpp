@@ -630,12 +630,23 @@ double SimulationReader::Read(int snapshot)
     {
       if (simulation_format == SimulationFormat::athena)
       {
-        ReadHDF5FloatArray("x1f", x1f);
-        ReadHDF5FloatArray("x2f", x2f);
-        ReadHDF5FloatArray("x3f", x3f);
-        ReadHDF5FloatArray("x1v", x1v);
-        ReadHDF5FloatArray("x2v", x2v);
-        ReadHDF5FloatArray("x3v", x3v);
+        try{
+          ReadHDF5FloatArray("x1f", x1f);
+          ReadHDF5FloatArray("x2f", x2f);
+          ReadHDF5FloatArray("x3f", x3f);
+          ReadHDF5FloatArray("x1v", x1v);
+          ReadHDF5FloatArray("x2v", x2v);
+          ReadHDF5FloatArray("x3v", x3v);
+        }catch (BlacklightException e){
+          std::printf("Attempting to read Athena-format coordinates as double precision.\n");
+          ReadHDF5DoubleArray("x1f", x1f);
+          ReadHDF5DoubleArray("x2f", x2f);
+          ReadHDF5DoubleArray("x3f", x3f);
+          ReadHDF5DoubleArray("x1v", x1v);
+          ReadHDF5DoubleArray("x2v", x2v);
+          ReadHDF5DoubleArray("x3v", x3v);
+        }
+        
         for(int j=0;j<x1f.n1;j++){
           for(int i=0;i<x1f.n2;i++){
             x1f(i,j) = simulation_r_rg*x1f(i,j);
@@ -812,11 +823,22 @@ double SimulationReader::Read(int snapshot)
       }
       Array<float> hydro(prim[n]);
       hydro.Slice(5, 0, num_variables(ind_hydro) - 1);
-      ReadHDF5FloatArray("prim", hydro);
+      try{
+        ReadHDF5FloatArray("prim", hydro);
+      }catch(BlacklightException e){
+        std::printf("Attempting to read Athena-format primitives as double precision.\n");
+        ReadHDF5DoubleArray("prim", hydro);
+      }
       if(!simulation_hd_only){
         Array<float> bb(prim[n]);
         bb.Slice(5, num_variables(ind_hydro), num_variables(ind_hydro) + num_variables(ind_bb) - 1);
-        ReadHDF5FloatArray("B", bb);
+        
+        try{
+          ReadHDF5FloatArray("B", bb);
+        }catch(BlacklightException e){
+          std::printf("Attempting to read Athena-format primitives as double precision.\n");
+          ReadHDF5DoubleArray("B", bb);
+        }
       }
     }
     else if (simulation_format == SimulationFormat::iharm3d)
