@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc5_newBackup.npz  # file to be (over)written with output data
+output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc5.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -28,7 +28,7 @@ simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_un
 simulation_interp       = true             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 simulation_hd_only = false
-simulation_mc_temp = true
+simulation_mc_temp = false
 
 #opacity table parameters
 opacity_table = true
@@ -79,12 +79,12 @@ image_rotation_split  = false     # flag for Strang splitting rotation from emis
 image_time            = false     # flag for producing image of geodesic times
 image_length          = false     # flag for producing image of geodesic lengths
 image_lambda          = false     # flag for producing image of affine path lengths
-image_emission        = false     # flag for producing image of emission coefficients
-image_tau             = true     # flag for producing image of optical depths
+image_emission        = true     # flag for producing image of emission coefficients
+image_tau             = false    # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
-image_tau_int         = true     # flag for producing tau-integrated images
-image_photosphere_int = true
+image_tau_int         = false     # flag for producing tau-integrated images
+image_photosphere_int = false
 image_crossings       = false     # flag for counting plane crossings of geodesics
 image_free_free       = true  # flag for specifying whether to include free-free emission terms
 image_scattering      = false     # flag for specifying whether to include compton scattering

@@ -297,7 +297,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         uu1_sim *= v_unit;
         uu2_sim *= v_unit;
         uu3_sim *= v_unit;
-        //note that before I did this twice.
+        //TEGAN: try to understand why I have to multiply v_unit twice!!
+        uu1_sim *= v_unit;
+        uu2_sim *= v_unit;
+        uu3_sim *= v_unit;
 
         // Calculate densities and pressures
         double rho_cgs = rho * d_unit;
@@ -506,6 +509,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           double table_opacity_value=0.0;
           
           bool default_to_free_free = false;
+          //TEGAN: maybe consider doing the interpolation over temp and density via simulation_sampling
           if(opacity_table){
             //if we have NaN frequency, just treat it as blacklight does normally
             if(nu_cgs != nu_cgs){
