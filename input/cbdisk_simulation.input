@@ -29,6 +29,7 @@ simulation_interp       = true             # flag indicating interpolation shoul
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 simulation_hd_only = false
 simulation_mc_temp = false
+simulation_cons = false
 
 #opacity table parameters
 opacity_table = true

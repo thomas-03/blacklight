@@ -116,8 +116,9 @@ MCReader::~MCReader()
   {
     scattering_source_terms[0].Deallocate();
     delete[] scattering_source_terms;
+  }else{
+    delete[] scattering_source_terms;
   }
-  delete[] scattering_source_terms;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -160,8 +161,8 @@ double MCReader::Read(int snapshot)
     }
   
 
-    // Read coordinates
-    if (first_time)
+  // Read coordinates
+  if (first_time)
     {
         //the following way of getting the hdf5 file fails because it doesn't match the expected signature
         data_stream = std::ifstream(mc_file_name,std::ios_base::in|std::ios_base::binary);
@@ -228,17 +229,17 @@ double MCReader::Read(int snapshot)
     if (first_time)
       {
         int n5 = num_freqs;
+        int n4 = levels.n1;
         int n3 = x3v.n1; 
         int n2 = x2v.n1; 
         int n1 = x1v.n1;
-        int n4 = levels.n1;
         scattering[0].Allocate(n5,n4, n3, n2, n1);
         if(compton){
           scattering_first_derivs[0].Allocate(n5,n4, n3, n2, n1);
           scattering_second_derivs[0].Allocate(n5,n4, n3, n2, n1);
         }else{
-          scattering_first_derivs[0].Allocate(n1);
-          scattering_second_derivs[0].Allocate(n1);
+          scattering_first_derivs[0].Allocate(1);
+          scattering_second_derivs[0].Allocate(1);
         }
         scattering_source_terms[0].Allocate(n5,n4, n3, n2, n1);
       }

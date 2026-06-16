@@ -402,7 +402,6 @@ void SimulationReader::SetHDF5FloatArray(const unsigned char *datatype_raw,
   std::memcpy(&size, datatype_raw + offset, 4);
   offset += 4;
   if (size != 4){
-    std::printf("size in set float array with float arr arg: %d\n",size);
     throw BlacklightException("Unexpected float size.");
   }
   // Check properties
