@@ -45,7 +45,7 @@ struct SimulationReader
   double simulation_r_rg;
   bool simulation_hd_only;
   std::string simulation_kappa_name;
-  bool simulation_cons;
+  bool simulation_athenak_vars;
 
   // Input data - slow-light parameters
   bool slow_light_on;

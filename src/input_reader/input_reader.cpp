@@ -214,8 +214,8 @@ void InputReader::AssignInputVal(std::string key,std::string val){
       simulation_hd_only = ReadBool(val);
     else if (key == "simulation_mc_temp")
       simulation_mc_temp = ReadBool(val);
-    else if (key == "simulation_cons")
-      simulation_cons = ReadBool(val);
+    else if (key == "simulation_athenak_vars")
+      simulation_athenak_vars = ReadBool(val);
     
       
 

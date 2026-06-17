@@ -68,7 +68,7 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
       simulation_r_rg = p_input_reader->simulation_r_rg.value();
     }
     simulation_hd_only = p_input_reader->simulation_hd_only.value();
-    simulation_cons = p_input_reader->simulation_cons.value();
+    simulation_athenak_vars = p_input_reader->simulation_athenak_vars.value();
   }
 
   // Copy slow-light parameters
@@ -826,7 +826,7 @@ double SimulationReader::Read(int snapshot)
       }
       Array<float> hydro(prim[n]);
       hydro.Slice(5, 0, num_variables(ind_hydro) - 1);
-      if(simulation_cons){
+      if(simulation_athenak_vars){
         try{
           ReadHDF5FloatArray("uov", hydro);
         }catch(BlacklightException e){
@@ -1229,7 +1229,7 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_hydro = 0; ind_hydro < num_dataset_names; ind_hydro++){
     if (dataset_names[ind_hydro] == "prim")
       break;
-    else if(dataset_names[ind_hydro] == "uov" && simulation_cons)
+    else if(dataset_names[ind_hydro] == "uov" && simulation_athenak_vars)
       break;
       
     else
@@ -1242,14 +1242,14 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_rho = prim_offset; ind_rho < prim_offset + num_variables(ind_hydro); ind_rho++)
     if (variable_names[ind_rho] == "rho")
       break;
-    else if(simulation_cons and variable_names[ind_rho] == "dens")
+    else if(simulation_athenak_vars and variable_names[ind_rho] == "dens")
       break;
   if (ind_rho == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"rho\" slice of \"prim\" in data file.");
   for (ind_pgas = prim_offset; ind_pgas < prim_offset + num_variables(ind_hydro); ind_pgas++)
     if (variable_names[ind_pgas] == "press")
       break;
-    else if(simulation_cons and variable_names[ind_pgas] == "eint")
+    else if(simulation_athenak_vars and variable_names[ind_pgas] == "eint")
       break;
   if (ind_pgas == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"press\" slice of \"prim\" in data file.");
@@ -1265,21 +1265,21 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_uu1 = prim_offset; ind_uu1 < prim_offset + num_variables(ind_hydro); ind_uu1++)
     if (variable_names[ind_uu1] == "vel1")
       break;
-    else if(simulation_cons and variable_names[ind_uu1] == "velx")
+    else if(simulation_athenak_vars and variable_names[ind_uu1] == "velx")
       break;
   if (ind_uu1 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel1\" slice of \"prim\" in data file.");
   for (ind_uu2 = prim_offset; ind_uu2 < prim_offset + num_variables(ind_hydro); ind_uu2++)
     if (variable_names[ind_uu2] == "vel2")
       break;
-    else if(simulation_cons and variable_names[ind_uu2] == "vely")
+    else if(simulation_athenak_vars and variable_names[ind_uu2] == "vely")
       break;
   if (ind_uu2 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel2\" slice of \"prim\" in data file.");
   for (ind_uu3 = prim_offset; ind_uu3 < prim_offset + num_variables(ind_hydro); ind_uu3++)
     if (variable_names[ind_uu3] == "vel3")
       break;
-    else if(simulation_cons and variable_names[ind_uu3] == "velz")
+    else if(simulation_athenak_vars and variable_names[ind_uu3] == "velz")
       break;
   if (ind_uu3 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel3\" slice of \"prim\" in data file.");
@@ -1303,7 +1303,7 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_bb1 = bb_offset; ind_bb1 < bb_offset + num_variables(ind_bb); ind_bb1++)
     if (variable_names[ind_bb1] == "Bcc1")
       break;
-    else if(simulation_cons and variable_names[ind_bb1] == "bcc1")
+    else if(simulation_athenak_vars and variable_names[ind_bb1] == "bcc1")
       break;
     else
       std::printf("variable name: %s \n",variable_names[ind_bb1].c_str());
@@ -1312,14 +1312,14 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_bb2 = bb_offset; ind_bb2 < bb_offset + num_variables(ind_bb); ind_bb2++)
     if (variable_names[ind_bb2] == "Bcc2")
       break;
-    else if(simulation_cons and variable_names[ind_bb2] == "bcc2")
+    else if(simulation_athenak_vars and variable_names[ind_bb2] == "bcc2")
       break;
   if (ind_bb2 == bb_offset + num_variables(ind_bb))
     throw BlacklightException("Unable to locate \"Bcc2\" slice of \"prim\" in data file.");
   for (ind_bb3 = bb_offset; ind_bb3 < bb_offset + num_variables(ind_bb); ind_bb3++)
     if (variable_names[ind_bb3] == "Bcc3")
       break;
-    else if(simulation_cons and variable_names[ind_bb3] == "bcc3")
+    else if(simulation_athenak_vars and variable_names[ind_bb3] == "bcc3")
       break;
   if (ind_bb3 == bb_offset + num_variables(ind_bb))
     throw BlacklightException("Unable to locate \"Bcc3\" slice of \"prim\" in data file.");
