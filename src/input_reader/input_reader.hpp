@@ -61,6 +61,7 @@ struct InputReader
   std::optional<bool> simulation_block_interp;
   std::optional<bool> simulation_hd_only;
   std::optional<bool> simulation_mc_temp;
+  std::optional<bool> simulation_athenak_vars;
 
   //Data - opacity table parameters
   std::optional<bool> opacity_table;

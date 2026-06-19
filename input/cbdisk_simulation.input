@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc5.npz  # file to be (over)written with output data
+output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc5_none.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -16,7 +16,7 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = data/input.cbdisk.out1.01637_float32.athdf  # file containing data dump
+simulation_file         = /PellaShared/zym9vn/outputs/cbd_ff/input.cbdisk.out1.01637.athdf # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = spm              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
@@ -29,6 +29,7 @@ simulation_interp       = true             # flag indicating interpolation shoul
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 simulation_hd_only = false
 simulation_mc_temp = false
+simulation_athenak_vars = false
 
 #opacity table parameters
 opacity_table = true
@@ -52,7 +53,7 @@ camera_k_r        = 1.0    # covariant KS r-momentum of photons
 camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radians)
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
-camera_width      = 1600.0   # full width of image in gravitational units
+camera_width      = 2400.0   # full width of image in gravitational units
 camera_resolution = 64     # number of pixels per side
 
 # Ray-tracing parameters
@@ -68,7 +69,7 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 
 # Image parameters
 image_light           = true     # flag indicating real image of radiation should be produced
-image_num_frequencies   = 15       # number of observation frequencies
+image_num_frequencies   = 30       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 1e14    # first frequency in Hz if image_frequency_num > 1
 image_frequency_end     = 1e18    # last frequency in Hz if image_frequency_num > 1
@@ -80,8 +81,8 @@ image_time            = false     # flag for producing image of geodesic times
 image_length          = false     # flag for producing image of geodesic lengths
 image_lambda          = false     # flag for producing image of affine path lengths
 image_emission        = true     # flag for producing image of emission coefficients
-image_tau             = false    # flag for producing image of optical depths
-image_lambda_ave      = false     # flag for producing lambda-averaged images
+image_tau             = true    # flag for producing image of optical depths
+image_lambda_ave      = true     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
 image_tau_int         = false     # flag for producing tau-integrated images
 image_photosphere_int = false
@@ -101,8 +102,8 @@ slow_light_on = false  # flag indicating slow light should be used
 adaptive_max_level = 0  # maximum number of adaptive levels beyond root
 
 # Plasma parameters
-plasma_mu         = 0.5         # molecular weight of fluid in proton masses
-plasma_ne_ni      = 1.0         # electrons per ion
+plasma_mu         = 1.2477         # molecular weight of fluid in proton masses
+plasma_ne_ni      = 1.08257         # electrons per ion
 plasma_model      = one_temp  # thermal electron temperature model (ti_te_beta, code_kappa)
 plasma_use_p      = true        # flag indicating total p (rather than u) should match simulation
 plasma_rat_low    = 1.0         # ion-electron temperature ratio at zero plasma beta

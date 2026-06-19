@@ -217,8 +217,9 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             int index = image_offset_emission_ave + l * CellValues::num_cell_values + a;
             image[adaptive_level](index,m) /= integrated_emission;
           }
-      
-    previous_delta_tau = image[adaptive_level](image_offset_tau+l,m);
+      if(image_photosphere_int){
+        previous_delta_tau = image[adaptive_level](image_offset_tau+l,m);
+      }
     }
     // Transform I_nu/nu^3 to I_nu
     if (image_light)

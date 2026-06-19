@@ -68,6 +68,7 @@ SimulationReader::SimulationReader(const InputReader *p_input_reader_)
       simulation_r_rg = p_input_reader->simulation_r_rg.value();
     }
     simulation_hd_only = p_input_reader->simulation_hd_only.value();
+    simulation_athenak_vars = p_input_reader->simulation_athenak_vars.value();
   }
 
   // Copy slow-light parameters
@@ -362,10 +363,12 @@ double SimulationReader::Read(int snapshot)
     if (simulation_format == SimulationFormat::athena)
     {
       float time_temp;
-      //TEGAN: fix this so it's not hardcoded
-      time_temp=1367;
-      //ReadHDF5FloatAttribute("Time", &time_temp);
-      time[n] = time_temp;
+      try{
+        ReadHDF5FloatAttribute("Time", &time_temp);
+      }catch(BlacklightException e){
+        BlacklightWarning("Could not read time from HDF5 file. Using random default time.");
+        time_temp = 1367;
+      }
     }
     else if (simulation_format == SimulationFormat::athenak)
       time[n] = athenak_time;
@@ -630,12 +633,23 @@ double SimulationReader::Read(int snapshot)
     {
       if (simulation_format == SimulationFormat::athena)
       {
-        ReadHDF5FloatArray("x1f", x1f);
-        ReadHDF5FloatArray("x2f", x2f);
-        ReadHDF5FloatArray("x3f", x3f);
-        ReadHDF5FloatArray("x1v", x1v);
-        ReadHDF5FloatArray("x2v", x2v);
-        ReadHDF5FloatArray("x3v", x3v);
+        try{
+          ReadHDF5FloatArray("x1f", x1f);
+          ReadHDF5FloatArray("x2f", x2f);
+          ReadHDF5FloatArray("x3f", x3f);
+          ReadHDF5FloatArray("x1v", x1v);
+          ReadHDF5FloatArray("x2v", x2v);
+          ReadHDF5FloatArray("x3v", x3v);
+        }catch (BlacklightException e){
+          std::printf("Attempting to read Athena-format coordinates as double precision.\n");
+          ReadHDF5DoubleArray("x1f", x1f);
+          ReadHDF5DoubleArray("x2f", x2f);
+          ReadHDF5DoubleArray("x3f", x3f);
+          ReadHDF5DoubleArray("x1v", x1v);
+          ReadHDF5DoubleArray("x2v", x2v);
+          ReadHDF5DoubleArray("x3v", x3v);
+        }
+        
         for(int j=0;j<x1f.n1;j++){
           for(int i=0;i<x1f.n2;i++){
             x1f(i,j) = simulation_r_rg*x1f(i,j);
@@ -812,11 +826,40 @@ double SimulationReader::Read(int snapshot)
       }
       Array<float> hydro(prim[n]);
       hydro.Slice(5, 0, num_variables(ind_hydro) - 1);
-      ReadHDF5FloatArray("prim", hydro);
+      if(simulation_athenak_vars){
+        try{
+          ReadHDF5FloatArray("uov", hydro);
+        }catch(BlacklightException e){
+          std::printf("Attempting to read Athena-format primitives as double precision.\n");
+          ReadHDF5DoubleArray("uov", hydro);
+        }
+        // Convert internal energy to pressure
+        #pragma omp parallel for schedule(static) collapse(3)
+        for (int block = 0; block < levels.n1; block++)
+          for (int k = 0; k < x3v.n1; k++)
+            for (int j = 0; j < x2v.n1; j++)
+              for (int i = 0; i < x1v.n1; i++)
+                prim[n](ind_pgas,block,k,j,i) *= static_cast<float>(plasma_gamma - 1.0);
+      
+      }else{
+        try{
+          ReadHDF5FloatArray("prim", hydro);
+        }catch(BlacklightException e){
+          std::printf("Attempting to read Athena-format primitives as double precision.\n");
+          ReadHDF5DoubleArray("prim", hydro);
+        }
+      }
+      
       if(!simulation_hd_only){
         Array<float> bb(prim[n]);
         bb.Slice(5, num_variables(ind_hydro), num_variables(ind_hydro) + num_variables(ind_bb) - 1);
-        ReadHDF5FloatArray("B", bb);
+        
+        try{
+          ReadHDF5FloatArray("B", bb);
+        }catch(BlacklightException e){
+          std::printf("Attempting to read Athena-format primitives as double precision.\n");
+          ReadHDF5DoubleArray("B", bb);
+        }
       }
     }
     else if (simulation_format == SimulationFormat::iharm3d)
@@ -1183,11 +1226,15 @@ void SimulationReader::VerifyVariablesAthena()
 {
   // Check that array of all primitives is present
   int prim_offset = 0;
-  for (ind_hydro = 0; ind_hydro < num_dataset_names; ind_hydro++)
+  for (ind_hydro = 0; ind_hydro < num_dataset_names; ind_hydro++){
     if (dataset_names[ind_hydro] == "prim")
       break;
+    else if(dataset_names[ind_hydro] == "uov" && simulation_athenak_vars)
+      break;
+      
     else
       prim_offset += num_variables(ind_hydro);
+  }
   if (ind_hydro == num_dataset_names)
     throw BlacklightException("Unable to locate array \"prim\" in data file.");
 
@@ -1195,10 +1242,14 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_rho = prim_offset; ind_rho < prim_offset + num_variables(ind_hydro); ind_rho++)
     if (variable_names[ind_rho] == "rho")
       break;
+    else if(simulation_athenak_vars and variable_names[ind_rho] == "dens")
+      break;
   if (ind_rho == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"rho\" slice of \"prim\" in data file.");
   for (ind_pgas = prim_offset; ind_pgas < prim_offset + num_variables(ind_hydro); ind_pgas++)
     if (variable_names[ind_pgas] == "press")
+      break;
+    else if(simulation_athenak_vars and variable_names[ind_pgas] == "eint")
       break;
   if (ind_pgas == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"press\" slice of \"prim\" in data file.");
@@ -1214,15 +1265,21 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_uu1 = prim_offset; ind_uu1 < prim_offset + num_variables(ind_hydro); ind_uu1++)
     if (variable_names[ind_uu1] == "vel1")
       break;
+    else if(simulation_athenak_vars and variable_names[ind_uu1] == "velx")
+      break;
   if (ind_uu1 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel1\" slice of \"prim\" in data file.");
   for (ind_uu2 = prim_offset; ind_uu2 < prim_offset + num_variables(ind_hydro); ind_uu2++)
     if (variable_names[ind_uu2] == "vel2")
       break;
+    else if(simulation_athenak_vars and variable_names[ind_uu2] == "vely")
+      break;
   if (ind_uu2 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel2\" slice of \"prim\" in data file.");
   for (ind_uu3 = prim_offset; ind_uu3 < prim_offset + num_variables(ind_hydro); ind_uu3++)
     if (variable_names[ind_uu3] == "vel3")
+      break;
+    else if(simulation_athenak_vars and variable_names[ind_uu3] == "velz")
       break;
   if (ind_uu3 == num_variables(ind_hydro))
     throw BlacklightException("Unable to locate \"vel3\" slice of \"prim\" in data file.");
@@ -1246,15 +1303,23 @@ void SimulationReader::VerifyVariablesAthena()
   for (ind_bb1 = bb_offset; ind_bb1 < bb_offset + num_variables(ind_bb); ind_bb1++)
     if (variable_names[ind_bb1] == "Bcc1")
       break;
+    else if(simulation_athenak_vars and variable_names[ind_bb1] == "bcc1")
+      break;
+    else
+      std::printf("variable name: %s \n",variable_names[ind_bb1].c_str());
   if (ind_bb1 == bb_offset + num_variables(ind_bb))
     throw BlacklightException("Unable to locate \"Bcc1\" slice of \"prim\" in data file.");
   for (ind_bb2 = bb_offset; ind_bb2 < bb_offset + num_variables(ind_bb); ind_bb2++)
     if (variable_names[ind_bb2] == "Bcc2")
       break;
+    else if(simulation_athenak_vars and variable_names[ind_bb2] == "bcc2")
+      break;
   if (ind_bb2 == bb_offset + num_variables(ind_bb))
     throw BlacklightException("Unable to locate \"Bcc2\" slice of \"prim\" in data file.");
   for (ind_bb3 = bb_offset; ind_bb3 < bb_offset + num_variables(ind_bb); ind_bb3++)
     if (variable_names[ind_bb3] == "Bcc3")
+      break;
+    else if(simulation_athenak_vars and variable_names[ind_bb3] == "bcc3")
       break;
   if (ind_bb3 == bb_offset + num_variables(ind_bb))
     throw BlacklightException("Unable to locate \"Bcc3\" slice of \"prim\" in data file.");
