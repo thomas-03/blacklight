@@ -147,7 +147,9 @@ double MCReader::Read(int snapshot)
   ReadFreqFile();
   dlf = std::log10(freq_grid(1))-std::log10(freq_grid(0));
 
-
+  
+  std::printf("full read frequency file time: %f ",omp_get_wtime()-time_start);
+  double time_counter = omp_get_wtime();
   // Open input file
 
   data_stream =
@@ -172,7 +174,8 @@ double MCReader::Read(int snapshot)
         ReadHDF5Superblock();
         root_data_segment_address = ReadHDF5Heap(root_name_heap_address);
         ReadHDF5RootObjectHeader();
-
+        std::printf("read header: %f ",omp_get_wtime()-time_counter);
+        time_counter = omp_get_wtime();
 
         ReadHDF5IntArray("Levels", levels);
 
@@ -182,7 +185,10 @@ double MCReader::Read(int snapshot)
         ReadHDF5FloatArray("x1v", x1v);
         ReadHDF5FloatArray("x2v", x2v);
         ReadHDF5FloatArray("x3v", x3v);
+        
 
+        std::printf("read coordinate time: %f ",omp_get_wtime()-time_counter);
+        time_counter = omp_get_wtime();
         //Update radial boundaries and check all of the boundaries match
         for(int j=0;j<x1f.n1;j++){
           for(int i=0;i<x1f.n2;i++){
@@ -217,6 +223,10 @@ double MCReader::Read(int snapshot)
             }
           }
         }
+
+
+        std::printf("set true scale and compare: %f ",omp_get_wtime()-time_counter);
+        time_counter = omp_get_wtime();
     } 
 
     Array<float> *scattering;
@@ -243,6 +253,9 @@ double MCReader::Read(int snapshot)
         }
         scattering_source_terms[0].Allocate(n5,n4, n3, n2, n1);
       }
+
+        std::printf("allocate arrays time: %f ",omp_get_wtime()-time_counter);
+        time_counter = omp_get_wtime();
       //Array<float> source_terms(scattering_source_terms[0]);
       Array<float> shallow_scatter(scattering[0]);
       Array<float> shallow_first_deriv(scattering_first_derivs[0]);
@@ -250,11 +263,21 @@ double MCReader::Read(int snapshot)
       Array<float> shallow_source_terms(scattering_source_terms[0]);
       
       ReadHDF5FloatArray("mcscat",shallow_scatter);
+
+        std::printf("read mc scattering: %f ",omp_get_wtime()-time_counter);
+        time_counter = omp_get_wtime();
       if(compton){
         Gradient(shallow_first_deriv, shallow_scatter, ln_freq_grid);
         Gradient(shallow_second_deriv, shallow_first_deriv, ln_freq_grid);
       }
+
+        std::printf("compute gradient time: %f ",omp_get_wtime()-time_counter);
+        time_counter = omp_get_wtime();
       CalculateSourceTerm(shallow_source_terms, shallow_scatter, shallow_first_deriv, shallow_second_deriv);
+
+
+        std::printf("calc source term time: %f ",omp_get_wtime()-time_counter);
+        time_counter = omp_get_wtime();
       
 
     // Close input file
@@ -288,6 +311,7 @@ double MCReader::Read(int snapshot)
 //   specifically the function MonteCarlo::InitUserMonteCarloData() in athena/src/pgen/mc_tde.cpp
 void MCReader::ReadFreqFile()
 {
+  double freq_time_start = omp_get_wtime();
   // Open input file
   if ( (mc_freq_file=fopen(mc_freq_file_name.c_str(),"r"))==NULL) {
     std::stringstream msg;
@@ -378,10 +402,14 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
             uu2_sim *=simulation_v_c;
             uu3_sim *=simulation_v_c;
 
+            uu1_sim *=simulation_v_c;
+            uu2_sim *=simulation_v_c;
+            uu3_sim *=simulation_v_c;
+
             // Calculate simulation metric
             if(simulation_coord == Coordinates::cks){
-              CovariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), x3v(i,j), gcov_sim);
-              ContravariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), x3v(i,j), gcon_sim);
+              CovariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), simulation_r_rg*x3v(i,j), gcov_sim);
+              ContravariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), simulation_r_rg*x3v(i,j), gcon_sim);
             }else{
               CovariantSimulationMetric(simulation_r_rg*x1v(i,j), x2v(i,j), x3v(i,j), gcov_sim);
               ContravariantSimulationMetric(simulation_r_rg*x1v(i,j), x2v(i,j), x3v(i,j), gcon_sim);
@@ -465,7 +493,23 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
             //calculate frequency dependent compton source term
             double x = Physics::h*freq_grid(l)/(Physics::m_e*Physics::c*Physics::c);
             if(compton){
+              //std::printf("first term: %.5e, second term: %.5e, third term: %.5e",(1-x)*scattering(l,b,k,j,i),(x-3*theta_e)*scattering_prime(l,b,k,j,i),theta_e*scattering_prime_prime(l,b,k,j,i));
               source_term(l,b,k,j,i) = (1-x)*scattering(l,b,k,j,i)+ (x-3*theta_e)*scattering_prime(l,b,k,j,i)+theta_e*scattering_prime_prime(l,b,k,j,i);
+              /*if(source_term(l,b,k,j,i)<0.0 && scattering(l,b,k,j,i)<0.0){
+                //1-x seems pretty much always positive, 3*theta_e>x most of the time but not always.
+                //frequency: 3.416e+16, x: 2.764e-04, theta_e: 4.283e-03
+                //frequency: 2.155e+18, x: 1.744e-02, theta_e: 3.951e-04
+                //frequency: 1.360e+18, x: 1.100e-02, theta_e: 2.092e-03
+                //frequency: 1.712e+18, x: 1.385e-02, theta_e: 4.016e-04
+                //frequency: 1.080e+17, x: 8.741e-04, theta_e: 1.082e+02
+
+                //scattering double prime very often 0 but sometimes very large negative or positive
+                //frequency: 2.155e+18, theta_e: 3.250e-03 , scattering double prime: -5.773e+04
+                //frequency: 8.579e+17, theta_e: 1.313e-03 , scattering double prime: 1.280e+06
+                //std::printf("frequency: %.3e, theta_e: %.3e , scattering double prime: %.3e",freq_grid(l),theta_e,scattering_prime_prime(l,b,k,j,i));
+
+                std::printf("scattering negative!: %.3e ",scattering(l,b,k,j,i));
+              }*/
               if(stimulated_compton){
                 source_term(l,b,k,j,i) += Physics::c*Physics::c*x*scattering(l,b,k,j,i)*(scattering_prime(l,b,k,j,i)-scattering(l,b,k,j,i))/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l));
               }
@@ -479,3 +523,11 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
   }
 }
 
+//full read frequency file time: 0.000098 read header: 0.000135 read coordinate time: 0.001295 set true scale and compare: 0.002711 allocate arrays time: 0.000045 read mc scattering: 4.322940 compute gradient time: 93.839276 scattering negative!: -2.218e-01 scattering negative!: -1.525e+06 scattering negative!: -7.940e-03 scattering negative!: -2.149e-03 scattering negative!: -1.914e+03 scattering negative!: -3.016e+03 scattering negative!: -1.188e+03 scattering negative!: -7.264e+07 scattering negative!: -4.726e-02 scattering negative!: -5.926e-03 scattering negative!: -2.386e+07 scattering negative!: -2.202e-02 scattering negative!: -2.202e-02 scattering negative!: -2.167e+06 scattering negative!: -2.568e+06 scattering negative!: -1.731e+01 scattering negative!: -1.091e+01 scattering negative!: -8.664e+00 scattering negative!: -6.879e+00 scattering negative!: -5.461e+00 scattering negative!: -2.140e+05 scattering negative!: -1.077e+06 scattering negative!: -6.932e+05 
+//calc source term time: 104.279882 
+// d_unit = 1.00000e-04, v_unit = 1.00000e+00, e_unit = 8.98755e+16
+
+//full read frequency file time: 0.000579 read header: 0.000185 read coordinate time: 0.003372 set true scale and compare: 0.008634 allocate arrays time: 0.000046 read mc scattering: 21.297775 compute gradient time: 128.174272 
+//scattering negative!: -4.766e+01 scattering negative!: -4.766e+01 scattering negative!: -1.881e+02 scattering negative!: -7.445e+01 scattering negative!: -1.881e+02 scattering negative!: -7.445e+01 scattering negative!: -3.625e-01 
+// calc sourceterm time: 121.561564 
+// d_unit = 1.00000e-04, v_unit = 1.00000e+00, e_unit = 8.98755e+16

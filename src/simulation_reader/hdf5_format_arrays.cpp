@@ -532,7 +532,6 @@ void SimulationReader::SetHDF5FloatArray(const unsigned char *datatype_raw,
   std::memcpy(&size, datatype_raw + offset, 4);
   offset += 4;
   if (size != 4){
-    std::printf("size in set float array: %d\n",size);
     throw BlacklightException("Unexpected float size.");
   }
 
@@ -756,7 +755,6 @@ void SimulationReader::SetHDF5DoubleArray(const unsigned char *datatype_raw,
   std::memcpy(&size, datatype_raw + offset, 4);
   offset += 4;
   if (size != 8){
-    std::printf("size in set double array with double arr arg: %d\n",size);
     throw BlacklightException("Unexpected double size.");
   }
   // Check properties
