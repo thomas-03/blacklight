@@ -80,6 +80,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     mc_input = p_input_reader->mc_input.value();
     compton = p_input_reader->compton.value();
     stimulated_compton = p_input_reader->stimulated_compton.value();
+    mc_error = p_input_reader->mc_error.value();
   }
 
   // Copy formula parameters
@@ -444,6 +445,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   sample_bb2 = new Array<float>[adaptive_max_level+1];
   sample_bb3 = new Array<float>[adaptive_max_level+1];
   sample_scattering = new Array<float>[adaptive_max_level+1];
+  sample_scattering_err = new Array<float>[adaptive_max_level+1];
 
   // Allocate space for coefficient data
   j_i = new Array<double>[adaptive_max_level+1];
@@ -659,6 +661,7 @@ RadiationIntegrator::~RadiationIntegrator()
     sample_bb2[level].Deallocate();
     sample_bb3[level].Deallocate();
     sample_scattering[level].Deallocate();
+    sample_scattering_err[level].Deallocate();
   }
   delete[] sample_inds;
   delete[] sample_fracs;
@@ -675,6 +678,7 @@ RadiationIntegrator::~RadiationIntegrator()
   delete[] sample_bb2;
   delete[] sample_bb3;
   delete[] sample_scattering;
+  delete[] sample_scattering_err;
 
   // Free memory - coefficient data
   for (int level = 0; level <= adaptive_max_level; level++)

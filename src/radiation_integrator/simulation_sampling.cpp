@@ -678,6 +678,8 @@ void RadiationIntegrator::SampleSimulation()
     sample_bb3[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     if(mc_input)
       sample_scattering[adaptive_level].Allocate(num_pix,geodesic_num_steps[adaptive_level],mc_num_freqs);
+    if(mc_input && mc_error)
+      sample_scattering_err[adaptive_level].Allocate(num_pix,geodesic_num_steps[adaptive_level],mc_num_freqs);
     
   }
   sample_rho[adaptive_level].Zero();
@@ -690,6 +692,7 @@ void RadiationIntegrator::SampleSimulation()
   sample_bb2[adaptive_level].Zero();
   sample_bb3[adaptive_level].Zero();
   sample_scattering[adaptive_level].Zero();
+  sample_scattering_err[adaptive_level].Zero();
 
   // Resample cell data onto geodesics in parallel
   #pragma omp parallel for schedule(static)
@@ -717,7 +720,8 @@ void RadiationIntegrator::SampleSimulation()
         if(mc_input){
         for(int l=0; l<mc_num_freqs;l++){
           sample_scattering[adaptive_level](m,n,l) = std::numeric_limits<float>::quiet_NaN();
-          
+          if(mc_error)
+            sample_scattering_err[adaptive_level](m,n,l) = std::numeric_limits<float>::quiet_NaN();
         }
         }
       }
@@ -741,6 +745,8 @@ void RadiationIntegrator::SampleSimulation()
         sample_bb3[adaptive_level](m,n) = fallback_bb3;
         if(mc_input){
           sample_scattering[adaptive_level](m,n) = 0.0;
+          if(mc_error)
+            sample_scattering_err[adaptive_level](m,n) = 0.0;
         }
       }
 
@@ -780,6 +786,8 @@ void RadiationIntegrator::SampleSimulation()
             
             for(int l=0; l<mc_num_freqs;l++){
               sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);  
+              if(mc_error)
+                sample_scattering_err[adaptive_level](m,n,l) = grid_scatter_err[t](l,b,k,j,i); 
             }
           }
         }
@@ -902,6 +910,14 @@ void RadiationIntegrator::SampleSimulation()
                 scattering = static_cast<double>(grid_scatter[0](l,b,k,j,i));
 
               sample_scattering[adaptive_level](m,n,l) = static_cast<float>(scattering);
+
+              if(mc_error){
+                scattering_err = InterpolateSimple(grid_scatter_err[0],l, b, k, j, i, f_k, f_j, f_i);
+              if(scattering_err<=0.0)
+                scattering_err = static_cast<double>(grid_scatter_err[0](l,b,k,j,i));
+
+              sample_scattering_err[adaptive_level](m,n,l) = static_cast<float>(scattering_err);
+              }
             }
             
           }

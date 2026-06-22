@@ -61,6 +61,7 @@ struct RadiationIntegrator
   double mc_dlf;
   bool compton;
   bool stimulated_compton;
+  bool mc_error;
 
 
   // Input data - formula parameters
@@ -276,6 +277,7 @@ struct RadiationIntegrator
   Array<float> *sample_bb2 = nullptr;
   Array<float> *sample_bb3 = nullptr;
   Array<float> *sample_scattering = nullptr;
+  Array<float> *sample_scattering_err = nullptr;
   double extrapolation_tolerance;
 
   // Coefficient data

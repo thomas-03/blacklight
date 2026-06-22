@@ -236,6 +236,8 @@ void InputReader::AssignInputVal(std::string key,std::string val){
       compton = ReadBool(val);
     else if(key == "stimulated_compton")
       stimulated_compton = ReadBool(val);
+    else if(key == "mc_error")
+      mc_error = ReadBool(val);
 
     // Store formula parameters
     else if( key == "formula_name")
