@@ -491,7 +491,21 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   {
     image_num_quantities += image_num_frequencies
         * (model_type == ModelType::simulation and image_polarization ? 4 : 1);
+    image_offset_scat_err = image_num_quantities;
     image_offset_time = image_num_quantities;
+    image_offset_length = image_num_quantities;
+    image_offset_lambda = image_num_quantities;
+    image_offset_emission = image_num_quantities;
+    image_offset_tau = image_num_quantities;
+    image_offset_lambda_ave = image_num_quantities;
+    image_offset_emission_ave = image_num_quantities;
+    image_offset_tau_int = image_num_quantities;
+    image_offset_photosphere_int = image_num_quantities;
+    image_offset_crossings = image_num_quantities;
+  }
+  if (mc_error)
+  {
+    image_num_quantities++;
     image_offset_length = image_num_quantities;
     image_offset_lambda = image_num_quantities;
     image_offset_emission = image_num_quantities;

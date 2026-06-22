@@ -308,6 +308,7 @@ struct RadiationIntegrator
   int image_offset_tau_int = 0;
   int image_offset_photosphere_int = 0;
   int image_offset_crossings = 0;
+  int image_offset_scat_err = 0;
 
   // Rendering data
   Array<double> *render = nullptr;

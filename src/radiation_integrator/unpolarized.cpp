@@ -105,13 +105,26 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             if (alpha > 0.0)
             {
               if (optically_thin)
+              {
                 image[adaptive_level](l,m) = exp_neg * (image[adaptive_level](l,m) + ss * expm1);
+                if(mc_error)
+                  image[adaptive_level](image_offset_scat_err+l,m) = std::sqrt(std::pow(image[adaptive_level](image_offset_scat_err+l,m)*exp_neg,2.)+std::pow(exp_neg*expm1/alpha,2.)*scat_err[adaptive_level](l,m,n));
+              }
               else 
+              {
                 image[adaptive_level](l,m) = ss;
+                if(mc_error)
+                  image[adaptive_level](image_offset_scat_err+l,m) = std::sqrt(scat_err[adaptive_level](l,m,n)/(alpha*alpha));
+              }
+                
 
             }
             else
+            {
               image[adaptive_level](l,m) += j * delta_lambda_cgs;
+              if(mc_error)
+                image[adaptive_level](image_offset_scat_err+l,m) = std::sqrt(std::pow(image[adaptive_level](image_offset_scat_err+l,m),2.)+scat_err[adaptive_level](l,m,n)*delta_lambda_cgs*delta_lambda_cgs);
+            }
           }
 
 
@@ -230,6 +243,8 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
         {
           double nu_cu = image_frequencies(l) * image_frequencies(l) * image_frequencies(l);
           image[adaptive_level](l,m) *= nu_cu;
+          if(mc_error)
+            image[adaptive_level](image_offset_scat_err+l,m) *= nu_cu;
         }
     }
   
@@ -242,6 +257,8 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
     alpha_i[adaptive_level].Deallocate();
     if (render_num_images <= 0)
       cell_values[adaptive_level].Deallocate();
+    if(mc_error)
+      scat_err[adaptive_level].Deallocate();
   }
   return;
 }

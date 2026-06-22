@@ -51,6 +51,8 @@ OutputWriter::OutputWriter(const InputReader *p_input_reader_,
       simulation_start = p_input_reader->simulation_start.value();
   }
 
+  mc_error = p_input_reader->mc_error.value();
+
   // Copy camera parameters
   if (output_format == OutputFormat::npz and output_camera)
     camera_type = p_input_reader->camera_type.value();
@@ -92,6 +94,7 @@ OutputWriter::OutputWriter(const InputReader *p_input_reader_,
   image_offset_tau_int = p_radiation_integrator->image_offset_tau_int;
   image_offset_photosphere_int = p_radiation_integrator->image_offset_photosphere_int;
   image_offset_crossings = p_radiation_integrator->image_offset_crossings;
+  image_offset_scat_err = p_radiation_integrator->image_offset_scat_err;
 
   // Copy rendering parameters
   render_num_images = p_input_reader->render_num_images.value();
