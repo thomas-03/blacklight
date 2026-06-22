@@ -457,6 +457,8 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   rho_q = new Array<double>[adaptive_max_level+1];
   rho_v = new Array<double>[adaptive_max_level+1];
   cell_values = new Array<double>[adaptive_max_level+1];
+  
+  scat_err = new Array<double>[adaptive_max_level+1];
 
   // Copy slow-light extrapolation tolerance
   if (slow_light_on)
@@ -692,6 +694,7 @@ RadiationIntegrator::~RadiationIntegrator()
     rho_q[level].Deallocate();
     rho_v[level].Deallocate();
     cell_values[level].Deallocate();
+    scat_err[level].Deallocate();
   }
   delete[] j_i;
   delete[] j_q;
@@ -702,6 +705,7 @@ RadiationIntegrator::~RadiationIntegrator()
   delete[] rho_q;
   delete[] rho_v;
   delete[] cell_values;
+  delete[] scat_err;
 
   // Free memory - image data
   for (int level = 0; level <= adaptive_max_level; level++)

@@ -250,6 +250,7 @@ struct RadiationIntegrator
   double *time;
   Array<float> *grid_prim;
   Array<float> *grid_scatter;
+  Array<float> *grid_scatter_err;
   Array<float> *grid_scatter_prime;
   Array<float> *grid_scatter_prime_prime;
   int ind_rho, ind_pgas, ind_kappa;
@@ -290,6 +291,7 @@ struct RadiationIntegrator
   Array<double> *rho_q = nullptr;
   Array<double> *rho_v = nullptr;
   Array<double> *cell_values = nullptr;
+  Array<double> *scat_err = nullptr;
 
   // Image data
   Array<double> *image = nullptr;
@@ -354,8 +356,6 @@ struct RadiationIntegrator
   double InterpolateSimple(const Array<float> &grid_vals, int grid_ind, int b, int k, int j, int i,
       double f_k, double f_j, double f_i);
   double InterpolateAdvanced(const Array<float> &grid_vals, int grid_ind, int m, int n);
-  float* Gradient4D(Array<float> &f, Array<double> &x, int b, int k, int j, int i);
-  float* Gradient1D(float f[], Array<double> &x);
 
   // Internal functions - simulation_coefficients.cpp
   void CalculateSimulationCoefficients();

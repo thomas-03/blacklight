@@ -224,6 +224,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
     if (image_lambda_ave or image_emission_ave or image_tau_int or image_photosphere_int or render_num_images > 0)
       cell_values[adaptive_level].Allocate(CellValues::num_cell_values, num_pix,
           geodesic_num_steps[adaptive_level]);
+
+    if(mc_input && mc_error)
+      scat_err[adaptive_level].Allocate(image_num_frequencies, num_pix,
+          geodesic_num_steps[adaptive_level]);
+    
   }
   j_i[adaptive_level].Zero();
   j_q[adaptive_level].Zero();
@@ -234,6 +239,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
   rho_q[adaptive_level].Zero();
   rho_v[adaptive_level].Zero();
   cell_values[adaptive_level].SetNaN();
+  scat_err[adaptive_level].Zero();
 
   // Calculate units
   double d_unit = simulation_rho_cgs;
