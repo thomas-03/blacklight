@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = spherical_isothermal/tabular_opac/tabular_opac_T1e6.npz  # file to be (over)written with output data
+output_file   = spherical_isothermal/tabular_opac/tabular_opac_T3e4.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
