@@ -183,11 +183,11 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
           if (image_photosphere_int and not std::isnan(cell_values[adaptive_level](0,m,n)))
           {
             double tau_0 = 0.3;
-            double tau_1 = 1.3;
+            double tau_1 = 1.7;
             for (int a = 0; a < CellValues::num_cell_values; a++){
               int index = image_offset_photosphere_int + l * CellValues::num_cell_values + a;
-
-              if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and (image[adaptive_level](image_offset_tau+l,m) <= tau_1 || previous_delta_tau < tau_0) and (not std::isnan(cell_values[adaptive_level](a,m,n)))){
+              //delta_tau sometimes equals 0 which causes Nan's
+              if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and (image[adaptive_level](image_offset_tau+l,m) <= tau_1 || previous_delta_tau < tau_0) and (not std::isnan(cell_values[adaptive_level](a,m,n))) and delta_tau!=0.0){
                 image[adaptive_level](index,m)+= cell_values[adaptive_level](a,m,n)/delta_tau;
               }else{
                 image[adaptive_level](index,m) += 0.0;
