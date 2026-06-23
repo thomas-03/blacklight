@@ -318,6 +318,7 @@ int main(int argc, char *argv[])
           return 1;
         }
     }
+    std::cout<<" finished integration fully. just need to write "<<std::endl;
 
     // Write output
     try
@@ -335,6 +336,7 @@ int main(int argc, char *argv[])
       return 1;
     }
   }
+  std::cout<<"finished writign"<<std::endl;
   
   // Free memory
   delete p_output_writer;

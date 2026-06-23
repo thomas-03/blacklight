@@ -49,6 +49,7 @@ MCReader::MCReader(const InputReader *p_input_reader_, const SimulationReader *p
     simulation_all_cgs = p_input_reader->simulation_all_cgs.value();
     compton = p_input_reader->compton.value();
     stimulated_compton = p_input_reader->stimulated_compton.value();
+    mc_error = p_input_reader->mc_error.value();
   
     if(simulation_all_cgs){
       simulation_rho_cgs = 1.0;
@@ -80,6 +81,7 @@ MCReader::MCReader(const InputReader *p_input_reader_, const SimulationReader *p
 
     simulation_format = p_input_reader->simulation_format.value();
     scattering_source_terms = new Array<float>[1];
+    scattering_error = new Array<float>[1];
     grid_prim = p_simulation_reader->prim;
     ind_rho = p_simulation_reader->ind_rho;
     ind_pgas = p_simulation_reader->ind_pgas;
@@ -116,8 +118,11 @@ MCReader::~MCReader()
   {
     scattering_source_terms[0].Deallocate();
     delete[] scattering_source_terms;
+    scattering_error[0].Deallocate();
+    delete[] scattering_error;
   }else{
     delete[] scattering_source_terms;
+    delete[] scattering_error;
   }
 }
 
@@ -243,16 +248,29 @@ double MCReader::Read(int snapshot)
         int n3 = x3v.n1; 
         int n2 = x2v.n1; 
         int n1 = x1v.n1;
-        scattering[0].Allocate(n5,n4, n3, n2, n1);
+        if(mc_error){
+          scattering[0].Allocate(2*n5,n4, n3, n2, n1);
+        }else{
+          scattering[0].Allocate(n5,n4, n3, n2, n1);
+        }
         if(compton){
-          scattering_first_derivs[0].Allocate(n5,n4, n3, n2, n1);
-          scattering_second_derivs[0].Allocate(n5,n4, n3, n2, n1);
+          
+          if(mc_error){
+            scattering_first_derivs[0].Allocate(2*n5,n4, n3, n2, n1);
+            scattering_second_derivs[0].Allocate(2*n5,n4, n3, n2, n1);
+          }else{
+            scattering_first_derivs[0].Allocate(n5,n4, n3, n2, n1);
+            scattering_second_derivs[0].Allocate(n5,n4, n3, n2, n1);
+          }
         }else{
           scattering_first_derivs[0].Allocate(1);
           scattering_second_derivs[0].Allocate(1);
+
         }
         scattering_source_terms[0].Allocate(n5,n4, n3, n2, n1);
+        scattering_error[0].Allocate(n5,n4,n3,n2,n1);
       }
+      std::cout<<"did all the allocations "<<std::endl;
 
         std::printf("allocate arrays time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
@@ -261,34 +279,50 @@ double MCReader::Read(int snapshot)
       Array<float> shallow_first_deriv(scattering_first_derivs[0]);
       Array<float> shallow_second_deriv(scattering_second_derivs[0]);
       Array<float> shallow_source_terms(scattering_source_terms[0]);
+      Array<float> shallow_scatter_error(scattering_error[0]);
+      std::cout<<"created shallow arrays"<<std::endl;
+      //TEGAN: i'm not sure if i have to do this sort of copying, but just doing it for now
+      //come back later to check
       
       ReadHDF5FloatArray("mcscat",shallow_scatter);
+      std::cout<<"read the mcscat"<<std::endl;
 
         std::printf("read mc scattering: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
       if(compton){
+        std::cout<<"computing gradients"<<std::endl;
         Gradient(shallow_first_deriv, shallow_scatter, ln_freq_grid);
+        std::cout<<" finished computing first gradient "<<std::endl;
         Gradient(shallow_second_deriv, shallow_first_deriv, ln_freq_grid);
       }
+      std::cout<<"done computing gradients"<<std::endl;
 
         std::printf("compute gradient time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
-      CalculateSourceTerm(shallow_source_terms, shallow_scatter, shallow_first_deriv, shallow_second_deriv);
+      CalculateSourceTerm(shallow_source_terms, shallow_scatter, shallow_first_deriv, shallow_second_deriv,shallow_scatter_error);
 
 
         std::printf("calc source term time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
-      
+    
+    std::cout<<"finished getting source terms"<<std::endl;
 
     // Close input file
     data_stream.close();
+    std::cout<<"deallocate scattering"<<std::endl;
 
     scattering[0].Deallocate();
     delete[] scattering;
+
+    std::cout<<"deallocate scattering deriv"<<std::endl;
     scattering_first_derivs[0].Deallocate();
     delete[] scattering_first_derivs;
+
+    std::cout<<"deallocate scattering second deriv"<<std::endl;
     scattering_second_derivs[0].Deallocate();
     delete[] scattering_second_derivs;
+    
+    std::cout<<" finished everything"<<std::endl;
 
     // Update first time flag
     first_time = false;
@@ -311,14 +345,12 @@ double MCReader::Read(int snapshot)
 //   specifically the function MonteCarlo::InitUserMonteCarloData() in athena/src/pgen/mc_tde.cpp
 void MCReader::ReadFreqFile()
 {
-  double freq_time_start = omp_get_wtime();
   // Open input file
   if ( (mc_freq_file=fopen(mc_freq_file_name.c_str(),"r"))==NULL) {
     std::stringstream msg;
     msg << "FATAL ERROR: Could not open " << mc_freq_file_name << "." << std::endl;
     throw BlacklightException(msg.str().c_str());
   }
-
 
   
   fscanf(mc_freq_file,"%d",&(num_freqs));
@@ -337,7 +369,6 @@ void MCReader::ReadFreqFile()
     fscanf(mc_freq_file,"%lf",&(trash));
     ln_freq_grid(i) = std::log(freq_grid(i));
   }
-
   fclose(mc_freq_file);
 
   return;
@@ -360,9 +391,20 @@ void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
       for(int k=0;k<f.n3;k++){
         for(int b=0;b<f.n4;b++){
           grad(0,b,k,j,i) = (f(1,b,k,j,i) - f(0,b,k,j,i))/(x(1) - x(0));
+
           grad(nx-1,b,k,j,i) = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
-          for(int l=1;l<(f.n5-1);l++){
+          if(mc_error){  
+            //std::printf("calculating grad error ");
+            grad(nx,b,k,j,i) = (f(1+nx,b,k,j,i) - f(nx,b,k,j,i))/(x(1) - x(0));
+            grad(2*nx-1,b,k,j,i) = (f(2*nx-1,b,k,j,i) - f(2*nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
+            //std::printf("calculated first two grad errors "); 
+          }
+          
+          for(int l=1;l<(num_freqs-1);l++){
             grad(l,b,k,j,i) = (f(l+1,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+1) - x(l-1));
+            if(mc_error){
+              grad(l+nx,b,k,j,i) = (f(l+1+nx,b,k,j,i) - f(l-1+nx,b,k,j,i))/(x(l+1) - x(l-1));
+            }
           }
         }
       }
@@ -370,7 +412,7 @@ void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
   }
 } 
 
-void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scattering,Array<float> &scattering_prime,Array<float> &scattering_prime_prime){
+void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scattering,Array<float> &scattering_prime,Array<float> &scattering_prime_prime,Array<float> &scattering_error){
   // Calculate the source term using the scattering and its derivatives
 
   double e_unit = simulation_rho_cgs * Physics::c * Physics::c * simulation_v_c*simulation_v_c;
@@ -381,112 +423,117 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
     for(int j=0;j<source_term.n2;j++){
       for(int k=0;k<source_term.n3;k++){
         for(int b=0;b<source_term.n4;b++){
-          double rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
-          double pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
+          double rho_cgs;
+          double pgas_cgs;
           double gcov_sim[4][4];
           double gcon_sim[4][4];
-          
-
-          // Calculate electron temperature for model with T_i/T_e a function of beta (E1 1)
-          double kb_tt_e_cgs = std::numeric_limits<double>::quiet_NaN();
-          double theta_e = std::numeric_limits<double>::quiet_NaN();
-          if (plasma_thermal_frac != 0.0 and plasma_model == PlasmaModel::ti_te_beta)
-          {
-            double uu1_sim = grid_prim[0](p_simulation_reader->ind_uu1,b,k,j,i);
-            double uu2_sim = grid_prim[0](p_simulation_reader->ind_uu2,b,k,j,i);
-            double uu3_sim = grid_prim[0](p_simulation_reader->ind_uu3,b,k,j,i);
-            double bb1_sim = grid_prim[0](p_simulation_reader->ind_bb1,b,k,j,i);
-            double bb2_sim = grid_prim[0](p_simulation_reader->ind_bb2,b,k,j,i);
-            double bb3_sim = grid_prim[0](p_simulation_reader->ind_bb3,b,k,j,i);
-            uu1_sim *=simulation_v_c;
-            uu2_sim *=simulation_v_c;
-            uu3_sim *=simulation_v_c;
-
-            uu1_sim *=simulation_v_c;
-            uu2_sim *=simulation_v_c;
-            uu3_sim *=simulation_v_c;
-
-            // Calculate simulation metric
-            if(simulation_coord == Coordinates::cks){
-              CovariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), simulation_r_rg*x3v(i,j), gcov_sim);
-              ContravariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), simulation_r_rg*x3v(i,j), gcon_sim);
-            }else{
-              CovariantSimulationMetric(simulation_r_rg*x1v(i,j), x2v(i,j), x3v(i,j), gcov_sim);
-              ContravariantSimulationMetric(simulation_r_rg*x1v(i,j), x2v(i,j), x3v(i,j), gcon_sim);
-            }
-
-            // Calculate simulation velocity
-            double uu0_sim = std::sqrt(1.0 + gcov_sim[1][1] * uu1_sim * uu1_sim
-                + 2.0 * gcov_sim[1][2] * uu1_sim * uu2_sim + 2.0 * gcov_sim[1][3] * uu1_sim * uu3_sim
-                + gcov_sim[2][2] * uu2_sim * uu2_sim + 2.0 * gcov_sim[2][3] * uu2_sim * uu3_sim
-                + gcov_sim[3][3] * uu3_sim * uu3_sim);
-            double lapse_sim = 1.0 / std::sqrt(-gcon_sim[0][0]);
-            double shift1_sim = -gcon_sim[0][1] / gcon_sim[0][0];
-            double shift2_sim = -gcon_sim[0][2] / gcon_sim[0][0];
-            double shift3_sim = -gcon_sim[0][3] / gcon_sim[0][0];
-            double ucon_sim[4];
-            ucon_sim[0] = uu0_sim / lapse_sim;
-            ucon_sim[1] = uu1_sim - shift1_sim * uu0_sim / lapse_sim;
-            ucon_sim[2] = uu2_sim - shift2_sim * uu0_sim / lapse_sim;
-            ucon_sim[3] = uu3_sim - shift3_sim * uu0_sim / lapse_sim;
-            double ucov_sim[4] = {};
-            for (int mu = 0; mu < 4; mu++)
-              for (int nu = 0; nu < 4; nu++)
-                ucov_sim[mu] += gcov_sim[mu][nu] * ucon_sim[nu];
-
-            // Calculate simulation magnetic field
-            double bcon_sim[4];
-            bcon_sim[0] = ucov_sim[1] * bb1_sim + ucov_sim[2] * bb2_sim + ucov_sim[3] * bb3_sim;
-            bcon_sim[1] = (bb1_sim + bcon_sim[0] * ucon_sim[1]) / ucon_sim[0];
-            bcon_sim[2] = (bb2_sim + bcon_sim[0] * ucon_sim[2]) / ucon_sim[0];
-            bcon_sim[3] = (bb3_sim + bcon_sim[0] * ucon_sim[3]) / ucon_sim[0];
-            double bcov_sim[4] = {};
-            for (int mu = 0; mu < 4; mu++)
-              for (int nu = 0; nu < 4; nu++)
-                bcov_sim[mu] += gcov_sim[mu][nu] * bcon_sim[nu];
-            double b_sq = 0.0;
-            for (int mu = 0; mu < 4; mu++)
-              b_sq += bcov_sim[mu] * bcon_sim[mu];
-            double bb_cgs = std::sqrt(b_sq) * b_unit;
-            double sigma = b_sq / grid_prim[0](ind_rho,b,k,j,i);
-            double beta_inv = b_sq / (2.0 * grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i));
-
-            double tti_tte = (plasma_rat_high + plasma_rat_low * beta_inv * beta_inv)
-                / (1.0 + beta_inv * beta_inv);
-            double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+          double kb_tt_e_cgs;
+          double theta_e;
+          if(compton){
+            rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
+            pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
             
-            if (plasma_use_p)
-              kb_tt_e_cgs = (1.0 + plasma_ne_ni) / (tti_tte + plasma_ne_ni) * kb_tt_tot_cgs;
-            else
+            // Calculate electron temperature for model with T_i/T_e a function of beta (E1 1)
+            kb_tt_e_cgs = std::numeric_limits<double>::quiet_NaN();
+            theta_e = std::numeric_limits<double>::quiet_NaN();
+            if (plasma_thermal_frac != 0.0 and plasma_model == PlasmaModel::ti_te_beta)
             {
-              kb_tt_e_cgs = (1.0 + plasma_ne_ni) * kb_tt_tot_cgs / (plasma_gamma - 1.0);
-              kb_tt_e_cgs /= tti_tte / (plasma_gamma_i - 1.0) + plasma_ne_ni / (plasma_gamma_e - 1.0);
-            }
-            
-            theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
-          }
-          if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
-          {
-            double kb_tt_tot_cgs = 0.0;
-            if(simulation_mc_temp){
-              kb_tt_tot_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
-            }else{
-              kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
-            }
-            
-            kb_tt_e_cgs = kb_tt_tot_cgs;
-            
-            theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
+              double uu1_sim = grid_prim[0](p_simulation_reader->ind_uu1,b,k,j,i);
+              double uu2_sim = grid_prim[0](p_simulation_reader->ind_uu2,b,k,j,i);
+              double uu3_sim = grid_prim[0](p_simulation_reader->ind_uu3,b,k,j,i);
+              double bb1_sim = grid_prim[0](p_simulation_reader->ind_bb1,b,k,j,i);
+              double bb2_sim = grid_prim[0](p_simulation_reader->ind_bb2,b,k,j,i);
+              double bb3_sim = grid_prim[0](p_simulation_reader->ind_bb3,b,k,j,i);
+              uu1_sim *=simulation_v_c;
+              uu2_sim *=simulation_v_c;
+              uu3_sim *=simulation_v_c;
 
-          }
-          // Calculate electron temperature for given electron entropy (E2 13)
-          if (plasma_thermal_frac != 0.0 and plasma_model == PlasmaModel::code_kappa)
-          {
-            double mu_e = plasma_mu * (1.0 + 1.0 / plasma_ne_ni);
-            double rho_e = grid_prim[0](ind_rho,b,k,j,i) * Physics::m_e / (mu_e * Physics::m_p);
-            double rho_kappa_e_cbrt = std::cbrt(rho_e * grid_prim[0](ind_kappa,b,k,j,i));
-            theta_e = 1.0 / 5.0 * (std::sqrt(1.0 + 25.0 * rho_kappa_e_cbrt * rho_kappa_e_cbrt) - 1.0);
-            kb_tt_e_cgs = theta_e * Physics::m_e * Physics::c * Physics::c;
+              uu1_sim *=simulation_v_c;
+              uu2_sim *=simulation_v_c;
+              uu3_sim *=simulation_v_c;
+
+              // Calculate simulation metric
+              if(simulation_coord == Coordinates::cks){
+                CovariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), simulation_r_rg*x3v(i,j), gcov_sim);
+                ContravariantSimulationMetric(simulation_r_rg*x1v(i,j), simulation_r_rg*x2v(i,j), simulation_r_rg*x3v(i,j), gcon_sim);
+              }else{
+                CovariantSimulationMetric(simulation_r_rg*x1v(i,j), x2v(i,j), x3v(i,j), gcov_sim);
+                ContravariantSimulationMetric(simulation_r_rg*x1v(i,j), x2v(i,j), x3v(i,j), gcon_sim);
+              }
+
+              // Calculate simulation velocity
+              double uu0_sim = std::sqrt(1.0 + gcov_sim[1][1] * uu1_sim * uu1_sim
+                  + 2.0 * gcov_sim[1][2] * uu1_sim * uu2_sim + 2.0 * gcov_sim[1][3] * uu1_sim * uu3_sim
+                  + gcov_sim[2][2] * uu2_sim * uu2_sim + 2.0 * gcov_sim[2][3] * uu2_sim * uu3_sim
+                  + gcov_sim[3][3] * uu3_sim * uu3_sim);
+              double lapse_sim = 1.0 / std::sqrt(-gcon_sim[0][0]);
+              double shift1_sim = -gcon_sim[0][1] / gcon_sim[0][0];
+              double shift2_sim = -gcon_sim[0][2] / gcon_sim[0][0];
+              double shift3_sim = -gcon_sim[0][3] / gcon_sim[0][0];
+              double ucon_sim[4];
+              ucon_sim[0] = uu0_sim / lapse_sim;
+              ucon_sim[1] = uu1_sim - shift1_sim * uu0_sim / lapse_sim;
+              ucon_sim[2] = uu2_sim - shift2_sim * uu0_sim / lapse_sim;
+              ucon_sim[3] = uu3_sim - shift3_sim * uu0_sim / lapse_sim;
+              double ucov_sim[4] = {};
+              for (int mu = 0; mu < 4; mu++)
+                for (int nu = 0; nu < 4; nu++)
+                  ucov_sim[mu] += gcov_sim[mu][nu] * ucon_sim[nu];
+
+              // Calculate simulation magnetic field
+              double bcon_sim[4];
+              bcon_sim[0] = ucov_sim[1] * bb1_sim + ucov_sim[2] * bb2_sim + ucov_sim[3] * bb3_sim;
+              bcon_sim[1] = (bb1_sim + bcon_sim[0] * ucon_sim[1]) / ucon_sim[0];
+              bcon_sim[2] = (bb2_sim + bcon_sim[0] * ucon_sim[2]) / ucon_sim[0];
+              bcon_sim[3] = (bb3_sim + bcon_sim[0] * ucon_sim[3]) / ucon_sim[0];
+              double bcov_sim[4] = {};
+              for (int mu = 0; mu < 4; mu++)
+                for (int nu = 0; nu < 4; nu++)
+                  bcov_sim[mu] += gcov_sim[mu][nu] * bcon_sim[nu];
+              double b_sq = 0.0;
+              for (int mu = 0; mu < 4; mu++)
+                b_sq += bcov_sim[mu] * bcon_sim[mu];
+              double bb_cgs = std::sqrt(b_sq) * b_unit;
+              double sigma = b_sq / grid_prim[0](ind_rho,b,k,j,i);
+              double beta_inv = b_sq / (2.0 * grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i));
+
+              double tti_tte = (plasma_rat_high + plasma_rat_low * beta_inv * beta_inv)
+                  / (1.0 + beta_inv * beta_inv);
+              double kb_tt_tot_cgs = plasma_mu * Physics::m_p * pgas_cgs / rho_cgs;
+              
+              if (plasma_use_p)
+                kb_tt_e_cgs = (1.0 + plasma_ne_ni) / (tti_tte + plasma_ne_ni) * kb_tt_tot_cgs;
+              else
+              {
+                kb_tt_e_cgs = (1.0 + plasma_ne_ni) * kb_tt_tot_cgs / (plasma_gamma - 1.0);
+                kb_tt_e_cgs /= tti_tte / (plasma_gamma_i - 1.0) + plasma_ne_ni / (plasma_gamma_e - 1.0);
+              }
+              
+              theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
+            }
+            if(plasma_thermal_frac!=0.0 and plasma_model == PlasmaModel::one_temp)
+            {
+              double kb_tt_tot_cgs = 0.0;
+              if(simulation_mc_temp){
+                kb_tt_tot_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
+              }else{
+                kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
+              }
+              
+              kb_tt_e_cgs = kb_tt_tot_cgs;
+              
+              theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);
+
+            }
+            // Calculate electron temperature for given electron entropy (E2 13)
+            if (plasma_thermal_frac != 0.0 and plasma_model == PlasmaModel::code_kappa)
+            {
+              double mu_e = plasma_mu * (1.0 + 1.0 / plasma_ne_ni);
+              double rho_e = grid_prim[0](ind_rho,b,k,j,i) * Physics::m_e / (mu_e * Physics::m_p);
+              double rho_kappa_e_cbrt = std::cbrt(rho_e * grid_prim[0](ind_kappa,b,k,j,i));
+              theta_e = 1.0 / 5.0 * (std::sqrt(1.0 + 25.0 * rho_kappa_e_cbrt * rho_kappa_e_cbrt) - 1.0);
+              kb_tt_e_cgs = theta_e * Physics::m_e * Physics::c * Physics::c;
+            }
           }
 
           for(int l=0;l<source_term.n5;l++){
@@ -495,6 +542,18 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
             if(compton){
               //std::printf("first term: %.5e, second term: %.5e, third term: %.5e",(1-x)*scattering(l,b,k,j,i),(x-3*theta_e)*scattering_prime(l,b,k,j,i),theta_e*scattering_prime_prime(l,b,k,j,i));
               source_term(l,b,k,j,i) = (1-x)*scattering(l,b,k,j,i)+ (x-3*theta_e)*scattering_prime(l,b,k,j,i)+theta_e*scattering_prime_prime(l,b,k,j,i);
+              /*double sigma_prime = scattering(l+source_term.n5+1,b,k,j,i)/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.) + scattering(l+source_term.n5-1,b,k,j,i)/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.);
+              double sigma_prime_minus = scattering(l+source_term.n5,b,k,j,i)/std::pow((ln_freq_grid(l)-ln_freq_grid(l-2)),2.) + scattering(l+source_term.n5-2,b,k,j,i)/std::pow((ln_freq_grid(l)-ln_freq_grid(l-2)),2.);
+              double sigma_prime_plus = scattering(l+source_term.n5+2,b,k,j,i)/std::pow((ln_freq_grid(l+2)-ln_freq_grid(l)),2.) + scattering(l+source_term.n5,b,k,j,i)/std::pow((ln_freq_grid(l+2)-ln_freq_grid(l)),2.);
+              
+              double sigma_prime_prime = sigma_prime_plus/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.) + sigma_prime_minus/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.);
+              */
+              if(mc_error){
+                scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i)*(1-x)*(1-x) + scattering_prime(l+source_term.n5,b,k,j,i)*(x-3.*theta_e)*(x-3.*theta_e) + scattering_prime_prime(l+source_term.n5,b,k,j,i)*theta_e*theta_e;
+              
+              }else{
+                scattering_error(l,b,k,j,i) = 0.0;
+              }
               /*if(source_term(l,b,k,j,i)<0.0 && scattering(l,b,k,j,i)<0.0){
                 //1-x seems pretty much always positive, 3*theta_e>x most of the time but not always.
                 //frequency: 3.416e+16, x: 2.764e-04, theta_e: 4.283e-03
@@ -512,10 +571,23 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
               }*/
               if(stimulated_compton){
                 source_term(l,b,k,j,i) += Physics::c*Physics::c*x*scattering(l,b,k,j,i)*(scattering_prime(l,b,k,j,i)-scattering(l,b,k,j,i))/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l));
+                if(mc_error){
+                  scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i)*std::pow(1-x+(Physics::c*Physics::c*x/(Physics::h*freq_grid(l)*freq_grid(l)))*scattering_prime(l,b,k,j,i) - (2.*Physics::c*Physics::c*x/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l)))*scattering(l,b,k,j,i),2.)+scattering_prime(l+source_term.n5,b,k,j,i)*std::pow(x-3*theta_e+scattering(l,b,k,j,i)*(Physics::c*Physics::c*x)/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l)),2.)+ scattering_prime_prime(l+source_term.n5,b,k,j,i)*theta_e*theta_e;
+                }else{
+                  scattering_error(l,b,k,j,i) = 0.0;
+                }
               }
             }else{
               source_term(l,b,k,j,i) = scattering(l,b,k,j,i);
+              if(mc_error){  
+                scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i);
+              }else{
+                scattering_error(l,b,k,j,i) = 0.0;
+              }
             }
+            //turn standard deviation to variance. this will be used up until integration
+            scattering_error(l,b,k,j,i) *= scattering_error(l,b,k,j,i);
+            
           }
         }
       }

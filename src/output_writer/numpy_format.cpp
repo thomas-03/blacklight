@@ -48,6 +48,7 @@ void OutputWriter::WriteNpz()
   // Prepare buffers for data and headers
   int num_image_arrays = (image_light ? 1 : 0)
       + (image_light and model_type == ModelType::simulation and image_polarization ? 3 : 0)
+      + (mc_error ? 1 : 0)
       + (image_time ? 1 : 0) + (image_length ? 1 : 0) + (image_lambda ? 1 : 0)
       + (image_emission ? 1 : 0) + (image_tau ? 1 : 0)
       + (image_lambda_ave ? CellValues::num_cell_values : 0)
@@ -174,6 +175,28 @@ void OutputWriter::WriteNpz()
 
   // Write root alternate image data and metadata to buffers
   Array<double> image_shallow_copy;
+  if (mc_error)
+  {
+    image_shallow_copy = image[0];
+    image_shallow_copy.Slice(3, image_offset_scat_err,
+        image_offset_scat_err + image_num_frequencies - 1);
+    data_lengths[array_offset] =
+        GenerateNpyFromArray(image_shallow_copy, num_dims, &data_buffers[array_offset]);
+    local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
+        data_lengths[array_offset], "sigma_I", &local_header_buffers[array_offset]);
+    array_offset++; 
+  }
+  /*if (image_emission)
+  {
+    image_shallow_copy = image[0];
+    image_shallow_copy.Slice(3, image_offset_emission,
+        image_offset_emission + image_num_frequencies - 1);
+    data_lengths[array_offset] =
+        GenerateNpyFromArray(image_shallow_copy, num_dims, &data_buffers[array_offset]);
+    local_header_lengths[array_offset] = GenerateZIPLocalFileHeader(data_buffers[array_offset],
+        data_lengths[array_offset], "emission", &local_header_buffers[array_offset]);
+    array_offset++;
+  }*/
   if (image_time)
   {
     image_shallow_copy = image[0];
@@ -406,6 +429,9 @@ void OutputWriter::WriteNpz()
             data_lengths[array_offset], name_buffer, &local_header_buffers[array_offset]);
         array_offset++;
       }
+      if(mc_error){
+        throw BlacklightWarning("adaptive level output for MC not done yet!");
+      }
     }
 
     // Write adaptive alternate image data and metadata to buffers
@@ -609,7 +635,7 @@ void OutputWriter::WriteNpz()
   char *buffer = reinterpret_cast<char *>(end_of_directory_buffer);
   std::streamsize length = static_cast<std::streamsize>(end_of_directory_length);
   p_output_stream->write(buffer, length);
-
+  std::cout<<"before freeing buffers"<<std::endl;
   // Free memory
   for (int n = 0; n < num_arrays; n++)
   {

@@ -16,11 +16,11 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = /PellaShared/swd8g/tegan/scatter_1e7/xrb.out4.00000.athdf  # file containing data dump
+simulation_file         = /PellaShared/swd8g/tegan/scatter_1e9/xrb.out4.00000.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = cks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.3              # dimensionless black hole spin
-simulation_m_msun       = 1          # black hole mass in solar masses
+simulation_m_msun       = 10          # black hole mass in solar masses
 simulation_all_cgs      = false
 simulation_rho_cgs      = 1e-4          # unit code density in g/cm^3
 simulation_v_c          = 1.0             # unit code v0
@@ -36,10 +36,11 @@ opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
 mc_input = true
-mc_file = /PellaShared/swd8g/tegan/scatter_1e7/xrb.out5.00000.athdf
+mc_file = /PellaShared/swd8g/tegan/scatter_1e9/xrb.out5.00000.athdf
 mc_freq_file = /PellaShared/swd8g/tegan/scatter_1e7/sourceterm_frequencies.txt
 compton = true
 stimulated_compton = true
+mc_error = true
 
 
 # Camera parameters

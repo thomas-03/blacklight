@@ -47,6 +47,7 @@ struct MCReader
   int num_freqs;
   Array<float> *scattering_source_terms;
   Array<float> *grid_prim;
+  Array<float> *scattering_error;
 
   Coordinates simulation_coord;
   SimulationFormat simulation_format;
@@ -63,6 +64,7 @@ struct MCReader
   bool simulation_mc_temp;
   bool compton;
   bool stimulated_compton;
+  bool mc_error;
 
   Array<double> freq_grid;
   //Array<double>* freq_grid_ptr = &freq_grid;
@@ -106,7 +108,7 @@ struct MCReader
   double Read(int snapshot);
   void ReadFreqFile();
   void Gradient(Array<float> &grad,Array<float> &f, Array<double> &x); 
-  void CalculateSourceTerm(Array<float> &source_term,Array<float> &scattering,Array<float> &scattering_prime,Array<float> &scattering_prime_prime);
+  void CalculateSourceTerm(Array<float> &source_term,Array<float> &scattering,Array<float> &scattering_prime,Array<float> &scattering_prime_prime,Array<float> &scattering_error);
 
   
   // Internal functions - mc_hdf5_format_structure.cpp

@@ -54,6 +54,7 @@ void RadiationIntegrator::ObtainGridData()
   // Copy cell values
   grid_prim = p_simulation_reader->prim;
   grid_scatter = p_mc_reader->scattering_source_terms;
+  grid_scatter_err = p_mc_reader->scattering_error;
   //TEGAN: the prints from this show that the grid_prim values are being copied correctly
   //std::printf("example pgas value: %f\n", grid_prim(0,0,0,ind_pgas));
 
@@ -678,6 +679,8 @@ void RadiationIntegrator::SampleSimulation()
     sample_bb3[adaptive_level].Allocate(num_pix, geodesic_num_steps[adaptive_level]);
     if(mc_input)
       sample_scattering[adaptive_level].Allocate(num_pix,geodesic_num_steps[adaptive_level],mc_num_freqs);
+    if(mc_input && mc_error)
+      sample_scattering_err[adaptive_level].Allocate(num_pix,geodesic_num_steps[adaptive_level],mc_num_freqs);
     
   }
   sample_rho[adaptive_level].Zero();
@@ -690,6 +693,7 @@ void RadiationIntegrator::SampleSimulation()
   sample_bb2[adaptive_level].Zero();
   sample_bb3[adaptive_level].Zero();
   sample_scattering[adaptive_level].Zero();
+  sample_scattering_err[adaptive_level].Zero();
 
   // Resample cell data onto geodesics in parallel
   #pragma omp parallel for schedule(static)
@@ -717,7 +721,8 @@ void RadiationIntegrator::SampleSimulation()
         if(mc_input){
         for(int l=0; l<mc_num_freqs;l++){
           sample_scattering[adaptive_level](m,n,l) = std::numeric_limits<float>::quiet_NaN();
-          
+          if(mc_error)
+            sample_scattering_err[adaptive_level](m,n,l) = std::numeric_limits<float>::quiet_NaN();
         }
         }
       }
@@ -741,6 +746,8 @@ void RadiationIntegrator::SampleSimulation()
         sample_bb3[adaptive_level](m,n) = fallback_bb3;
         if(mc_input){
           sample_scattering[adaptive_level](m,n) = 0.0;
+          if(mc_error)
+            sample_scattering_err[adaptive_level](m,n) = 0.0;
         }
       }
 
@@ -772,14 +779,10 @@ void RadiationIntegrator::SampleSimulation()
           sample_bb3[adaptive_level](m,n) = grid_prim[t](ind_bb3,b,k,j,i);
           
           if(mc_input){
-            double rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
-
-            double e_unit = simulation_rho_cgs * Physics::c * Physics::c * simulation_v_c*simulation_v_c;
-            double pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
-            double kb_tt_e_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
-            
             for(int l=0; l<mc_num_freqs;l++){
               sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);  
+              if(mc_error)
+                sample_scattering_err[adaptive_level](m,n,l) = grid_scatter_err[t](l,b,k,j,i); 
             }
           }
         }
@@ -895,6 +898,7 @@ void RadiationIntegrator::SampleSimulation()
           sample_bb3[adaptive_level](m,n) = static_cast<float>(bb3);
 
           double scattering = 0.0;
+          double scattering_err = 0.0;
           if(mc_input){
             for(int l=0; l<mc_num_freqs;l++){
               scattering = InterpolateSimple(grid_scatter[0],l, b, k, j, i, f_k, f_j, f_i);
@@ -902,6 +906,13 @@ void RadiationIntegrator::SampleSimulation()
                 scattering = static_cast<double>(grid_scatter[0](l,b,k,j,i));
 
               sample_scattering[adaptive_level](m,n,l) = static_cast<float>(scattering);
+
+              if(mc_error){
+                scattering_err = InterpolateSimple(grid_scatter_err[0],l, b, k, j, i, f_k, f_j, f_i);
+                if(scattering_err<=0.0)
+                  scattering_err = static_cast<double>(grid_scatter_err[0](l,b,k,j,i));
+                sample_scattering_err[adaptive_level](m,n,l) = static_cast<float>(scattering_err);
+              }
             }
             
           }
@@ -1017,6 +1028,7 @@ void RadiationIntegrator::SampleSimulation()
             kappa = static_cast<double>(grid_prim[t](ind_kappa,b,k,j,i));
           
           double scattering = 0.0;
+          double scattering_err = 0.0;
           if(mc_input){
             for(int l=0; l<mc_num_freqs;l++){
               scattering = InterpolateAdvanced(grid_scatter[0],l,m,n);
@@ -1024,6 +1036,13 @@ void RadiationIntegrator::SampleSimulation()
                 scattering = static_cast<double>(grid_scatter[0](l,b,k,j,i));
 
               sample_scattering[adaptive_level](m,n,l) = static_cast<float>(scattering);
+
+              if(mc_error){
+                scattering_err = InterpolateAdvanced(grid_scatter_err[0],l, m,n);
+                if(scattering_err<=0.0)
+                  scattering_err = static_cast<double>(grid_scatter_err[0](l,b,k,j,i));
+                sample_scattering_err[adaptive_level](m,n,l) = static_cast<float>(scattering_err);
+              }
             }
           }
 
@@ -1472,51 +1491,3 @@ double RadiationIntegrator::InterpolateAdvanced(const Array<float> &grid_vals, i
   return val;
 }
 
-//--------------------------------------------------------------------------------------------------
-
-// Function for evaluating the gradient of f over x 
-// Used specifically to calculate the gradient of J over frequency for the Compton source term
-// TEGAN: need to make gradient fine for different shapes
-
-// idea: instead accept an array of indices and then unpack it somehow
-float* RadiationIntegrator::Gradient4D(Array<float> &f, Array<double> &x, int b, int k, int j, int i){
-  //we want to get sample_scattering at (m,n) but across all the frequencies
-  int nx = x.n1;
-  if(nx!=mc_num_freqs){
-    std::printf("nx: %d mc_num_freqs: %d",nx,mc_num_freqs);
-  }
-  float* gradient = new float[mc_num_freqs];
-  gradient[0] = (f(1,b,k,j,i) - f(0,b,k,j,i))/(x(1) - x(0));
-  gradient[nx-1] = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
-  for(int i=1;i<nx-1;i++){
-    //the sub-array we are looking at is f(m,n) which leaves one dimension for the frequencies
-    //use central difference for interior gradients
-    gradient[i] = (f(i+1,b,k,j,i) - f(i-1,b,k,j,i))/(x(i+1) - x(i-1));
-  }
-  return gradient;
-}
-
-//--------------------------------------------------------------------------------------------------
-
-// Function for evaluating the gradient of f over x 
-// Used specifically to calculate the gradient of J over frequency for the Compton source term
-// TEGAN: need to make gradient fine for different shapes
-
-// idea: instead accept an array of indices and then unpack it somehow
-float* RadiationIntegrator::Gradient1D(float f[], Array<double> &x){
-  //we want to get sample_scattering at (m,n) but across all the frequencies
-  int nx = x.n1;
-  //const int nx = mc_num_freqs;
-  if(nx!=mc_num_freqs){
-    std::printf("nx: %d mc_num_freqs: %d",nx,mc_num_freqs);
-  }
-  float* gradient = new float[mc_num_freqs];
-  gradient[0] = (f[1] - f[0])/(x(1) - x(0));
-  gradient[nx-1] = (f[nx-1] - f[nx-2])/(x(nx-1) - x(nx-2));
-  for(int i=1;i<nx-1;i++){
-    //the sub-array we are looking at is f(m,n) which leaves one dimension for the frequencies
-    //use central difference for interior gradients
-    gradient[i] = (f[i+1] - f[i-1])/(x(i+1) - x(i-1));
-  }
-  return gradient;
-}

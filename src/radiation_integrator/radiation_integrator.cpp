@@ -80,6 +80,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     mc_input = p_input_reader->mc_input.value();
     compton = p_input_reader->compton.value();
     stimulated_compton = p_input_reader->stimulated_compton.value();
+    mc_error = p_input_reader->mc_error.value();
   }
 
   // Copy formula parameters
@@ -444,6 +445,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   sample_bb2 = new Array<float>[adaptive_max_level+1];
   sample_bb3 = new Array<float>[adaptive_max_level+1];
   sample_scattering = new Array<float>[adaptive_max_level+1];
+  sample_scattering_err = new Array<float>[adaptive_max_level+1];
 
   // Allocate space for coefficient data
   j_i = new Array<double>[adaptive_max_level+1];
@@ -455,6 +457,8 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   rho_q = new Array<double>[adaptive_max_level+1];
   rho_v = new Array<double>[adaptive_max_level+1];
   cell_values = new Array<double>[adaptive_max_level+1];
+  
+  scat_err = new Array<double>[adaptive_max_level+1];
 
   // Copy slow-light extrapolation tolerance
   if (slow_light_on)
@@ -487,7 +491,21 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   {
     image_num_quantities += image_num_frequencies
         * (model_type == ModelType::simulation and image_polarization ? 4 : 1);
+    image_offset_scat_err = image_num_quantities;
     image_offset_time = image_num_quantities;
+    image_offset_length = image_num_quantities;
+    image_offset_lambda = image_num_quantities;
+    image_offset_emission = image_num_quantities;
+    image_offset_tau = image_num_quantities;
+    image_offset_lambda_ave = image_num_quantities;
+    image_offset_emission_ave = image_num_quantities;
+    image_offset_tau_int = image_num_quantities;
+    image_offset_photosphere_int = image_num_quantities;
+    image_offset_crossings = image_num_quantities;
+  }
+  if (mc_error)
+  {
+    image_num_quantities+= image_num_frequencies;
     image_offset_length = image_num_quantities;
     image_offset_lambda = image_num_quantities;
     image_offset_emission = image_num_quantities;
@@ -659,6 +677,7 @@ RadiationIntegrator::~RadiationIntegrator()
     sample_bb2[level].Deallocate();
     sample_bb3[level].Deallocate();
     sample_scattering[level].Deallocate();
+    sample_scattering_err[level].Deallocate();
   }
   delete[] sample_inds;
   delete[] sample_fracs;
@@ -675,6 +694,7 @@ RadiationIntegrator::~RadiationIntegrator()
   delete[] sample_bb2;
   delete[] sample_bb3;
   delete[] sample_scattering;
+  delete[] sample_scattering_err;
 
   // Free memory - coefficient data
   for (int level = 0; level <= adaptive_max_level; level++)
@@ -688,6 +708,7 @@ RadiationIntegrator::~RadiationIntegrator()
     rho_q[level].Deallocate();
     rho_v[level].Deallocate();
     cell_values[level].Deallocate();
+    scat_err[level].Deallocate();
   }
   delete[] j_i;
   delete[] j_q;
@@ -698,6 +719,7 @@ RadiationIntegrator::~RadiationIntegrator()
   delete[] rho_q;
   delete[] rho_v;
   delete[] cell_values;
+  delete[] scat_err;
 
   // Free memory - image data
   for (int level = 0; level <= adaptive_max_level; level++)

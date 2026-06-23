@@ -49,6 +49,8 @@ struct OutputWriter
   Camera camera_type;
   int camera_resolution;
 
+  bool mc_error;
+
   // Input data - image parameters
   bool image_light;
   int image_num_frequencies;
@@ -73,6 +75,7 @@ struct OutputWriter
   int image_offset_tau_int;
   int image_offset_photosphere_int;
   int image_offset_crossings;
+  int image_offset_scat_err;
 
   // Input data - rendering parameters
   int render_num_images;
