@@ -779,12 +779,6 @@ void RadiationIntegrator::SampleSimulation()
           sample_bb3[adaptive_level](m,n) = grid_prim[t](ind_bb3,b,k,j,i);
           
           if(mc_input){
-            double rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
-
-            double e_unit = simulation_rho_cgs * Physics::c * Physics::c * simulation_v_c*simulation_v_c;
-            double pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
-            double kb_tt_e_cgs =  Physics::m_p *pgas_cgs / rho_cgs;
-            
             for(int l=0; l<mc_num_freqs;l++){
               sample_scattering[adaptive_level](m,n,l) = grid_scatter[t](l,b,k,j,i);  
               if(mc_error)

@@ -628,7 +628,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             if(scattering!=0.0){
               alpha_i[adaptive_level](l,m,n) += Physics::sigma_t*n_e_cgs*nu_cgs;
               j_i[adaptive_level](l,m,n) += scattering;
-              scat_err[adaptive_level](l,m,n) += scattering_error;
+              scat_err[adaptive_level](l,m,n) = scattering_error;
             }
 
           }

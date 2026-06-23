@@ -98,7 +98,6 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
 
           int trace_pixel = m;
 
-
           // Integrate light
           if (image_light)
           {
@@ -116,14 +115,10 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
                 if(mc_error)
                   image[adaptive_level](image_offset_scat_err+l,m) = std::sqrt(scat_err[adaptive_level](l,m,n)/(alpha*alpha));
               }
-                
-
             }
             else
             {
               image[adaptive_level](l,m) += j * delta_lambda_cgs;
-              if(mc_error)
-                image[adaptive_level](image_offset_scat_err+l,m) = std::sqrt(std::pow(image[adaptive_level](image_offset_scat_err+l,m),2.)+scat_err[adaptive_level](l,m,n)*delta_lambda_cgs*delta_lambda_cgs);
             }
           }
 
@@ -247,7 +242,6 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             image[adaptive_level](image_offset_scat_err+l,m) *= nu_cu;
         }
     }
-  
   }
 
   // Free memory

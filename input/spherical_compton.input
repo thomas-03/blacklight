@@ -75,7 +75,7 @@ image_light           = true      # flag indicating real image of radiation shou
 image_num_frequencies   = 30       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
 image_frequency_start   = 2.713029e+14    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 2.155035e+18    # last frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 2.155035e+17    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization     = camera  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized

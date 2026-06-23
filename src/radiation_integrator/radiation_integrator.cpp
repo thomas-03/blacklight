@@ -505,7 +505,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   }
   if (mc_error)
   {
-    image_num_quantities++;
+    image_num_quantities+= image_num_frequencies;
     image_offset_length = image_num_quantities;
     image_offset_lambda = image_num_quantities;
     image_offset_emission = image_num_quantities;
