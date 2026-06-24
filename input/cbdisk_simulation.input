@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc5.npz  # file to be (over)written with output data
+output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc85.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -40,11 +40,12 @@ mc_file = data/isoth.out2.00000.athdf
 mc_freq_file = data/thomsonFrequencies.txt
 compton = false
 stimulated_compton = false
+mc_error = false
 
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
 camera_r          = 3200.0  # KS radial coordinate r in gravitational units
-camera_th         = 5.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_th         = 85.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
@@ -84,7 +85,7 @@ image_emission        = true     # flag for producing image of emission coeffici
 image_tau             = true    # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
-image_tau_int         = true     # flag for producing tau-integrated images
+image_tau_int         = false     # flag for producing tau-integrated images
 image_photosphere_int = true
 image_crossings       = false     # flag for counting plane crossings of geodesics
 image_free_free       = true  # flag for specifying whether to include free-free emission terms

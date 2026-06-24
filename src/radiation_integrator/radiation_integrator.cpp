@@ -594,7 +594,7 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
   }
   if (image_photosphere_int)
   {
-    image_num_quantities += image_num_frequencies * CellValues::num_cell_values;
+    image_num_quantities += image_num_frequencies * (CellValues::num_cell_values+3);
     image_offset_crossings = image_num_quantities;
   }
   if (image_crossings)

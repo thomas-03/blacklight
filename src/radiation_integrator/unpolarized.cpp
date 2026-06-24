@@ -68,6 +68,7 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
         int crossings_count = 0;
 
         double previous_delta_tau = 0.;
+        int photosphere_steps = 0;
         // Go through samples
         for (int n = 0; n < num_steps; n++)
         {
@@ -119,6 +120,7 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             else
             {
               image[adaptive_level](l,m) += j * delta_lambda_cgs;
+              //in the case that there's no alpha, there must be no scattering contribution so the error remains unchanged
             }
           }
 
@@ -184,16 +186,25 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
           {
             double tau_0 = 0.3;
             double tau_1 = 1.7;
-            for (int a = 0; a < CellValues::num_cell_values; a++){
-              int index = image_offset_photosphere_int + l * CellValues::num_cell_values + a;
-              //delta_tau sometimes equals 0 which causes Nan's
-              if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and (image[adaptive_level](image_offset_tau+l,m) <= tau_1 || previous_delta_tau < tau_0) and (not std::isnan(cell_values[adaptive_level](a,m,n))) and delta_tau!=0.0){
-                image[adaptive_level](index,m)+= cell_values[adaptive_level](a,m,n)/delta_tau;
-              }else{
-                image[adaptive_level](index,m) += 0.0;
-              }
-            }
             
+            int index = image_offset_photosphere_int + l * CellValues::num_cell_values;
+            if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and (image[adaptive_level](image_offset_tau+l,m) <= tau_1 || previous_delta_tau < tau_0) and delta_tau!=0.0){
+              for (int a = 0; a < CellValues::num_cell_values; a++){
+                if(not std::isnan(cell_values[adaptive_level](a,m,n))){
+                  index = image_offset_photosphere_int + l * CellValues::num_cell_values + a;
+                  //delta_tau sometimes equals 0 which causes Nan's
+                  image[adaptive_level](index,m)+= cell_values[adaptive_level](a,m,n);
+                }
+                
+              }
+
+              //index = image_offset_photosphere_int + (l+1) * CellValues::num_cell_values;
+              image[adaptive_level](index+1,m)+= x1;
+              image[adaptive_level](index+2,m)+= x2;
+              image[adaptive_level](index+3,m)+= x3;
+
+              photosphere_steps++;
+            }
           }
           if (image_crossings and l == 0)
           {
@@ -201,6 +212,9 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             if (plane_sign_new != plane_sign)
               crossings_count++;
             plane_sign = plane_sign_new;
+          }
+          if(image_photosphere_int){
+            previous_delta_tau = image[adaptive_level](image_offset_tau+l,m);
           }
         }
         
@@ -225,9 +239,19 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             int index = image_offset_emission_ave + l * CellValues::num_cell_values + a;
             image[adaptive_level](index,m) /= integrated_emission;
           }
-      if(image_photosphere_int){
-        previous_delta_tau = image[adaptive_level](image_offset_tau+l,m);
-      }
+        //TEGAN: note that this is a very rough average of the photospheric values and isn't taken very properly 
+        //       because don't consider the different spatial scales of steps
+        if (image_photosphere_int){
+          int index = image_offset_photosphere_int + l * CellValues::num_cell_values;
+          for (int a = 0; a < CellValues::num_cell_values; a++){
+              index = image_offset_photosphere_int + l * CellValues::num_cell_values + a;
+              
+              image[adaptive_level](index,m) /= photosphere_steps;
+          }
+          image[adaptive_level](index+1,m)/= photosphere_steps;
+          image[adaptive_level](index+2,m)/= photosphere_steps;
+          image[adaptive_level](index+3,m)/= photosphere_steps;
+        }
     }
     // Transform I_nu/nu^3 to I_nu
     if (image_light)
