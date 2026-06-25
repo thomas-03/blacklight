@@ -268,6 +268,7 @@ double MCReader::Read(int snapshot)
 
         }
         scattering_source_terms[0].Allocate(n5,n4, n3, n2, n1);
+        //TEGAN: I should be doing a like if mc_error statment here
         scattering_error[0].Allocate(n5,n4,n3,n2,n1);
       }
       std::cout<<"did all the allocations "<<std::endl;
@@ -395,15 +396,26 @@ void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
           grad(nx-1,b,k,j,i) = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
           if(mc_error){  
             //std::printf("calculating grad error ");
-            grad(nx,b,k,j,i) = (f(1+nx,b,k,j,i) - f(nx,b,k,j,i))/(x(1) - x(0));
-            grad(2*nx-1,b,k,j,i) = (f(2*nx-1,b,k,j,i) - f(2*nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
+            grad(nx,b,k,j,i) = std::sqrt(std::pow(f(1+nx,b,k,j,i),2.) - std::pow(f(nx,b,k,j,i),2.))/(x(1) - x(0));
+            grad(2*nx-1,b,k,j,i) = std::sqrt(std::pow(f(2*nx-1,b,k,j,i),2.) - std::pow(f(2*nx-2,b,k,j,i),2.))/(x(nx-1) - x(nx-2));
             //std::printf("calculated first two grad errors "); 
           }
           
           for(int l=1;l<(num_freqs-1);l++){
+            /*if(f(l+1,b,k,j,i)<0.0 && l<(num_freqs-2)){
+              grad(l,b,k,j,i) = (f(l+2,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+2) - x(l-1));
+              if(mc_error){
+                grad(l+nx,b,k,j,i) = (f(l+2+nx,b,k,j,i) - f(l-1+nx,b,k,j,i))/(x(l+2) - x(l-1));
+              }
+            }else if(f(l+1,b,k,j,i)<0.0 && l==(num_freqs-2)){
+              grad(l,b,k,j,i) = (f(l,b,k,j,i) - f(l-1,b,k,j,i))/(x(l) - x(l-1));
+              if (mc_error) grad(nx+l,b,k,j,i) = (f(nx+l,b,k,j,i) - f(nx+l-1,b,k,j,i))/(x(l) - x(l-1));
+            }*/
+
+
             grad(l,b,k,j,i) = (f(l+1,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+1) - x(l-1));
             if(mc_error){
-              grad(l+nx,b,k,j,i) = (f(l+1+nx,b,k,j,i) - f(l-1+nx,b,k,j,i))/(x(l+1) - x(l-1));
+              grad(l+nx,b,k,j,i) = std::sqrt(std::pow(f(l+1+nx,b,k,j,i),2.) - std::pow(f(l-1+nx,b,k,j,i),2.))/(x(l+1) - x(l-1));
             }
           }
         }
@@ -418,6 +430,46 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
   double e_unit = simulation_rho_cgs * Physics::c * Physics::c * simulation_v_c*simulation_v_c;
   double b_unit = std::sqrt(4.0 * Math::pi * e_unit);
 
+  if(!compton){
+    //when not doing checks it might be a good idea to see if I can simplify this down to a simple copy
+    #pragma omp parallel for schedule(static) collapse(5)
+    for(int i=0;i<source_term.n1;i++){
+      for(int j=0;j<source_term.n2;j++){
+        for(int k=0;k<source_term.n3;k++){
+          for(int b=0;b<source_term.n4;b++){
+            for(int l=0;l<source_term.n5;l++){
+
+              //just taking out the negative values doesn't improve the error in thomson
+              /*if(scattering(l,b,k,j,i)<0.){
+                source_term(l,b,k,j,i) = 0.0;
+                scattering_error(l,b,k,j,i) = 0.0;
+                //there doesn't seem to be a particular frequency that gets more negatives than others just by simple look at print
+                //std::printf("negative source terms: %.3e error: %.3e freq: %d",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i),l);
+              
+              }else{*/
+                source_term(l,b,k,j,i) = scattering(l,b,k,j,i);
+                if(mc_error){  
+                scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i);
+                }else{
+                  scattering_error(l,b,k,j,i) = 0.0;
+                }
+              //}
+              /*if(scattering(l,b,k,j,i)<scattering(l+source_term.n5,b,k,j,i)){
+                source_term(l,b,k,j,i) = 0.0;
+                if(mc_error) scattering_error(l,b,k,j,i) = 0.0;
+              }*/
+              
+              /*if(source_term(l,b,k,j,i)<0.0){
+                std::printf("negative source terms: %.3e error: %.3e ",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i));
+              }*/
+              
+              scattering_error(l,b,k,j,i) *= scattering_error(l,b,k,j,i);
+            }
+          }
+        }
+      }
+    }
+  }else{
   #pragma omp parallel for schedule(static) collapse(4)
   for(int i=0;i<source_term.n1;i++){
     for(int j=0;j<source_term.n2;j++){
@@ -429,7 +481,6 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
           double gcon_sim[4][4];
           double kb_tt_e_cgs;
           double theta_e;
-          if(compton){
             rho_cgs = simulation_rho_cgs*grid_prim[0](ind_rho,b,k,j,i);
             pgas_cgs = e_unit*grid_prim[0](p_simulation_reader->ind_pgas,b,k,j,i);
             
@@ -534,13 +585,16 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
               theta_e = 1.0 / 5.0 * (std::sqrt(1.0 + 25.0 * rho_kappa_e_cbrt * rho_kappa_e_cbrt) - 1.0);
               kb_tt_e_cgs = theta_e * Physics::m_e * Physics::c * Physics::c;
             }
-          }
-
+          
+          
           for(int l=0;l<source_term.n5;l++){
             //calculate frequency dependent compton source term
             double x = Physics::h*freq_grid(l)/(Physics::m_e*Physics::c*Physics::c);
-            if(compton){
-              //std::printf("first term: %.5e, second term: %.5e, third term: %.5e",(1-x)*scattering(l,b,k,j,i),(x-3*theta_e)*scattering_prime(l,b,k,j,i),theta_e*scattering_prime_prime(l,b,k,j,i));
+            
+           /* if(scattering(l,b,k,j,i)<0.0 || scattering(std::max(l-1,0),b,k,j,i)<0.0 || scattering(std::min(l+1,source_term.n5-1),b,k,j,i)<0.0){
+              source_term(l,b,k,j,i) = 0.0;
+              scattering_error(l,b,k,j,i) = 0.0;
+            }else{*/
               source_term(l,b,k,j,i) = (1-x)*scattering(l,b,k,j,i)+ (x-3*theta_e)*scattering_prime(l,b,k,j,i)+theta_e*scattering_prime_prime(l,b,k,j,i);
               /*double sigma_prime = scattering(l+source_term.n5+1,b,k,j,i)/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.) + scattering(l+source_term.n5-1,b,k,j,i)/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.);
               double sigma_prime_minus = scattering(l+source_term.n5,b,k,j,i)/std::pow((ln_freq_grid(l)-ln_freq_grid(l-2)),2.) + scattering(l+source_term.n5-2,b,k,j,i)/std::pow((ln_freq_grid(l)-ln_freq_grid(l-2)),2.);
@@ -548,12 +602,22 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
               
               double sigma_prime_prime = sigma_prime_plus/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.) + sigma_prime_minus/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.);
               */
+              //Note: scattering_error's here are directly computed as variances
               if(mc_error){
-                scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i)*(1-x)*(1-x) + scattering_prime(l+source_term.n5,b,k,j,i)*(x-3.*theta_e)*(x-3.*theta_e) + scattering_prime_prime(l+source_term.n5,b,k,j,i)*theta_e*theta_e;
+                scattering_error(l,b,k,j,i) = std::pow(scattering(l+source_term.n5,b,k,j,i),2.)*(1-x)*(1-x) + std::pow(scattering_prime(l+source_term.n5,b,k,j,i),2.)*(x-3.*theta_e)*(x-3.*theta_e) + std::pow(scattering_prime_prime(l+source_term.n5,b,k,j,i),2.)*theta_e*theta_e;
               
               }else{
                 scattering_error(l,b,k,j,i) = 0.0;
               }
+              if(stimulated_compton){
+                source_term(l,b,k,j,i) += Physics::c*Physics::c*x*scattering(l,b,k,j,i)*(scattering_prime(l,b,k,j,i)-scattering(l,b,k,j,i))/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l));
+                if(mc_error){
+                  scattering_error(l,b,k,j,i) = std::pow(scattering(l+source_term.n5,b,k,j,i),2.)*std::pow(1-x+(Physics::c*Physics::c*x/(Physics::h*freq_grid(l)*freq_grid(l)))*scattering_prime(l,b,k,j,i) - (2.*Physics::c*Physics::c*x/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l)))*scattering(l,b,k,j,i),2.)+std::pow(scattering_prime(l+source_term.n5,b,k,j,i),2.)*std::pow(x-3*theta_e+scattering(l,b,k,j,i)*(Physics::c*Physics::c*x)/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l)),2.)+ std::pow(scattering_prime_prime(l+source_term.n5,b,k,j,i),2.)*theta_e*theta_e;
+                }else{
+                  scattering_error(l,b,k,j,i) = 0.0;
+                }
+              }
+           // }
               /*if(source_term(l,b,k,j,i)<0.0 && scattering(l,b,k,j,i)<0.0){
                 //1-x seems pretty much always positive, 3*theta_e>x most of the time but not always.
                 //frequency: 3.416e+16, x: 2.764e-04, theta_e: 4.283e-03
@@ -569,29 +633,16 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
 
                 std::printf("scattering negative!: %.3e ",scattering(l,b,k,j,i));
               }*/
-              if(stimulated_compton){
-                source_term(l,b,k,j,i) += Physics::c*Physics::c*x*scattering(l,b,k,j,i)*(scattering_prime(l,b,k,j,i)-scattering(l,b,k,j,i))/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l));
-                if(mc_error){
-                  scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i)*std::pow(1-x+(Physics::c*Physics::c*x/(Physics::h*freq_grid(l)*freq_grid(l)))*scattering_prime(l,b,k,j,i) - (2.*Physics::c*Physics::c*x/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l)))*scattering(l,b,k,j,i),2.)+scattering_prime(l+source_term.n5,b,k,j,i)*std::pow(x-3*theta_e+scattering(l,b,k,j,i)*(Physics::c*Physics::c*x)/(Physics::h*freq_grid(l)*freq_grid(l)*freq_grid(l)),2.)+ scattering_prime_prime(l+source_term.n5,b,k,j,i)*theta_e*theta_e;
-                }else{
-                  scattering_error(l,b,k,j,i) = 0.0;
-                }
-              }
-            }else{
-              source_term(l,b,k,j,i) = scattering(l,b,k,j,i);
-              if(mc_error){  
-                scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i);
-              }else{
-                scattering_error(l,b,k,j,i) = 0.0;
-              }
-            }
+              
+            
             //turn standard deviation to variance. this will be used up until integration
-            scattering_error(l,b,k,j,i) *= scattering_error(l,b,k,j,i);
+            //scattering_error(l,b,k,j,i) *= scattering_error(l,b,k,j,i);
             
           }
         }
       }
     }
+  }
   }
 }
 

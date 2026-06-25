@@ -25,7 +25,7 @@ simulation_all_cgs      = false
 simulation_rho_cgs      = 1e-4          # unit code density in g/cm^3
 simulation_v_c          = 1.0             # unit code v0
 simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
-simulation_interp       = true             # flag indicating interpolation should be used
+simulation_interp       = false             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
 simulation_hd_only = false
 simulation_mc_temp = true
@@ -73,7 +73,7 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 image_light           = true      # flag indicating real image of radiation should be produced
 image_num_frequencies   = 20       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 2e14    # first frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 2e16    # first frequency in Hz if image_frequency_num > 1
 image_frequency_end     = 3e20    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
