@@ -54,6 +54,11 @@ struct MCReader
 
   bool first_time = true;
   bool first_time_root_object_header = true;
+  bool root_grid_size_found = false;
+  bool dataset_names_found = false;
+  bool variable_names_found = false;
+  bool num_variables_found = false;
+  bool tree_n_heap_address_found = false;
   
   double simulation_m_msun;
   bool simulation_all_cgs;
@@ -113,9 +118,19 @@ struct MCReader
   
   // Internal functions - mc_hdf5_format_structure.cpp
   void ReadHDF5Superblock();
+  void ReadHDF5SuperblockVers2();
   void ReadHDF5RootGroupSymbolTableEntry();
   unsigned long int ReadHDF5Heap(unsigned long int heap_address);
   void ReadHDF5RootObjectHeader();
+  void ReadHDF5RootObjectHeaderVers2();
+  void ReadHDF5AttributeBTreeVers2(unsigned long int btree_address);
+  void ReadHDF5FractalHeapObject(unsigned long int heap_address, 
+                                        unsigned char* heap_id, 
+                                        int heap_id_len,
+                                        std::string &out_name, 
+                                        unsigned char** out_datatype_raw,
+                                        unsigned char** out_dataspace_raw,
+                                        unsigned char** out_data_raw);
   void ReadHDF5FloatAttribute(const char *attribute_name, float *p_val);
 
   // Internal functions - mc_hdf5_format_metadata.cpp
