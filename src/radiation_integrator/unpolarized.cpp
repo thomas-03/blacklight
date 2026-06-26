@@ -187,24 +187,30 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             double tau_0 = 0.3;
             double tau_1 = 1.7;
             
-            int index = image_offset_photosphere_int + l * CellValues::num_cell_values;
-            if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and (image[adaptive_level](image_offset_tau+l,m) <= tau_1 || previous_delta_tau < tau_0) and delta_tau!=0.0){
-              for (int a = 0; a < CellValues::num_cell_values; a++){
-                if(not std::isnan(cell_values[adaptive_level](a,m,n))){
-                  index = image_offset_photosphere_int + l * CellValues::num_cell_values + a;
+            //int index = image_offset_photosphere_int + l * CellValues::num_cell_values;
+            for (int a = 0; a < CellValues::num_cell_values; a++){
+              int index = image_offset_photosphere_int + l * CellValues::num_cell_values + a;
+            if(image[adaptive_level](image_offset_tau+l,m) >= tau_0 and (image[adaptive_level](image_offset_tau+l,m) <= tau_1 || previous_delta_tau < tau_0) and (not std::isnan(cell_values[adaptive_level](a,m,n))) and delta_tau!=0.0){
+             // for (int a = 0; a < CellValues::num_cell_values; a++){
+                //if(not std::isnan(cell_values[adaptive_level](a,m,n))){
+                  
                   //delta_tau sometimes equals 0 which causes Nan's
                   image[adaptive_level](index,m)+= cell_values[adaptive_level](a,m,n);
-                }
-                
-              }
+                //}else{
 
-              //index = image_offset_photosphere_int + (l+1) * CellValues::num_cell_values;
+               // }
+                
+              }else{
+                image[adaptive_level](index,m) += 0.0;
+              }
+            }
+              int index = image_offset_photosphere_int + (l+1) * CellValues::num_cell_values;
               image[adaptive_level](index+1,m)+= x1;
               image[adaptive_level](index+2,m)+= x2;
               image[adaptive_level](index+3,m)+= x3;
 
               photosphere_steps++;
-            }
+            
           }
           if (image_crossings and l == 0)
           {
@@ -248,6 +254,7 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
               
               image[adaptive_level](index,m) /= photosphere_steps;
           }
+          index = image_offset_photosphere_int + (l+1) * CellValues::num_cell_values;
           image[adaptive_level](index+1,m)/= photosphere_steps;
           image[adaptive_level](index+2,m)/= photosphere_steps;
           image[adaptive_level](index+3,m)/= photosphere_steps;

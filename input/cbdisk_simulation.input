@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc85.npz  # file to be (over)written with output data
+output_file   = output/cbdisk/ff_tabular/r3200_w1600_inc5.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -45,7 +45,7 @@ mc_error = false
 # Camera parameters
 camera_type       = pinhole  # type of camera (plane, pinhole)
 camera_r          = 3200.0  # KS radial coordinate r in gravitational units
-camera_th         = 85.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_th         = 5.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
