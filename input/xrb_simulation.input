@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/xrb_gr/xrb_i0_plane_shane_compton.npz  # file to be (over)written with output data
+output_file   = output/xrb_gr/xrb_i0_plane.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -35,10 +35,10 @@ simulation_athenak_vars = true
 opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
-mc_input = true
+mc_input = false
 mc_file = /PellaShared/swd8g/tegan/scatter_1e9/xrb.out5.00000.athdf
 mc_freq_file = /PellaShared/swd8g/tegan/scatter_1e7/sourceterm_frequencies.txt
-compton = true
+compton = false
 stimulated_compton = true
 mc_error = true
 
@@ -46,7 +46,7 @@ mc_error = true
 # Camera parameters
 camera_type       = plane  # type of camera (plane, pinhole)
 camera_r          = 1600.0  # KS radial coordinate r in gravitational units
-camera_th         = 90.0   # KS polar coordinate theta in degrees (0/180 for N/S)
+camera_th         = 0.0   # KS polar coordinate theta in degrees (0/180 for N/S)
 camera_ph         = 0.0    # KS azimuthal coordinate phi in degrees
 camera_urn        = 0.0    # contravariant KS normal r-velocity
 camera_uthn       = 0.0    # contravariant KS normal theta-velocity (using radians)
