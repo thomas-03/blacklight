@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = output/xrb_gr/xrb_i0_plane.npz  # file to be (over)written with output data
+output_file   = output/xrb_gr/shane_xrb_i0_plane_compton.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -16,7 +16,7 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = /PellaShared/swd8g/tegan/scatter_1e9/xrb.out4.00000.athdf  # file containing data dump
+simulation_file         = /PellaShared/swd8g/tegan/scatter_1e8/xrb.out4.00000.athdf  # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = cks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.3              # dimensionless black hole spin
@@ -27,19 +27,19 @@ simulation_v_c          = 1.0             # unit code v0
 simulation_r_rg         = 1.0              # flag indicating r_g/simulation r_units. for r_g it would be 1 and for r_s it would be 2.
 simulation_interp       = false             # flag indicating interpolation should be used
 simulation_block_interp = false            # flag indicating interpolation should cross blocks  
-simulation_hd_only = false
+simulation_hd_only = true
 simulation_mc_temp = true
-simulation_athenak_vars = true
+simulation_athenak_vars = false
 
 #opacity table parameters
 opacity_table = false
 opacity_file = data/out_opacity_table_nfreq64.txt
 
-mc_input = false
-mc_file = /PellaShared/swd8g/tegan/scatter_1e9/xrb.out5.00000.athdf
-mc_freq_file = /PellaShared/swd8g/tegan/scatter_1e7/sourceterm_frequencies.txt
-compton = false
-stimulated_compton = true
+mc_input = true
+mc_file = /PellaShared/swd8g/tegan/scatter_1e8/xrb.out5.00000.athdf
+mc_freq_file = /PellaShared/swd8g/x-ray_binaries/test_scat/sourceterm_frequencies.txt
+compton = true
+stimulated_compton = false
 mc_error = true
 
 
@@ -71,10 +71,10 @@ ray_tol_rel     = 1.0e-8          # relative tolerance for taking full steps (dp
 
 # Image parameters
 image_light           = true      # flag indicating real image of radiation should be produced
-image_num_frequencies   = 20       # number of observation frequencies
+image_num_frequencies   = 30       # number of observation frequencies
 image_frequency         = 3.3e20  # frequency in Hz if image_frequency_num = 1
-image_frequency_start   = 2e16    # first frequency in Hz if image_frequency_num > 1
-image_frequency_end     = 3e20    # last frequency in Hz if image_frequency_num > 1
+image_frequency_start   = 3e16    # first frequency in Hz if image_frequency_num > 1
+image_frequency_end     = 5e18    # last frequency in Hz if image_frequency_num > 1
 image_frequency_spacing = log  # frequency spacing (lin_freq, lin_wave, log)
 image_normalization   = infinity  # frequency location (camera [w/ velocity], infinity [rest])
 image_polarization    = false     # flag indicating transport should be polarized
@@ -83,7 +83,7 @@ image_time            = false     # flag for producing image of geodesic times
 image_length          = false     # flag for producing image of geodesic lengths
 image_lambda          = false     # flag for producing image of affine path lengths
 image_emission        = true     # flag for producing image of emission coefficients
-image_tau             = true     # flag for producing image of optical depths
+image_tau             = true    # flag for producing image of optical depths
 image_lambda_ave      = false     # flag for producing lambda-averaged images
 image_emission_ave    = false     # flag for producing emission-averaged images
 image_tau_int         = false     # flag for producing tau-integrated images
@@ -103,8 +103,8 @@ slow_light_on = false  # flag indicating slow light should be used
 adaptive_max_level = 0  # maximum number of adaptive levels beyond root
 
 # Plasma parameters
-plasma_mu         = 0.5         # molecular weight of fluid in proton masses
-plasma_ne_ni      = 1.0         # electrons per ion
+plasma_mu         = 1.2477        # molecular weight of fluid in proton masses
+plasma_ne_ni      = 1.08257        # electrons per ion
 plasma_model      = one_temp  # thermal electron temperature model (ti_te_beta, code_kappa)
 plasma_use_p      = true        # flag indicating total p (rather than u) should match simulation
 plasma_rat_low    = 1.0         # ion-electron temperature ratio at zero plasma beta

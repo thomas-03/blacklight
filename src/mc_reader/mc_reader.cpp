@@ -271,8 +271,7 @@ double MCReader::Read(int snapshot)
         //TEGAN: I should be doing a like if mc_error statment here
         scattering_error[0].Allocate(n5,n4,n3,n2,n1);
       }
-      std::cout<<"did all the allocations "<<std::endl;
-
+      
         std::printf("allocate arrays time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
       //Array<float> source_terms(scattering_source_terms[0]);
@@ -281,22 +280,17 @@ double MCReader::Read(int snapshot)
       Array<float> shallow_second_deriv(scattering_second_derivs[0]);
       Array<float> shallow_source_terms(scattering_source_terms[0]);
       Array<float> shallow_scatter_error(scattering_error[0]);
-      std::cout<<"created shallow arrays"<<std::endl;
       //TEGAN: i'm not sure if i have to do this sort of copying, but just doing it for now
       //come back later to check
       
       ReadHDF5FloatArray("mcscat",shallow_scatter);
-      std::cout<<"read the mcscat"<<std::endl;
-
+      
         std::printf("read mc scattering: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
       if(compton){
-        std::cout<<"computing gradients"<<std::endl;
         Gradient(shallow_first_deriv, shallow_scatter, ln_freq_grid);
-        std::cout<<" finished computing first gradient "<<std::endl;
         Gradient(shallow_second_deriv, shallow_first_deriv, ln_freq_grid);
       }
-      std::cout<<"done computing gradients"<<std::endl;
 
         std::printf("compute gradient time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
@@ -306,25 +300,20 @@ double MCReader::Read(int snapshot)
         std::printf("calc source term time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
     
-    std::cout<<"finished getting source terms"<<std::endl;
-
+    
     // Close input file
     data_stream.close();
-    std::cout<<"deallocate scattering"<<std::endl;
-
+    
     scattering[0].Deallocate();
     delete[] scattering;
 
-    std::cout<<"deallocate scattering deriv"<<std::endl;
     scattering_first_derivs[0].Deallocate();
     delete[] scattering_first_derivs;
 
-    std::cout<<"deallocate scattering second deriv"<<std::endl;
     scattering_second_derivs[0].Deallocate();
     delete[] scattering_second_derivs;
     
-    std::cout<<" finished everything"<<std::endl;
-
+    
     // Update first time flag
     first_time = false;
 
@@ -396,8 +385,8 @@ void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
           grad(nx-1,b,k,j,i) = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
           if(mc_error){  
             //std::printf("calculating grad error ");
-            grad(nx,b,k,j,i) = std::sqrt(std::pow(f(1+nx,b,k,j,i),2.) - std::pow(f(nx,b,k,j,i),2.))/(x(1) - x(0));
-            grad(2*nx-1,b,k,j,i) = std::sqrt(std::pow(f(2*nx-1,b,k,j,i),2.) - std::pow(f(2*nx-2,b,k,j,i),2.))/(x(nx-1) - x(nx-2));
+            grad(nx,b,k,j,i) = std::sqrt(std::pow(f(1+nx,b,k,j,i),2.) + std::pow(f(nx,b,k,j,i),2.))/(x(1) - x(0));
+            grad(2*nx-1,b,k,j,i) = std::sqrt(std::pow(f(2*nx-1,b,k,j,i),2.) + std::pow(f(2*nx-2,b,k,j,i),2.))/(x(nx-1) - x(nx-2));
             //std::printf("calculated first two grad errors "); 
           }
           
@@ -415,7 +404,7 @@ void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
 
             grad(l,b,k,j,i) = (f(l+1,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+1) - x(l-1));
             if(mc_error){
-              grad(l+nx,b,k,j,i) = std::sqrt(std::pow(f(l+1+nx,b,k,j,i),2.) - std::pow(f(l-1+nx,b,k,j,i),2.))/(x(l+1) - x(l-1));
+              grad(l+nx,b,k,j,i) = std::sqrt(std::pow(f(l+1+nx,b,k,j,i),2.) + std::pow(f(l-1+nx,b,k,j,i),2.))/(x(l+1) - x(l-1));
             }
           }
         }
@@ -441,18 +430,35 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
 
               //just taking out the negative values doesn't improve the error in thomson
               /*if(scattering(l,b,k,j,i)<0.){
+                //source_term(l,b,k,j,i) = 0.0;
+                //scattering_error(l,b,k,j,i) = 0.0;
+                //there doesn't seem to be a particular frequency that gets more negatives than others just by simple look at print
+                std::printf("negative source terms: %.3e error: %.3e freq: %d",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i),l);
+              
+              }*///else{
+              /*if(b==109 && k == 25 && j == 59 && i ==2 && l==7){
+                std::printf("scattering isnan: %d scattering error isnnan: %d ",std::isnan(scattering(l,b,k,j,i)),std::isnan(scattering(l+source_term.n5,b,k,j,i)));
+              }*/
+
+              if(std::isnan(scattering(l,b,k,j,i))){
                 source_term(l,b,k,j,i) = 0.0;
                 scattering_error(l,b,k,j,i) = 0.0;
-                //there doesn't seem to be a particular frequency that gets more negatives than others just by simple look at print
-                //std::printf("negative source terms: %.3e error: %.3e freq: %d",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i),l);
-              
-              }else{*/
+              }else{
                 source_term(l,b,k,j,i) = scattering(l,b,k,j,i);
                 if(mc_error){  
                 scattering_error(l,b,k,j,i) = scattering(l+source_term.n5,b,k,j,i);
                 }else{
                   scattering_error(l,b,k,j,i) = 0.0;
                 }
+              }
+                
+                /*if(source_term(l,b,k,j,i) != 0.0){
+                  std::printf("zero source terms: %.3e error: %.3e freq: %d ",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i),l);
+                }*/
+                
+                /*if(source_term(l,b,k,j,i)<0.0){
+                  std::printf("find that error, scattering: %.3e  error: %.3e ",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i));
+                }*/
               //}
               /*if(scattering(l,b,k,j,i)<scattering(l+source_term.n5,b,k,j,i)){
                 source_term(l,b,k,j,i) = 0.0;
@@ -595,6 +601,7 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
               source_term(l,b,k,j,i) = 0.0;
               scattering_error(l,b,k,j,i) = 0.0;
             }else{*/
+            if(!std::isnan(source_term(l,b,k,j,i))){
               source_term(l,b,k,j,i) = (1-x)*scattering(l,b,k,j,i)+ (x-3*theta_e)*scattering_prime(l,b,k,j,i)+theta_e*scattering_prime_prime(l,b,k,j,i);
               /*double sigma_prime = scattering(l+source_term.n5+1,b,k,j,i)/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.) + scattering(l+source_term.n5-1,b,k,j,i)/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.);
               double sigma_prime_minus = scattering(l+source_term.n5,b,k,j,i)/std::pow((ln_freq_grid(l)-ln_freq_grid(l-2)),2.) + scattering(l+source_term.n5-2,b,k,j,i)/std::pow((ln_freq_grid(l)-ln_freq_grid(l-2)),2.);
@@ -603,9 +610,8 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
               double sigma_prime_prime = sigma_prime_plus/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.) + sigma_prime_minus/std::pow((ln_freq_grid(l+1)-ln_freq_grid(l-1)),2.);
               */
               //Note: scattering_error's here are directly computed as variances
-              if(mc_error){
+              if(!stimulated_compton && mc_error){
                 scattering_error(l,b,k,j,i) = std::pow(scattering(l+source_term.n5,b,k,j,i),2.)*(1-x)*(1-x) + std::pow(scattering_prime(l+source_term.n5,b,k,j,i),2.)*(x-3.*theta_e)*(x-3.*theta_e) + std::pow(scattering_prime_prime(l+source_term.n5,b,k,j,i),2.)*theta_e*theta_e;
-              
               }else{
                 scattering_error(l,b,k,j,i) = 0.0;
               }
@@ -617,6 +623,17 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
                   scattering_error(l,b,k,j,i) = 0.0;
                 }
               }
+            }else{
+              source_term(l,b,k,j,i) = 0.0;
+              scattering_error(l,b,k,j,i) = 0.0;
+            }
+              /*if(source_term(l,b,k,j,i)<scattering_error(l,b,k,j,i)){
+                source_term(l,b,k,j,i) = 0.0;
+                scattering_error(l,b,k,j,i) = 0.0;
+                //there doesn't seem to be a particular frequency that gets more negatives than others just by simple look at print
+               //std::printf("negative source terms: %.3e error: %.3e source term minus 1: %.3e freq: %d",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i),scattering(l-1,b,k,j,i),l);
+              
+              }*/
            // }
               /*if(source_term(l,b,k,j,i)<0.0 && scattering(l,b,k,j,i)<0.0){
                 //1-x seems pretty much always positive, 3*theta_e>x most of the time but not always.

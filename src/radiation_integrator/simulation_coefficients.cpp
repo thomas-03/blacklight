@@ -502,7 +502,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         // Go through frequencies
         for (int l = 0; l < image_num_frequencies; l++)
         {
-          // Calculate orthonormal-frame frequencies
+          //nu_cgs is in the orthonormal frame and nu_fluid_cgs is in the fluid frame
           double nu_cgs = 0.0;
           for (int mu = 0; mu < 4; mu++)
             nu_cgs -= kcov[mu] * ucon[mu];//this gives the fluid frame frequency
@@ -589,6 +589,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
             //TEGAN:why am i doing it over log10???
             // If the frequency is outside the range of the MC frequencies + delta_nu, then default to no scattering
+            
             if (mid==0 && (std::log(nu_cgs)+mc_dlf)<std::log(mc_freqs(mid))){
               scattering = 0.0;
 
@@ -598,6 +599,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
               scattering_error = 0.0;
             }else{
+              //if(image_frequencies(l)>2.5e18){
+              //  std::printf("nu_fluid_cgs = %.5e, mid = %d, mc_freqs(mid) = %.5e, mc_dlf = %.5e\n", nu_cgs, mid, mc_freqs(mid), mc_dlf);
+              //}
               //perform linear interpolation in linear-log space to find scattering value at nu_cgs
               if(std::log(mc_freqs(mid))==std::log(nu_cgs) || mid==0 || mid==mc_num_freqs-1){
                 scattering = sample_scattering[adaptive_level](m,n,mid)*Physics::sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
@@ -621,14 +625,26 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
                 scattering = scattering_interp;
 
                 if(mc_error) scattering_error = sample_scattering_err[adaptive_level](m,n,mid-1)*std::pow((Physics::sigma_t*n_e_cgs/(mc_freqs(mid-1)*mc_freqs(mid-1)))*(log_nu_high-std::log(nu_cgs))/(log_nu_high-log_nu_low),2.) + sample_scattering_err[adaptive_level](m,n,mid)*std::pow((Physics::sigma_t*n_e_cgs/(mc_freqs(mid)*mc_freqs(mid)))* (std::log(nu_cgs) - log_nu_low) / (log_nu_high - log_nu_low),2.);
-               }
+              }
+             /* scattering = sample_scattering[adaptive_level](m,n,mid)*Physics::sigma_t*n_e_cgs/(nu_cgs*nu_cgs);
+
+              if(mc_error) scattering_error = sample_scattering_err[adaptive_level](m,n,mid)*std::pow(Physics::sigma_t*n_e_cgs/(nu_cgs*nu_cgs),2.);
+              */
             }
 
             //Calculate emissivity and absorptivity due to scattering
+            
+            /*if(scattering<0.0){
+              std::printf("negative scattering!");
+            }*/
+            //need to include this if statement as some cells may not be visited at all and shouldn't get absorption there bc would be unfair???
             if(scattering!=0.0){
               alpha_i[adaptive_level](l,m,n) += Physics::sigma_t*n_e_cgs*nu_cgs;
-              j_i[adaptive_level](l,m,n) += scattering;
-              if(mc_error) scat_err[adaptive_level](l,m,n) = scattering_error;
+              /*if (sample_scattering[adaptive_level](m,n,mid) > 1.0e10){
+                std::printf("scattering = %.5e, alpha_i = %.5e, nu_cgs = %.5e, n_e_cgs = %.5e\n", scattering, alpha_i[adaptive_level](l,m,n), nu_cgs, n_e_cgs);
+              }*/
+              j_i[adaptive_level](l,m,n) += scattering/Physics::c;
+              if(mc_error) scat_err[adaptive_level](l,m,n) = scattering_error/Physics::c;
             }
 
           }
