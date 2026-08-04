@@ -1289,7 +1289,13 @@ void SimulationReader::VerifyVariablesAthena()
       break;*/
 
   // Check that array of all magnetic field components is present
-  if(simulation_hd_only) return; //skip B field checks if HD only
+  if(simulation_hd_only)
+  {
+    ind_bb1 = -1;
+    ind_bb2 = -1;
+    ind_bb3 = -1;
+    return; //skip B field checks if HD only
+  }
   int bb_offset = 0;
   for (ind_bb = 0; ind_bb < num_dataset_names; ind_bb++)
     if (dataset_names[ind_bb] == "B")

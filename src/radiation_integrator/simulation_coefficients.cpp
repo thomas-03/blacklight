@@ -246,14 +246,15 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
   double v_unit = simulation_v_c;
   //double t_unit = 5444097725001.523;
   //double e_unit = t_unit*d_unit;
-  double e_unit = d_unit * Physics::c * Physics::c * v_unit*v_unit;
+  double e_unit = d_unit *v_unit*v_unit*Physics::c*Physics::c;
   std::printf("d_unit = %.5e, v_unit = %.5e, e_unit = %.5e\n",d_unit,v_unit,e_unit);
   //double e_unit = 1.0;
-
+  bool firstTime = true;
   double b_unit = std::sqrt(4.0 * Math::pi * e_unit);
   if(plasma_model==PlasmaModel::one_temp)
   std::cout<<"Warning: you have selected the one_temp electron model. The electron temperature will be calculated as if it were a two temperature simulation but with T_e = T_i."<<std::endl;
-
+  //when do it maria renee way: rho_cgs: 5.853e+21 uu1_sim: 3.002e+00 pgas_cgs: 4.373e+56 T: 9.052e+26 mu*mp/kB: 1.211e-08 pgas: 7.884e+19 rho: 9.483e+05 
+  //rho_cgs: 5.853e+21 uu1_sim: 3.002e+00 pgas_cgs: 4.373e+56 T: 9.052e+26 mu*mp/kB: 1.211e-08 pgas: 7.884e+19 rho: 9.483e+05 
   // Work in parallel
   #pragma omp parallel
   {
@@ -269,9 +270,13 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
     #pragma omp for schedule(static)
     for (int m = 0; m < num_pix; m++)
     {
+       bool firstTime = true;
       int num_steps = sample_num[adaptive_level](m);
       for (int n = 0; n < num_steps; n++)
       {
+        if(  m==1023 && n==25606){
+          std::printf("n: %d m:%d first \n",n,m);
+        }
         // Skip coupling if in cut region
         if (sample_cut[adaptive_level](m,n))
           continue;
@@ -280,6 +285,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double x1 = sample_pos[adaptive_level](m,n,1);
         double x2 = sample_pos[adaptive_level](m,n,2);
         double x3 = sample_pos[adaptive_level](m,n,3);
+        if(  m==1023&& n==25606){
+          std::printf("n: %d m:%d x1: %.3e x2: %.3e x3: %.3e second \n",n,m,x1,x2,x3);
+        }
         double kcov[4];
         kcov[0] = sample_dir[adaptive_level](m,n,0);
         kcov[1] = sample_dir[adaptive_level](m,n,1);
@@ -297,7 +305,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double uu3_sim = sample_uu3[adaptive_level](m,n);
         double bb1_sim = sample_bb1[adaptive_level](m,n);
         double bb2_sim = sample_bb2[adaptive_level](m,n);
-        double bb3_sim = sample_bb3[adaptive_level](m,n);
+        double bb3_sim = sample_bb3[adaptive_level](m,n);        
 
         //scale model velocities appropriately
         uu1_sim *= v_unit;
@@ -312,7 +320,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double rho_cgs = rho * d_unit;
         double pgas_cgs = pgas * e_unit;
         double n_cgs = rho_cgs / (plasma_mu * Physics::m_p);
-
+        // rho_cgs: 1.477e+01 uu1_sim: 2.896e-01 pgas_cgs: 1.103e+36
+        
         //plasma_ne_ni is set through our input parameters as 1 so basically number density for both is equal everywhere
         double n_e_cgs = n_cgs*plasma_ne_ni;
         double n_i_cgs = n_cgs;
@@ -403,6 +412,11 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           kb_tt_e_cgs = theta_e * Physics::m_e * Physics::c * Physics::c;
         }
 
+        if(  m==1023){
+          std::printf("n: %d m:%d x1: %.3e x2: %.3e x3: %.3e \n",n,m,x1,x2,x3);
+        }
+        //after all tetrad stuffn: 9147 m:1023 rho_cgs: 4.830e-02 uu1_sim: 3.062e-01 pgas_cgs: 4.015e+12 T: 1.007e+06 mu*mp/kB: 1.211e-08 pgas: 4.015e+16 rho: 4.830e+02 
+        //after all tetrad stuffn: 9148 m:1023 rho_cgs: 4.830e-02 uu1_sim: 3.062e-01 pgas_cgs: 4.015e+12 T: 1.007e+06 mu*mp/kB: 1.211e-08 pgas: 4.015e+16 rho: 4.830e+02 
         // Skip coupling based on cell values
         if ((cut_rho_min >= 0.0 and rho_cgs < cut_rho_min)
             or (cut_rho_max >= 0.0 and rho_cgs > cut_rho_max)
@@ -437,8 +451,13 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           continue;
 
         // Skip coupling if magnetic field vanishes
-        if (bb1_sim == 0.0 and bb2_sim == 0.0 and bb3_sim == 0.0)
+        if (bb1_sim == 0.0 and bb2_sim == 0.0 and bb3_sim == 0.0 and !simulation_hd_only)
           continue;
+
+        if(rho_cgs==0.0){
+          //std::printf("skip! \n");
+          continue;
+        }
 
         // Calculate Jacobian of transformation from simulation to geodesic coordinates
         CoordinateJacobian(x1, x2, x3, jacobian);
@@ -468,10 +487,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         for (int mu = 0; mu < 4; mu++)
           for (int nu = 0; nu < 4; nu++)
             ucov[mu] += gcov[mu][nu] * ucon[nu];
-        double bcov[4] = {};
+        double bcov[4] = {}; 
         for (int mu = 0; mu < 4; mu++)
           for (int nu = 0; nu < 4; nu++)
-            bcov[mu] += gcov[mu][nu] * bcon[nu];
+            bcov[mu] += gcov[mu][nu] * bcon[nu];        
 
         // Calculate orthonormal tetrad
         Tetrad(ucon, ucov, kcon, kcov, bcon, gcov, gcon, tetrad);
@@ -499,9 +518,15 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double sin2_theta_b = 1.0 - cos2_theta_b;
         double sin_theta_b = std::sqrt(sin2_theta_b);
         double cos_theta_b = std::sqrt(cos2_theta_b) * (k_b_tet >= 0.0 ? 1.0 : -1.0);
+        if(rho_cgs!=0.0 &&  (m==1023 | m==1024)){
+          std::printf("after all tetrad stuff");
+        }
+        
         // Go through frequencies
         for (int l = 0; l < image_num_frequencies; l++)
         {
+          
+
           //nu_cgs is in the orthonormal frame and nu_fluid_cgs is in the fluid frame
           double nu_cgs = 0.0;
           for (int mu = 0; mu < 4; mu++)
@@ -643,8 +668,8 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
               /*if (sample_scattering[adaptive_level](m,n,mid) > 1.0e10){
                 std::printf("scattering = %.5e, alpha_i = %.5e, nu_cgs = %.5e, n_e_cgs = %.5e\n", scattering, alpha_i[adaptive_level](l,m,n), nu_cgs, n_e_cgs);
               }*/
-              j_i[adaptive_level](l,m,n) += scattering/Physics::c;
-              if(mc_error) scat_err[adaptive_level](l,m,n) = scattering_error/Physics::c;
+              j_i[adaptive_level](l,m,n) += scattering;
+              if(mc_error) scat_err[adaptive_level](l,m,n) = scattering_error;
             }
 
           }
@@ -747,7 +772,9 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
            //std::printf("j coeff cgs: %e\n", partA*partB*std::sqrt(kb_tt_e_cgs/Physics::k_b));
 
            double coefficient = partA*partB*n_e_cgs*n_i_cgs*std::exp(-Physics::h*nu_cgs/kb_tt_e_cgs)*gaunt_factor;
-           
+          /* if(n_e_cgs!=0.0){
+            printf("T: %.3e rho: %.3e ",kb_tt_e_cgs/Physics::k_b,rho_cgs);
+           }*/
            /*double tempx1 = sample_pos[adaptive_level](m,n,1);
            double tempx2 = sample_pos[adaptive_level](m,n,2);
            double tempx3 = sample_pos[adaptive_level](m,n,3);
@@ -944,8 +971,12 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             rho_v[adaptive_level](l,m,n) +=
                 (1.0 - kappa_rho_frac) * rho_v_low + kappa_rho_frac * rho_v_high;
           }
-        }        
+        }    
+        if(  m==1023 && n==25606){
+          std::printf("n: %d m:%d end \n",n,m);
+        }    
       }
+      
     }
   }
 

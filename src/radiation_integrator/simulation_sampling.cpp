@@ -65,6 +65,9 @@ void RadiationIntegrator::ObtainGridData()
   ind_uu1 = p_simulation_reader->ind_uu1;
   ind_uu2 = p_simulation_reader->ind_uu2;
   ind_uu3 = p_simulation_reader->ind_uu3;
+  ind_bb1 = -1;
+  ind_bb2 = -1;
+  ind_bb3 = -1;
   if( !simulation_hd_only)
   {
     ind_bb1 = p_simulation_reader->ind_bb1;
@@ -365,7 +368,6 @@ void RadiationIntegrator::CalculateSimulationSampling(int snapshot)
               t_ind--;
           }
         }
-
         // Determine block
         if (x1 < x1_min_block or x1 > x1_max_block or x2 < x2_min_block or x2 > x2_max_block
             or x3 < x3_min_block or x3 > x3_max_block)
@@ -773,10 +775,18 @@ void RadiationIntegrator::SampleSimulation()
           sample_uu1[adaptive_level](m,n) = grid_prim[t](ind_uu1,b,k,j,i);
           sample_uu2[adaptive_level](m,n) = grid_prim[t](ind_uu2,b,k,j,i);
           sample_uu3[adaptive_level](m,n) = grid_prim[t](ind_uu3,b,k,j,i);
-          //TEGAN: i should probably put some if statements here for whether or not we should use the B field
-          sample_bb1[adaptive_level](m,n) = grid_prim[t](ind_bb1,b,k,j,i);
-          sample_bb2[adaptive_level](m,n) = grid_prim[t](ind_bb2,b,k,j,i);
-          sample_bb3[adaptive_level](m,n) = grid_prim[t](ind_bb3,b,k,j,i);
+          if (simulation_hd_only)
+          {
+            sample_bb1[adaptive_level](m,n) = 0.0f;
+            sample_bb2[adaptive_level](m,n) = 0.0f;
+            sample_bb3[adaptive_level](m,n) = 0.0f;
+          }
+          else
+          {
+            sample_bb1[adaptive_level](m,n) = grid_prim[t](ind_bb1,b,k,j,i);
+            sample_bb2[adaptive_level](m,n) = grid_prim[t](ind_bb2,b,k,j,i);
+            sample_bb3[adaptive_level](m,n) = grid_prim[t](ind_bb3,b,k,j,i);
+          }
           
           if(mc_input){
             for(int l=0; l<mc_num_freqs;l++){
@@ -802,9 +812,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1_1 = static_cast<double>(grid_prim[t](ind_uu1,b,k,j,i));
           double uu2_1 = static_cast<double>(grid_prim[t](ind_uu2,b,k,j,i));
           double uu3_1 = static_cast<double>(grid_prim[t](ind_uu3,b,k,j,i));
-          double bb1_1 = static_cast<double>(grid_prim[t](ind_bb1,b,k,j,i));
-          double bb2_1 = static_cast<double>(grid_prim[t](ind_bb2,b,k,j,i));
-          double bb3_1 = static_cast<double>(grid_prim[t](ind_bb3,b,k,j,i));
+          double bb1_1 = simulation_hd_only ? 0.0 : static_cast<double>(grid_prim[t](ind_bb1,b,k,j,i));
+          double bb2_1 = simulation_hd_only ? 0.0 : static_cast<double>(grid_prim[t](ind_bb2,b,k,j,i));
+          double bb3_1 = simulation_hd_only ? 0.0 : static_cast<double>(grid_prim[t](ind_bb3,b,k,j,i));
 
           // Perform spatial interpolation on second slice
           double rho_2 = static_cast<double>(grid_prim[t+1](ind_rho,b,k,j,i));
@@ -815,9 +825,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1_2 = static_cast<double>(grid_prim[t+1](ind_uu1,b,k,j,i));
           double uu2_2 = static_cast<double>(grid_prim[t+1](ind_uu2,b,k,j,i));
           double uu3_2 = static_cast<double>(grid_prim[t+1](ind_uu3,b,k,j,i));
-          double bb1_2 = static_cast<double>(grid_prim[t+1](ind_bb1,b,k,j,i));
-          double bb2_2 = static_cast<double>(grid_prim[t+1](ind_bb2,b,k,j,i));
-          double bb3_2 = static_cast<double>(grid_prim[t+1](ind_bb3,b,k,j,i));
+          double bb1_2 = simulation_hd_only ? 0.0 : static_cast<double>(grid_prim[t+1](ind_bb1,b,k,j,i));
+          double bb2_2 = simulation_hd_only ? 0.0 : static_cast<double>(grid_prim[t+1](ind_bb2,b,k,j,i));
+          double bb3_2 = simulation_hd_only ? 0.0 : static_cast<double>(grid_prim[t+1](ind_bb3,b,k,j,i));
 
           // Assign interpolated values
           double t_frac = sample_fracs[adaptive_level](m,n,0);
@@ -873,9 +883,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1 = InterpolateSimple(grid_prim[t], ind_uu1, b, k, j, i, f_k, f_j, f_i);
           double uu2 = InterpolateSimple(grid_prim[t], ind_uu2, b, k, j, i, f_k, f_j, f_i);
           double uu3 = InterpolateSimple(grid_prim[t], ind_uu3, b, k, j, i, f_k, f_j, f_i);
-          double bb1 = InterpolateSimple(grid_prim[t], ind_bb1, b, k, j, i, f_k, f_j, f_i);
-          double bb2 = InterpolateSimple(grid_prim[t], ind_bb2, b, k, j, i, f_k, f_j, f_i);
-          double bb3 = InterpolateSimple(grid_prim[t], ind_bb3, b, k, j, i, f_k, f_j, f_i);
+          double bb1 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t], ind_bb1, b, k, j, i, f_k, f_j, f_i);
+          double bb2 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t], ind_bb2, b, k, j, i, f_k, f_j, f_i);
+          double bb3 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t], ind_bb3, b, k, j, i, f_k, f_j, f_i);
 
           // Account for possible invalid values
           if (rho <= 0.0)
@@ -934,9 +944,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1_1 = InterpolateSimple(grid_prim[t], ind_uu1, b, k, j, i, f_k, f_j, f_i);
           double uu2_1 = InterpolateSimple(grid_prim[t], ind_uu2, b, k, j, i, f_k, f_j, f_i);
           double uu3_1 = InterpolateSimple(grid_prim[t], ind_uu3, b, k, j, i, f_k, f_j, f_i);
-          double bb1_1 = InterpolateSimple(grid_prim[t], ind_bb1, b, k, j, i, f_k, f_j, f_i);
-          double bb2_1 = InterpolateSimple(grid_prim[t], ind_bb2, b, k, j, i, f_k, f_j, f_i);
-          double bb3_1 = InterpolateSimple(grid_prim[t], ind_bb3, b, k, j, i, f_k, f_j, f_i);
+          double bb1_1 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t], ind_bb1, b, k, j, i, f_k, f_j, f_i);
+          double bb2_1 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t], ind_bb2, b, k, j, i, f_k, f_j, f_i);
+          double bb3_1 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t], ind_bb3, b, k, j, i, f_k, f_j, f_i);
 
           // Account for possible invalid values
           if (rho_1 <= 0.0)
@@ -955,9 +965,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1_2 = InterpolateSimple(grid_prim[t+1], ind_uu1, b, k, j, i, f_k, f_j, f_i);
           double uu2_2 = InterpolateSimple(grid_prim[t+1], ind_uu2, b, k, j, i, f_k, f_j, f_i);
           double uu3_2 = InterpolateSimple(grid_prim[t+1], ind_uu3, b, k, j, i, f_k, f_j, f_i);
-          double bb1_2 = InterpolateSimple(grid_prim[t+1], ind_bb1, b, k, j, i, f_k, f_j, f_i);
-          double bb2_2 = InterpolateSimple(grid_prim[t+1], ind_bb2, b, k, j, i, f_k, f_j, f_i);
-          double bb3_2 = InterpolateSimple(grid_prim[t+1], ind_bb3, b, k, j, i, f_k, f_j, f_i);
+          double bb1_2 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t+1], ind_bb1, b, k, j, i, f_k, f_j, f_i);
+          double bb2_2 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t+1], ind_bb2, b, k, j, i, f_k, f_j, f_i);
+          double bb3_2 = simulation_hd_only ? 0.0 : InterpolateSimple(grid_prim[t+1], ind_bb3, b, k, j, i, f_k, f_j, f_i);
 
           // Account for possible invalid values
           if (rho_2 <= 0.0)
@@ -1011,9 +1021,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1 = InterpolateAdvanced(grid_prim[t], ind_uu1, m, n);
           double uu2 = InterpolateAdvanced(grid_prim[t], ind_uu2, m, n);
           double uu3 = InterpolateAdvanced(grid_prim[t], ind_uu3, m, n);
-          double bb1 = InterpolateAdvanced(grid_prim[t], ind_bb1, m, n);
-          double bb2 = InterpolateAdvanced(grid_prim[t], ind_bb2, m, n);
-          double bb3 = InterpolateAdvanced(grid_prim[t], ind_bb3, m, n);
+          double bb1 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t], ind_bb1, m, n);
+          double bb2 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t], ind_bb2, m, n);
+          double bb3 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t], ind_bb3, m, n);
 
           // Account for possible invalid values
           int b = sample_inds[adaptive_level](m,n,0,0);
@@ -1075,9 +1085,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1_1 = InterpolateAdvanced(grid_prim[t], ind_uu1, m, n);
           double uu2_1 = InterpolateAdvanced(grid_prim[t], ind_uu2, m, n);
           double uu3_1 = InterpolateAdvanced(grid_prim[t], ind_uu3, m, n);
-          double bb1_1 = InterpolateAdvanced(grid_prim[t], ind_bb1, m, n);
-          double bb2_1 = InterpolateAdvanced(grid_prim[t], ind_bb2, m, n);
-          double bb3_1 = InterpolateAdvanced(grid_prim[t], ind_bb3, m, n);
+          double bb1_1 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t], ind_bb1, m, n);
+          double bb2_1 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t], ind_bb2, m, n);
+          double bb3_1 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t], ind_bb3, m, n);
 
           // Account for possible invalid values
           int b = sample_inds[adaptive_level](m,n,0,0);
@@ -1100,9 +1110,9 @@ void RadiationIntegrator::SampleSimulation()
           double uu1_2 = InterpolateAdvanced(grid_prim[t+1], ind_uu1, m, n);
           double uu2_2 = InterpolateAdvanced(grid_prim[t+1], ind_uu2, m, n);
           double uu3_2 = InterpolateAdvanced(grid_prim[t+1], ind_uu3, m, n);
-          double bb1_2 = InterpolateAdvanced(grid_prim[t+1], ind_bb1, m, n);
-          double bb2_2 = InterpolateAdvanced(grid_prim[t+1], ind_bb2, m, n);
-          double bb3_2 = InterpolateAdvanced(grid_prim[t+1], ind_bb3, m, n);
+          double bb1_2 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t+1], ind_bb1, m, n);
+          double bb2_2 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t+1], ind_bb2, m, n);
+          double bb3_2 = simulation_hd_only ? 0.0 : InterpolateAdvanced(grid_prim[t+1], ind_bb3, m, n);
 
           // Account for possible invalid values
           if (rho_2 <= 0.0)

@@ -384,9 +384,9 @@ void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
 
           grad(nx-1,b,k,j,i) = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
           if(mc_error){  
-            //std::printf("calculating grad error ");
-            grad(nx,b,k,j,i) = std::sqrt(std::pow(f(1+nx,b,k,j,i),2.) + std::pow(f(nx,b,k,j,i),2.))/(x(1) - x(0));
-            grad(2*nx-1,b,k,j,i) = std::sqrt(std::pow(f(2*nx-1,b,k,j,i),2.) + std::pow(f(2*nx-2,b,k,j,i),2.))/(x(nx-1) - x(nx-2));
+            //perform square root in order to get standard deviation and not variance
+            grad(nx,b,k,j,i) = std::sqrt((std::pow(f(1+nx,b,k,j,i),2.) + std::pow(f(nx,b,k,j,i),2.))/(x(1) - x(0)));
+            grad(2*nx-1,b,k,j,i) = std::sqrt((std::pow(f(2*nx-1,b,k,j,i),2.) + std::pow(f(2*nx-2,b,k,j,i),2.))/(x(nx-1) - x(nx-2)));
             //std::printf("calculated first two grad errors "); 
           }
           
@@ -404,7 +404,7 @@ void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
 
             grad(l,b,k,j,i) = (f(l+1,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+1) - x(l-1));
             if(mc_error){
-              grad(l+nx,b,k,j,i) = std::sqrt(std::pow(f(l+1+nx,b,k,j,i),2.) + std::pow(f(l-1+nx,b,k,j,i),2.))/(x(l+1) - x(l-1));
+              grad(l+nx,b,k,j,i) = std::sqrt((std::pow(f(l+1+nx,b,k,j,i),2.) + std::pow(f(l-1+nx,b,k,j,i),2.))/(x(l+1) - x(l-1)));
             }
           }
         }
