@@ -265,8 +265,7 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
           image[adaptive_level](index,m) /= photosphere_steps;
           index++;
           image[adaptive_level](index,m) /= photosphere_steps;*/
-        }
-          
+        }   
     }
     // Transform I_nu/nu^3 to I_nu
     if (image_light)

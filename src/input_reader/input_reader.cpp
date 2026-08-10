@@ -105,6 +105,7 @@ int InputReader::Read()
       throw BlacklightException("Invalid assignment in input file.");
     std::string key = line.substr(0, pos);
     std::string val = line.substr(pos + 1, line.size());
+    SetDefaults();
     AssignInputVal(key,val);
   }
 
@@ -236,8 +237,12 @@ void InputReader::AssignInputVal(std::string key,std::string val){
       compton = ReadBool(val);
     else if(key == "stimulated_compton")
       stimulated_compton = ReadBool(val);
-    else if(key == "mc_error")
-      mc_error = ReadBool(val);
+    else if(key == "mc_error" && mc_input.has_value()){
+      if(mc_input.value()){
+        mc_error = ReadBool(val);
+      }
+    }
+      
 
     // Store formula parameters
     else if( key == "formula_name")
@@ -518,6 +523,11 @@ void InputReader::AssignInputVal(std::string key,std::string val){
       message << "Unknown key (" << key << ") in input file.";
       throw BlacklightException(message.str().c_str());
     }
+}
+
+void InputReader::SetDefaults(){
+  mc_error = false;
+  
 }
 
 //--------------------------------------------------------------------------------------------------

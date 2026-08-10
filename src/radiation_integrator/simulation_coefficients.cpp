@@ -274,9 +274,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
       int num_steps = sample_num[adaptive_level](m);
       for (int n = 0; n < num_steps; n++)
       {
-        if(  m==1023 && n==25606){
-          std::printf("n: %d m:%d first \n",n,m);
-        }
         // Skip coupling if in cut region
         if (sample_cut[adaptive_level](m,n))
           continue;
@@ -285,9 +282,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double x1 = sample_pos[adaptive_level](m,n,1);
         double x2 = sample_pos[adaptive_level](m,n,2);
         double x3 = sample_pos[adaptive_level](m,n,3);
-        if(  m==1023&& n==25606){
-          std::printf("n: %d m:%d x1: %.3e x2: %.3e x3: %.3e second \n",n,m,x1,x2,x3);
-        }
         double kcov[4];
         kcov[0] = sample_dir[adaptive_level](m,n,0);
         kcov[1] = sample_dir[adaptive_level](m,n,1);
@@ -412,9 +406,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
           kb_tt_e_cgs = theta_e * Physics::m_e * Physics::c * Physics::c;
         }
 
-        if(  m==1023){
-          std::printf("n: %d m:%d x1: %.3e x2: %.3e x3: %.3e \n",n,m,x1,x2,x3);
-        }
         //after all tetrad stuffn: 9147 m:1023 rho_cgs: 4.830e-02 uu1_sim: 3.062e-01 pgas_cgs: 4.015e+12 T: 1.007e+06 mu*mp/kB: 1.211e-08 pgas: 4.015e+16 rho: 4.830e+02 
         //after all tetrad stuffn: 9148 m:1023 rho_cgs: 4.830e-02 uu1_sim: 3.062e-01 pgas_cgs: 4.015e+12 T: 1.007e+06 mu*mp/kB: 1.211e-08 pgas: 4.015e+16 rho: 4.830e+02 
         // Skip coupling based on cell values
@@ -518,15 +509,10 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
         double sin2_theta_b = 1.0 - cos2_theta_b;
         double sin_theta_b = std::sqrt(sin2_theta_b);
         double cos_theta_b = std::sqrt(cos2_theta_b) * (k_b_tet >= 0.0 ? 1.0 : -1.0);
-        if(rho_cgs!=0.0 &&  (m==1023 | m==1024)){
-          std::printf("after all tetrad stuff");
-        }
         
         // Go through frequencies
         for (int l = 0; l < image_num_frequencies; l++)
         {
-          
-
           //nu_cgs is in the orthonormal frame and nu_fluid_cgs is in the fluid frame
           double nu_cgs = 0.0;
           for (int mu = 0; mu < 4; mu++)
@@ -971,10 +957,7 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             rho_v[adaptive_level](l,m,n) +=
                 (1.0 - kappa_rho_frac) * rho_v_low + kappa_rho_frac * rho_v_high;
           }
-        }    
-        if(  m==1023 && n==25606){
-          std::printf("n: %d m:%d end \n",n,m);
-        }    
+        }       
       }
       
     }

@@ -244,6 +244,7 @@ struct InputReader
   // External function
   int Read();
   void AssignInputVal(std::string key,std::string val);
+  void SetDefaults();
 
   // Internal functions - input_reader.cpp
   static bool RemoveableSpace(unsigned char c);
