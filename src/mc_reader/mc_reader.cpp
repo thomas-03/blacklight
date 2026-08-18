@@ -149,9 +149,10 @@ double MCReader::Read(int snapshot)
   double time_start = omp_get_wtime();
 
   int num_read = 1;
+  std::printf("before read freq file");
   ReadFreqFile();
   dlf = std::log10(freq_grid(1))-std::log10(freq_grid(0));
-
+  std::cout<<"finished reading freq file "<<std::endl;
   
   std::printf("full read frequency file time: %f ",omp_get_wtime()-time_start);
   double time_counter = omp_get_wtime();
@@ -232,6 +233,7 @@ double MCReader::Read(int snapshot)
 
         std::printf("set true scale and compare: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
+        std::cout<<"finished coord check "<<std::endl;
     } 
 
     Array<float> *scattering;
@@ -274,6 +276,7 @@ double MCReader::Read(int snapshot)
       
         std::printf("allocate arrays time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
+        std::cout<<"finish allocat "<<std::endl;
       //Array<float> source_terms(scattering_source_terms[0]);
       Array<float> shallow_scatter(scattering[0]);
       Array<float> shallow_first_deriv(scattering_first_derivs[0]);
@@ -282,8 +285,9 @@ double MCReader::Read(int snapshot)
       Array<float> shallow_scatter_error(scattering_error[0]);
       //TEGAN: i'm not sure if i have to do this sort of copying, but just doing it for now
       //come back later to check
-      
+      std::cout<<"before reading float"<<std::endl;
       ReadHDF5FloatArray("mcscat",shallow_scatter);
+      std::cout<<"finished reading float"<<std::endl;
       
         std::printf("read mc scattering: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
@@ -291,15 +295,16 @@ double MCReader::Read(int snapshot)
         Gradient(shallow_first_deriv, shallow_scatter, ln_freq_grid);
         Gradient(shallow_second_deriv, shallow_first_deriv, ln_freq_grid);
       }
-
+      
         std::printf("compute gradient time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
+        std::cout<<"before calc source"<<std::endl;
       CalculateSourceTerm(shallow_source_terms, shallow_scatter, shallow_first_deriv, shallow_second_deriv,shallow_scatter_error);
-
+      std::cout<<"after calc source"<<std::endl;
 
         std::printf("calc source term time: %f ",omp_get_wtime()-time_counter);
         time_counter = omp_get_wtime();
-    
+    std::cout<<"finsiehd calc source term"<<std::endl;
     
     // Close input file
     data_stream.close();
@@ -341,7 +346,7 @@ void MCReader::ReadFreqFile()
     msg << "FATAL ERROR: Could not open " << mc_freq_file_name << "." << std::endl;
     throw BlacklightException(msg.str().c_str());
   }
-
+  std::printf("reading freq file! \n");
   
   fscanf(mc_freq_file,"%d",&(num_freqs));
 
@@ -370,48 +375,46 @@ void MCReader::ReadFreqFile()
 
 // Function for evaluating the gradient of f over x 
 // Used specifically to calculate the gradient of J over frequency for the Compton source term
-void MCReader::Gradient(Array<float> &grad,Array<float> &f, Array<double> &x){
+void MCReader::Gradient(Array<float> &grad, Array<float> &f, Array<double> &x){
   int nx = x.n1;
-  if(nx!=num_freqs){
-    std::printf("nx: %d mc_num_freqs: %d",nx,num_freqs);
-  }
-  #pragma omp parallel for schedule(static) collapse(4)
-  for(int i=0;i<f.n1;i++){
-    for(int j=0;j<f.n2;j++){
-      for(int k=0;k<f.n3;k++){
-        for(int b=0;b<f.n4;b++){
-          grad(0,b,k,j,i) = (f(1,b,k,j,i) - f(0,b,k,j,i))/(x(1) - x(0));
 
-          grad(nx-1,b,k,j,i) = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1) - x(nx-2));
-          if(mc_error){  
-            //perform square root in order to get standard deviation and not variance
-            grad(nx,b,k,j,i) = std::sqrt((std::pow(f(1+nx,b,k,j,i),2.) + std::pow(f(nx,b,k,j,i),2.))/(x(1) - x(0)));
-            grad(2*nx-1,b,k,j,i) = std::sqrt((std::pow(f(2*nx-1,b,k,j,i),2.) + std::pow(f(2*nx-2,b,k,j,i),2.))/(x(nx-1) - x(nx-2)));
-            //std::printf("calculated first two grad errors "); 
+  // Endpoints (l=0, l=nx-1): parallelize over b,k,j; keep i innermost/contiguous
+  #pragma omp parallel for schedule(static) collapse(3)
+  for(int b=0;b<f.n4;b++){
+    for(int k=0;k<f.n3;k++){
+      for(int j=0;j<f.n2;j++){
+        for(int i=0;i<f.n1;i++){
+          grad(0,b,k,j,i)    = (f(1,b,k,j,i)   - f(0,b,k,j,i))   /(x(1)-x(0));
+          grad(nx-1,b,k,j,i) = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1)-x(nx-2));
+          if(mc_error){
+            float f1 = f(1+nx,b,k,j,i), f0 = f(nx,b,k,j,i);
+            grad(nx,b,k,j,i) = std::sqrt((f1*f1 + f0*f0)/(x(1)-x(0)));
+            float fN1 = f(2*nx-1,b,k,j,i), fN2 = f(2*nx-2,b,k,j,i);
+            grad(2*nx-1,b,k,j,i) = std::sqrt((fN1*fN1 + fN2*fN2)/(x(nx-1)-x(nx-2)));
           }
-          
-          for(int l=1;l<(num_freqs-1);l++){
-            /*if(f(l+1,b,k,j,i)<0.0 && l<(num_freqs-2)){
-              grad(l,b,k,j,i) = (f(l+2,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+2) - x(l-1));
-              if(mc_error){
-                grad(l+nx,b,k,j,i) = (f(l+2+nx,b,k,j,i) - f(l-1+nx,b,k,j,i))/(x(l+2) - x(l-1));
-              }
-            }else if(f(l+1,b,k,j,i)<0.0 && l==(num_freqs-2)){
-              grad(l,b,k,j,i) = (f(l,b,k,j,i) - f(l-1,b,k,j,i))/(x(l) - x(l-1));
-              if (mc_error) grad(nx+l,b,k,j,i) = (f(nx+l,b,k,j,i) - f(nx+l-1,b,k,j,i))/(x(l) - x(l-1));
-            }*/
+        }
+      }
+    }
+  }
 
-
-            grad(l,b,k,j,i) = (f(l+1,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+1) - x(l-1));
+  // Interior: l as one of the collapsed/parallel dims, i innermost/contiguous
+  #pragma omp parallel for schedule(static) collapse(4)
+  for(int l=1;l<num_freqs-1;l++){
+    for(int b=0;b<f.n4;b++){
+      for(int k=0;k<f.n3;k++){
+        for(int j=0;j<f.n2;j++){
+          for(int i=0;i<f.n1;i++){
+            grad(l,b,k,j,i) = (f(l+1,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+1)-x(l-1));
             if(mc_error){
-              grad(l+nx,b,k,j,i) = std::sqrt((std::pow(f(l+1+nx,b,k,j,i),2.) + std::pow(f(l-1+nx,b,k,j,i),2.))/(x(l+1) - x(l-1)));
+              float fp = f(l+1+nx,b,k,j,i), fm = f(l-1+nx,b,k,j,i);
+              grad(l+nx,b,k,j,i) = std::sqrt((fp*fp + fm*fm)/(x(l+1)-x(l-1)));
             }
           }
         }
       }
     }
   }
-} 
+}
 
 void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scattering,Array<float> &scattering_prime,Array<float> &scattering_prime_prime,Array<float> &scattering_error){
   // Calculate the source term using the scattering and its derivatives
@@ -422,11 +425,11 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
   if(!compton){
     //when not doing checks it might be a good idea to see if I can simplify this down to a simple copy
     #pragma omp parallel for schedule(static) collapse(5)
-    for(int i=0;i<source_term.n1;i++){
+    for(int l=0;l<source_term.n5;l++){
+    for(int b=0;b<source_term.n4;b++){
+      for(int k=0;k<source_term.n3;k++){
       for(int j=0;j<source_term.n2;j++){
-        for(int k=0;k<source_term.n3;k++){
-          for(int b=0;b<source_term.n4;b++){
-            for(int l=0;l<source_term.n5;l++){
+    for(int i=0;i<source_term.n1;i++){
 
               //just taking out the negative values doesn't improve the error in thomson
               /*if(scattering(l,b,k,j,i)<0.){
@@ -477,10 +480,10 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
     }
   }else{
   #pragma omp parallel for schedule(static) collapse(4)
-  for(int i=0;i<source_term.n1;i++){
-    for(int j=0;j<source_term.n2;j++){
+  for(int b=0;b<source_term.n4;b++){
       for(int k=0;k<source_term.n3;k++){
-        for(int b=0;b<source_term.n4;b++){
+      for(int j=0;j<source_term.n2;j++){
+    for(int i=0;i<source_term.n1;i++){
           double rho_cgs;
           double pgas_cgs;
           double gcov_sim[4][4];

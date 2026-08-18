@@ -390,7 +390,6 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
             kb_tt_tot_cgs = plasma_mu * Physics::m_p *pgas_cgs / rho_cgs;
           }
           
-          
           kb_tt_e_cgs = kb_tt_tot_cgs;
           
           theta_e = kb_tt_e_cgs / (Physics::m_e * Physics::c * Physics::c);

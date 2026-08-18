@@ -79,6 +79,7 @@ InputReader::~InputReader()
 //   returned value: number of runs to perform based on inputs
 int InputReader::Read()
 {
+  SetDefaults();
   // Open input file
   std::ifstream input_stream(input_file);
   if (not input_stream.is_open())
@@ -105,7 +106,6 @@ int InputReader::Read()
       throw BlacklightException("Invalid assignment in input file.");
     std::string key = line.substr(0, pos);
     std::string val = line.substr(pos + 1, line.size());
-    SetDefaults();
     AssignInputVal(key,val);
   }
 
