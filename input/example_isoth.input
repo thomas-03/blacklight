@@ -4,7 +4,7 @@ num_threads = 12           # number of threads to use in parallel
 
 # Output parameters
 output_format = npz                            # format of output file (npz, npy, raw)
-output_file   = /PellaShared/kcu8rf/blacklight/spherical_isothermal/sks_ff/sks_ring_comp_lowphot_ff.npz  # file to be (over)written with output data
+output_file   = /PellaShared/kcu8rf/blacklight/tests/example_isoth.npz  # file to be (over)written with output data
 output_camera = false                          # flag for saving camera details
 
 # Checkpoint parameters
@@ -17,7 +17,7 @@ checkpoint_sample_file   = data/sample.dat
 
 # Simulation parameters
 simulation_format       = athena           # format of GRMHD data
-simulation_file         = /PellaShared/kcu8rf/sks_ring_comp_lowphot/isothgr.out2.00000.athdf # file containing data dump
+simulation_file         = /PellaShared/kcu8rf/spherical_ring_ff/isoth.out2.00000.athdf # file containing data dump
 simulation_multiple     = false            # flag for processing multiple files
 simulation_coord        = sks              # simulation coordinates (sks, cks), if i set it to cks then everything is just NaNs
 simulation_a            = 0.0              # dimensionless black hole spin
