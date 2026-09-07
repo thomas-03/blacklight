@@ -37,7 +37,7 @@ opacity_file = data/out_opacity_table_nfreq64.txt
 
 mc_input = true
 mc_file = /PellaShared/swd8g/tegan/scatter_1e8/xrb.out5.00000.athdf
-mc_freq_file = /PellaShared/swd8g/x-ray_binaries/test_scat/sourceterm_frequencies.txt
+mc_freq_file = /PellaShared/swd8g/tegan/scatter_1e8/sourceterm_frequencies.txt
 compton = true
 stimulated_compton = false
 mc_error = true
@@ -56,7 +56,7 @@ camera_k_th       = 0.0    # covariant KS theta-momentum of photons (using radia
 camera_k_ph       = 0.0    # covariant KS phi-momentum of photons (using radians)
 camera_rotation   = 0.0    # rotation of camera in degrees (0/90 for north up/left)
 camera_width      = 800.0   # full width of image in gravitational units
-camera_resolution = 96     # number of pixels per side
+camera_resolution = 32     # number of pixels per side
 
 # Ray-tracing parameters
 ray_flat        = false           # flag indicating ray tracing should assume flat spacetime

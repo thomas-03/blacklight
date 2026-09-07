@@ -644,17 +644,12 @@ void RadiationIntegrator::CalculateSimulationCoefficients()
 
             //Calculate emissivity and absorptivity due to scattering
             
-            /*if(scattering<0.0){
-              std::printf("negative scattering!");
-            }*/
+            
             //need to include this if statement as some cells may not be visited at all and shouldn't get absorption there bc would be unfair???
             if(scattering!=0.0){
               alpha_i[adaptive_level](l,m,n) += Physics::sigma_t*n_e_cgs*nu_cgs;
-              /*if (sample_scattering[adaptive_level](m,n,mid) > 1.0e10){
-                std::printf("scattering = %.5e, alpha_i = %.5e, nu_cgs = %.5e, n_e_cgs = %.5e\n", scattering, alpha_i[adaptive_level](l,m,n), nu_cgs, n_e_cgs);
-              }*/
               j_i[adaptive_level](l,m,n) += scattering;
-              if(mc_error) scat_err[adaptive_level](l,m,n) = scattering_error;
+              if(mc_error) scat_err[adaptive_level](l,m,n) += scattering_error;
             }
 
           }

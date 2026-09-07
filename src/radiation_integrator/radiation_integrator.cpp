@@ -78,9 +78,15 @@ RadiationIntegrator::RadiationIntegrator(const InputReader *p_input_reader,
     simulation_hd_only = p_input_reader->simulation_hd_only.value();
     simulation_mc_temp = p_input_reader->simulation_mc_temp.value();
     mc_input = p_input_reader->mc_input.value();
-    compton = p_input_reader->compton.value();
-    stimulated_compton = p_input_reader->stimulated_compton.value();
-    mc_error = p_input_reader->mc_error.value();
+    if(mc_input){
+      compton = p_input_reader->compton.value();
+      stimulated_compton = p_input_reader->stimulated_compton.value();
+      mc_error = p_input_reader->mc_error.value();
+    }else{
+      compton = false;
+      stimulated_compton = false;
+      mc_error = false;
+    }
   }
 
   // Copy formula parameters

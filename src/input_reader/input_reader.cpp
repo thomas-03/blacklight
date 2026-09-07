@@ -229,14 +229,26 @@ void InputReader::AssignInputVal(std::string key,std::string val){
     //Store MC file parameters
     else if(key == "mc_input")
       mc_input = ReadBool(val);
-    else if(key == "mc_file")
-      mc_file = val;
-    else if(key == "mc_freq_file")
-      mc_freq_file=val;
-    else if(key == "compton")
-      compton = ReadBool(val);
-    else if(key == "stimulated_compton")
-      stimulated_compton = ReadBool(val);
+    else if(key == "mc_file"){
+      if(mc_input.value()){
+        mc_file = val;
+      }
+    }
+    else if(key == "mc_freq_file"){
+      if(mc_input.value()){
+        mc_freq_file=val;
+      }
+    }
+    else if(key == "compton"){
+      if(mc_input.value()){
+        compton = ReadBool(val);
+      }
+    }
+    else if(key == "stimulated_compton"){
+      if(mc_input.value()){
+        stimulated_compton = ReadBool(val);
+      }
+    }
     else if(key == "mc_error" && mc_input.has_value()){
       if(mc_input.value()){
         mc_error = ReadBool(val);

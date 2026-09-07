@@ -13,7 +13,6 @@
 #include <optional>   // optional
 #include <sstream>    // ostringstream
 #include <string>     // getline, stod, stoi, string
-
 // Library headers
 #include <omp.h>  // pragmas, omp_get_wtime
 
@@ -388,9 +387,9 @@ void MCReader::Gradient(Array<float> &grad, Array<float> &f, Array<double> &x){
           grad(nx-1,b,k,j,i) = (f(nx-1,b,k,j,i) - f(nx-2,b,k,j,i))/(x(nx-1)-x(nx-2));
           if(mc_error){
             float f1 = f(1+nx,b,k,j,i), f0 = f(nx,b,k,j,i);
-            grad(nx,b,k,j,i) = std::sqrt((f1*f1 + f0*f0)/(x(1)-x(0)));
+            grad(nx,b,k,j,i) = std::sqrt((f1*f1 + f0*f0))/(x(1)-x(0));
             float fN1 = f(2*nx-1,b,k,j,i), fN2 = f(2*nx-2,b,k,j,i);
-            grad(2*nx-1,b,k,j,i) = std::sqrt((fN1*fN1 + fN2*fN2)/(x(nx-1)-x(nx-2)));
+            grad(2*nx-1,b,k,j,i) = std::sqrt((fN1*fN1 + fN2*fN2))/(x(nx-1)-x(nx-2));
           }
         }
       }
@@ -407,7 +406,7 @@ void MCReader::Gradient(Array<float> &grad, Array<float> &f, Array<double> &x){
             grad(l,b,k,j,i) = (f(l+1,b,k,j,i) - f(l-1,b,k,j,i))/(x(l+1)-x(l-1));
             if(mc_error){
               float fp = f(l+1+nx,b,k,j,i), fm = f(l-1+nx,b,k,j,i);
-              grad(l+nx,b,k,j,i) = std::sqrt((fp*fp + fm*fm)/(x(l+1)-x(l-1)));
+              grad(l+nx,b,k,j,i) = std::sqrt((fp*fp + fm*fm))/(x(l+1)-x(l-1));
             }
           }
         }
@@ -431,18 +430,6 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
       for(int j=0;j<source_term.n2;j++){
     for(int i=0;i<source_term.n1;i++){
 
-              //just taking out the negative values doesn't improve the error in thomson
-              /*if(scattering(l,b,k,j,i)<0.){
-                //source_term(l,b,k,j,i) = 0.0;
-                //scattering_error(l,b,k,j,i) = 0.0;
-                //there doesn't seem to be a particular frequency that gets more negatives than others just by simple look at print
-                std::printf("negative source terms: %.3e error: %.3e freq: %d",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i),l);
-              
-              }*///else{
-              /*if(b==109 && k == 25 && j == 59 && i ==2 && l==7){
-                std::printf("scattering isnan: %d scattering error isnnan: %d ",std::isnan(scattering(l,b,k,j,i)),std::isnan(scattering(l+source_term.n5,b,k,j,i)));
-              }*/
-
               if(std::isnan(scattering(l,b,k,j,i))){
                 source_term(l,b,k,j,i) = 0.0;
                 scattering_error(l,b,k,j,i) = 0.0;
@@ -454,23 +441,6 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
                   scattering_error(l,b,k,j,i) = 0.0;
                 }
               }
-                
-                /*if(source_term(l,b,k,j,i) != 0.0){
-                  std::printf("zero source terms: %.3e error: %.3e freq: %d ",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i),l);
-                }*/
-                
-                /*if(source_term(l,b,k,j,i)<0.0){
-                  std::printf("find that error, scattering: %.3e  error: %.3e ",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i));
-                }*/
-              //}
-              /*if(scattering(l,b,k,j,i)<scattering(l+source_term.n5,b,k,j,i)){
-                source_term(l,b,k,j,i) = 0.0;
-                if(mc_error) scattering_error(l,b,k,j,i) = 0.0;
-              }*/
-              
-              /*if(source_term(l,b,k,j,i)<0.0){
-                std::printf("negative source terms: %.3e error: %.3e ",scattering(l,b,k,j,i),scattering(l+source_term.n5,b,k,j,i));
-              }*/
               
               scattering_error(l,b,k,j,i) *= scattering_error(l,b,k,j,i);
             }
@@ -627,7 +597,7 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
                 }
               }
             }else{
-              source_term(l,b,k,j,i) = 0.0;
+              source_term(l,b,k,j,i) = std::nanf("");
               scattering_error(l,b,k,j,i) = 0.0;
             }
               /*if(source_term(l,b,k,j,i)<scattering_error(l,b,k,j,i)){
@@ -665,12 +635,3 @@ void MCReader::CalculateSourceTerm(Array<float> &source_term,Array<float> &scatt
   }
   }
 }
-
-//full read frequency file time: 0.000098 read header: 0.000135 read coordinate time: 0.001295 set true scale and compare: 0.002711 allocate arrays time: 0.000045 read mc scattering: 4.322940 compute gradient time: 93.839276 scattering negative!: -2.218e-01 scattering negative!: -1.525e+06 scattering negative!: -7.940e-03 scattering negative!: -2.149e-03 scattering negative!: -1.914e+03 scattering negative!: -3.016e+03 scattering negative!: -1.188e+03 scattering negative!: -7.264e+07 scattering negative!: -4.726e-02 scattering negative!: -5.926e-03 scattering negative!: -2.386e+07 scattering negative!: -2.202e-02 scattering negative!: -2.202e-02 scattering negative!: -2.167e+06 scattering negative!: -2.568e+06 scattering negative!: -1.731e+01 scattering negative!: -1.091e+01 scattering negative!: -8.664e+00 scattering negative!: -6.879e+00 scattering negative!: -5.461e+00 scattering negative!: -2.140e+05 scattering negative!: -1.077e+06 scattering negative!: -6.932e+05 
-//calc source term time: 104.279882 
-// d_unit = 1.00000e-04, v_unit = 1.00000e+00, e_unit = 8.98755e+16
-
-//full read frequency file time: 0.000579 read header: 0.000185 read coordinate time: 0.003372 set true scale and compare: 0.008634 allocate arrays time: 0.000046 read mc scattering: 21.297775 compute gradient time: 128.174272 
-//scattering negative!: -4.766e+01 scattering negative!: -4.766e+01 scattering negative!: -1.881e+02 scattering negative!: -7.445e+01 scattering negative!: -1.881e+02 scattering negative!: -7.445e+01 scattering negative!: -3.625e-01 
-// calc sourceterm time: 121.561564 
-// d_unit = 1.00000e-04, v_unit = 1.00000e+00, e_unit = 8.98755e+16

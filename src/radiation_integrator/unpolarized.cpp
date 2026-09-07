@@ -120,6 +120,10 @@ void RadiationIntegrator::IntegrateUnpolarizedRadiation()
             else
             {
               image[adaptive_level](l,m) += j * delta_lambda_cgs;
+              if(mc_error)
+                image[adaptive_level](image_offset_scat_err+l,m) = std::sqrt(
+                    std::pow(image[adaptive_level](image_offset_scat_err+l,m), 2.)
+                    + std::pow(delta_lambda_cgs, 2.) * scat_err[adaptive_level](l,m,n));
             }
           }
 
